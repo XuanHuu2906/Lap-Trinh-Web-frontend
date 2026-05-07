@@ -1,5 +1,6 @@
 import React from 'react';
 import { type CVTemplate } from '../../types/cv.type';
+import { Button } from '../ui/button';
 
 interface CVTemplateCardProps {
   template: CVTemplate;
@@ -205,18 +206,22 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
 
         {/* Buttons */}
         <div className="grid grid-cols-2 gap-3 mt-auto">
-          <button
+          <Button
             onClick={() => onPreview(template)}
-            className="py-2 px-3 border border-slate-200 rounded-[4px] text-xs font-semibold text-slate-600 hover:text-slate-950 hover:border-slate-400 transition-all bg-white hover:bg-slate-50 active:scale-[0.98] cursor-pointer"
+            variant="outline"
+            size="sm"
+            className="text-[11px] font-bold tracking-wider rounded-[4px]"
           >
             XEM TRƯỚC
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onUse(template)}
-            className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-[4px] text-xs font-semibold shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer"
+            variant="default"
+            size="sm"
+            className="text-[11px] font-bold tracking-wider rounded-[4px]"
           >
             SỬ DỤNG
-          </button>
+          </Button>
         </div>
       </div>
 

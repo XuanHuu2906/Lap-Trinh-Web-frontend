@@ -4,6 +4,7 @@ import { Search, ChevronRight, FileText, CheckCircle2, Award, Zap } from 'lucide
 import { type CVTemplate, type CVTemplateCategory } from '../../types/cv.type';
 import { CVTemplateCard } from '../../components/cv/CVTemplateCard';
 import { Modal } from '../../components/common/Modal';
+import { Button } from '../../components/ui/button';
 
 // Mock Data Danh sách 4 Mẫu CV khớp hoàn toàn hình ảnh và Database Schema
 const MOCK_TEMPLATES: CVTemplate[] = [
@@ -134,16 +135,18 @@ export const CVTemplatePage: React.FC = () => {
         {/* Category Buttons */}
         <div className="flex flex-wrap gap-2 order-2 md:order-1">
           {categories.map((category) => (
-            <button
+            <Button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 text-xs font-semibold rounded-[4px] border transition-all duration-200 cursor-pointer ${selectedCategory === category
-                  ? 'bg-slate-100 border-slate-300 text-slate-900 font-bold shadow-sm'
-                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300'
+              variant={selectedCategory === category ? 'secondary' : 'outline'}
+              size="sm"
+              className={`rounded-[4px] border font-semibold text-xs cursor-pointer ${selectedCategory === category
+                ? 'border-slate-300 text-slate-900 font-bold shadow-sm'
+                : 'border-slate-200 text-slate-500 hover:text-slate-800'
                 }`}
             >
               {category}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -373,15 +376,17 @@ export const CVTemplatePage: React.FC = () => {
 
               {/* Action buttons in modal */}
               <div className="mt-8 pt-6 border-t border-slate-100">
-                <button
+                <Button
                   onClick={() => {
                     handleClosePreview();
                     handleUseTemplate(previewTemplate);
                   }}
-                  className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-[4px] shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer text-center"
+                  variant="default"
+                  size="lg"
+                  className="w-full text-xs font-bold tracking-wider rounded-[4px] shadow-md hover:shadow-lg"
                 >
                   SỬ DỤNG MẪU NÀY BẮT ĐẦU TẠO CV
-                </button>
+                </Button>
               </div>
 
             </div>
