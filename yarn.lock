@@ -1317,6 +1317,7 @@ react-dom@^19.2.4, react-dom@>=18:
   version "19.2.4"
   resolved "https://registry.npmjs.org/react-dom/-/react-dom-19.2.4.tgz"
   integrity sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==
+
   dependencies:
     scheduler "^0.27.0"
 
@@ -1344,6 +1345,7 @@ react-router@7.15.0:
   version "19.2.4"
   resolved "https://registry.npmjs.org/react/-/react-19.2.4.tgz"
   integrity sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==
+
 
 resolve-from@^4.0.0:
   version "4.0.0"
@@ -1423,10 +1425,12 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
+
 tailwind-merge@^3.5.0:
   version "3.5.0"
   resolved "https://registry.npmjs.org/tailwind-merge/-/tailwind-merge-3.5.0.tgz"
   integrity sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==
+
 
 tailwindcss@^4.2.2, tailwindcss@4.2.2:
   version "4.2.2"

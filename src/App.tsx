@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { CVTemplatePage } from './pages/candidate/CVTemplatePage';
@@ -21,7 +22,7 @@ const MockLoginPage: React.FC = () => {
         </p>
         <button 
           onClick={handleLogin}
-          className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-[4px] hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm"
+          className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-[4px] hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm cursor-pointer"
         >
           Simulate Sign In & Continue
         </button>
@@ -37,7 +38,7 @@ const MockRegisterPage: React.FC = () => (
       <p className="text-slate-500 text-sm mb-6 font-sans">This is a simulated register page.</p>
       <button 
         onClick={() => window.history.back()}
-        className="w-full py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-[4px] hover:bg-slate-50 transition-all"
+        className="w-full py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-[4px] hover:bg-slate-50 transition-all cursor-pointer"
       >
         Go Back
       </button>
@@ -65,13 +66,13 @@ const MockCVBuilderPage: React.FC = () => {
               alert('Lưu CV thành công!');
               window.location.href = '/';
             }}
-            className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-[4px] hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm"
+            className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-[4px] hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm cursor-pointer"
           >
             Lưu CV vào hệ thống (Hoàn thành UC-05)
           </button>
           <button 
             onClick={() => window.history.back()}
-            className="w-full py-2.5 border border-transparent text-slate-500 font-semibold text-sm rounded-[4px] hover:text-slate-700 transition-all"
+            className="w-full py-2.5 border border-transparent text-slate-500 font-semibold text-sm rounded-[4px] hover:text-slate-700 transition-all cursor-pointer"
           >
             Quay lại chọn mẫu khác
           </button>
