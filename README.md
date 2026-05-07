@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+﻿# LTWeb Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend project for the LTWeb recruitment management system. The app is built with React, TypeScript, Vite, Tailwind CSS, Axios, React Hook Form, and React Router DOM.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Project Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+LTWeb-frontend/
+├── public/
+│   ├── images/
+│   ├── favicon.svg
+│   └── icons.svg
+├── src/
+│   ├── assets/
+│   │   ├── images/
+│   │   ├── hero.png
+│   │   ├── react.svg
+│   │   └── vite.svg
+│   ├── components/
+│   │   ├── application/
+│   │   ├── common/
+│   │   ├── cv/
+│   │   ├── dashboard/
+│   │   ├── job/
+│   │   └── layout/
+│   ├── constants/
+│   ├── contexts/
+│   ├── hooks/
+│   ├── pages/
+│   │   ├── admin/
+│   │   ├── candidate/
+│   │   ├── public/
+│   │   ├── recruiter/
+│   │   └── Home.tsx
+│   ├── routes/
+│   ├── services/
+│   ├── styles/
+│   ├── types/
+│   ├── utils/
+│   ├── App.css
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+├── eslint.config.js
+├── index.html
+├── package.json
+├── system.md
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
 ```
+
+## Folder Responsibilities
+
+- `public/`: static files served directly by Vite.
+- `src/assets/`: frontend image and static assets imported by React code.
+- `src/components/`: reusable UI components grouped by domain.
+- `src/pages/`: route-level pages grouped by user area.
+- `src/routes/`: route configuration and route guards.
+- `src/services/`: API client modules and backend integration code.
+- `src/types/`: shared TypeScript types.
+- `src/constants/`: app-wide constants such as roles, routes, and statuses.
+- `src/hooks/`: reusable React hooks.
+- `src/contexts/`: React context providers.
+- `src/utils/`: shared utility functions.
+- `src/styles/`: shared style entrypoints.
+
+## Notes
+
+The current structure is folder-first. Several folders are intentionally empty or contain `.gitkeep` placeholders so feature files can be added later without changing the planned module layout.

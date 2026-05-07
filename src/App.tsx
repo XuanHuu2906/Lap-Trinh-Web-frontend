@@ -1,121 +1,104 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { PublicLayout } from './components/layout/PublicLayout';
+import { CVTemplatePage } from './pages/candidate/CVTemplatePage';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Placeholder/Mock Pages to simulate full Use Case flows
+const MockLoginPage: React.FC = () => {
+  const handleLogin = () => {
+    localStorage.setItem('isAuthenticated', 'true');
+    // Read redirect query or fallback
+    const params = new URLSearchParams(window.location.search);
+    const redirectUrl = params.get('redirect') || '/';
+    window.location.href = redirectUrl;
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-md mx-auto">
+      <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm w-full">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2 font-sans">Sign In</h2>
+        <p className="text-slate-500 text-sm mb-6 font-sans">
+          This is a simulated sign-in page to satisfy the **UC-05 (Tạo CV)** login precondition.
+        </p>
+        <button 
+          onClick={handleLogin}
+          className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-[4px] hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm"
         >
-          Count is {count}
+          Simulate Sign In & Continue
         </button>
-      </section>
+      </div>
+    </div>
+  );
+};
 
-      <div className="ticks"></div>
+const MockRegisterPage: React.FC = () => (
+  <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-md mx-auto">
+    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm w-full">
+      <h2 className="text-2xl font-bold text-slate-900 mb-2 font-sans">Register</h2>
+      <p className="text-slate-500 text-sm mb-6 font-sans">This is a simulated register page.</p>
+      <button 
+        onClick={() => window.history.back()}
+        className="w-full py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-[4px] hover:bg-slate-50 transition-all"
+      >
+        Go Back
+      </button>
+    </div>
+  </div>
+);
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+const MockCVBuilderPage: React.FC = () => {
+  const params = new URLSearchParams(window.location.search);
+  const templateName = params.get('template') || 'Selected Template';
+
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-lg mx-auto">
+      <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm w-full">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 mb-4">
+          UC-05: Tạo CV - Bước 4
+        </span>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2 font-sans">Trình thiết kế CV</h2>
+        <p className="text-slate-500 text-sm mb-6 font-sans">
+          Đã tải mẫu CV: <strong className="text-slate-800">{templateName}</strong>. Hãy bắt đầu nhập thông tin cá nhân, học vấn, kỹ năng để tạo CV của bạn.
+        </p>
+        <div className="space-y-3">
+          <button 
+            onClick={() => {
+              alert('Lưu CV thành công!');
+              window.location.href = '/';
+            }}
+            className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-[4px] hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm"
+          >
+            Lưu CV vào hệ thống (Hoàn thành UC-05)
+          </button>
+          <button 
+            onClick={() => window.history.back()}
+            className="w-full py-2.5 border border-transparent text-slate-500 font-semibold text-sm rounded-[4px] hover:text-slate-700 transition-all"
+          >
+            Quay lại chọn mẫu khác
+          </button>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </div>
+    </div>
+  );
+};
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<PublicLayout />}>
+          {/* Mặc định hiển thị Trang chọn mẫu CV */}
+          <Route index element={<CVTemplatePage />} />
+          <Route path="resources" element={<Navigate to="/" replace />} />
+          <Route path="resources/cv-templates" element={<Navigate to="/" replace />} />
+          <Route path="login" element={<MockLoginPage />} />
+          <Route path="register" element={<MockRegisterPage />} />
+          <Route path="candidate/cv-builder" element={<MockCVBuilderPage />} />
+          {/* Điều hướng mặc định */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
