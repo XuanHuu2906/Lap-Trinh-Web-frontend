@@ -21,6 +21,14 @@ import Notifications from "./pages/candidate/Notifications";
 // ── Public Job Search ─────────────────────────────────────────────────────────
 import JobSearch from "./pages/public/JobSearch";
 
+// ── Recruiter Layout & Pages ──────────────────────────────────────────────────
+import { RecruiterLayout } from "./pages/recruiter/RecruiterLayout";
+import { RecruiterOverviewPage } from "./pages/recruiter/Overview";
+import { PostJobPage } from "./pages/recruiter/PostJob";
+import { ManageJobsPage } from "./pages/recruiter/ManageJobs";
+import { ManageCandidatesPage } from "./pages/recruiter/ManageCandidates";
+import { SettingsPage } from "./pages/recruiter/Settings";
+
 // ── Mock CV Builder ───────────────────────────────────────────────────────────
 const MockCVBuilderPage: React.FC = () => {
   const params = new URLSearchParams(window.location.search);
@@ -111,6 +119,15 @@ function App() {
 
           {/* Mock CV Builder (từ template chọn mẫu) — giữ nguyên route cũ */}
           <Route path="cv-builder-mock" element={<MockCVBuilderPage />} />
+        </Route>
+
+        {/* ── Recruiter Layout (Sidebar + Topbar) ── */}
+        <Route path="/recruiter" element={<RecruiterLayout />}>
+          <Route index element={<RecruiterOverviewPage />} />
+          <Route path="post-job" element={<PostJobPage />} />
+          <Route path="manage-jobs" element={<ManageJobsPage />} />
+          <Route path="candidates" element={<ManageCandidatesPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
 
         {/* ── Auth — layout toàn màn hình ── */}
