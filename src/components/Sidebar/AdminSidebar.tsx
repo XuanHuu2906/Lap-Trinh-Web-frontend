@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Briefcase,
   FileText,
-  Settings,
+  Users,
   LogOut,
   ShieldAlert,
   X,
@@ -34,9 +34,9 @@ const navItems = [
     icon: FileText,
   },
   {
-    label: "Cấu hình hệ thống",
+    label: "Quản lý tài khoản",
     path: "/admin/system",
-    icon: Settings,
+    icon: Users,
   },
 ];
 

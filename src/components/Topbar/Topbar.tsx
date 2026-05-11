@@ -44,7 +44,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/dashboard": "Tổng quan hệ thống",
   "/admin/jobs": "Quản lý tuyển dụng",
   "/admin/templates": "Quản lý mẫu thiết kế CV",
-  "/admin/system": "Cấu hình hệ thống chính",
+  "/admin/system": "Quản lý tài khoản",
 };
 
 const BREADCRUMBS: Record<string, string> = {
@@ -130,15 +130,7 @@ export const Topbar: React.FC<TopbarProps> = ({
           </div>
         )}
 
-        {/* System Online Badge (Admin Only) */}
-        {role === "admin" && (
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-full">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-              HỆ THỐNG ONLINE
-            </span>
-          </div>
-        )}
+
 
         {/* Theme Toggle (Sáng / Tối) */}
         <button

@@ -32,7 +32,7 @@ export function SettingsPage() {
   return (
     <div className="flex-1 p-8">
       <div className="mb-6">
-        <h1 className="text-[26px] font-bold leading-tight" style={{ color: '#0f172a' }}>Cài đặt hệ thống</h1>
+        <h1 className="text-[26px] font-bold leading-tight" style={{ color: '#0f172a' }}>Hồ sơ & Cài đặt</h1>
         <p className="text-[14px] text-slate-500 mt-1">Quản lý thông tin doanh nghiệp và tùy chỉnh cấu hình tài khoản.</p>
       </div>
 

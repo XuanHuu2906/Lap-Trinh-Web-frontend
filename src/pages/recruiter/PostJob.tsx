@@ -6,6 +6,7 @@ export function PostJobPage() {
   const [experience, setExperience] = useState('');
   const [location, setLocation] = useState('');
   const [department, setDepartment] = useState('');
+  const [salary, setSalary] = useState('');
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState('');
   const [benefits, setBenefits] = useState('');
@@ -85,7 +86,7 @@ export function PostJobPage() {
             </div>
 
             {/* Địa điểm + Phòng ban */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                   Địa điểm làm việc <span className="text-red-500">*</span>
@@ -110,6 +111,20 @@ export function PostJobPage() {
                   className="w-full h-11 border border-slate-200 px-4 text-[14px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700 transition-all"
                 />
               </div>
+            </div>
+
+            {/* Mức lương */}
+            <div className="mb-0">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Mức lương tuyển dụng <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={salary}
+                onChange={e => setSalary(e.target.value)}
+                placeholder="Vd: 15 - 20 triệu, Thỏa thuận, 1000 USD..."
+                className="w-full h-11 border border-slate-200 px-4 text-[14px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700 transition-all"
+              />
             </div>
           </div>
 

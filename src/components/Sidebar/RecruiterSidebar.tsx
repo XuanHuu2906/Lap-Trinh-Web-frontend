@@ -5,10 +5,12 @@ import {
   PlusCircle,
   FileText,
   Users,
+  MessageSquare,
   Settings,
   LogOut,
   Layers,
   X,
+  Bell,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -41,7 +43,17 @@ const navItems = [
     icon: Users,
   },
   {
-    label: "Cài đặt",
+    label: "Trò chuyện",
+    path: "/recruiter/chat",
+    icon: MessageSquare,
+  },
+  {
+    label: "Thông báo",
+    path: "/recruiter/notifications",
+    icon: Bell,
+  },
+  {
+    label: "Hồ sơ công ty",
     path: "/recruiter/settings",
     icon: Settings,
   },

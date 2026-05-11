@@ -45,6 +45,8 @@ import { PostJobPage } from "./pages/recruiter/PostJob";
 import { ManageJobsPage } from "./pages/recruiter/ManageJobs";
 import { ManageCandidatesPage } from "./pages/recruiter/ManageCandidates";
 import { SettingsPage } from "./pages/recruiter/Settings";
+import { RecruiterChatPage } from "./pages/recruiter/Chat";
+import { RecruiterNotificationsPage } from "./pages/recruiter/Notifications";
 
 // ── App ───────────────────────────────────────────────────────────────────────
 
@@ -113,6 +115,8 @@ function App() {
           <Route path="post-job" element={<PostJobPage />} />
           <Route path="manage-jobs" element={<ManageJobsPage />} />
           <Route path="candidates" element={<ManageCandidatesPage />} />
+          <Route path="chat" element={<RecruiterChatPage />} />
+          <Route path="notifications" element={<RecruiterNotificationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
