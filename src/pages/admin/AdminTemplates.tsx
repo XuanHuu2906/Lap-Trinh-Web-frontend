@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Eye, 
-  Edit3, 
-  Trash2, 
-  Layout, 
-  X, 
-  CheckCircle2, 
-  Upload, 
+import {
+  Search,
+  Plus,
+  Eye,
+  Edit3,
+  Trash2,
+  Layout,
+  X,
+  CheckCircle2,
+  Upload,
   FileCode,
   FileText,
   ToggleLeft,
@@ -238,28 +238,24 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
   // Lọc danh sách mẫu CV hiển thị trên giao diện quản trị
   const filteredTemplates = templates.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (t.description && t.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.description && t.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'Tất cả' || t.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="space-y-6 animate-fade-in font-sans text-slate-800">
-      
+
       {/* 1. TOP TITLE BAR */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-150 rounded-xs text-[10px] font-black text-indigo-700 tracking-wider">UC-19 COMPLIANT</span>
-            <span className="px-2 py-0.5 bg-emerald-50 border border-emerald-150 rounded-xs text-[10px] font-black text-emerald-700 tracking-wider">UC-25 VALIDATION</span>
-          </div>
           <h1 className="text-xl font-black text-slate-900 tracking-tight mt-1.5">QUẢN LÝ TEMPLATE CV</h1>
           <p className="text-xs text-slate-500 font-semibold mt-0.5">
             Quản lý kho template CV cung cấp cho ứng viên, hỗ trợ Thêm mới, Sửa, Xóa, Xem trước và Ẩn mẫu CV an toàn.
           </p>
         </div>
-        
+
         {/* Button Đăng ký dùng Shadcn UI */}
         <Button
           onClick={handleOpenAddModal}
@@ -272,7 +268,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
       {/* 2. CONTROL FILTERS */}
       <div className="bg-white border border-slate-200/90 rounded-sm p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-3xs">
-        
+
         {/* Category filters sử dụng Shadcn UI Buttons */}
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {['Tất cả', 'Đơn giản', 'Hiện đại', 'Chuyên nghiệp'].map((cat) => (
@@ -308,8 +304,8 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
       {filteredTemplates.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredTemplates.map((template) => (
-            <div 
-              key={template.id} 
+            <div
+              key={template.id}
               className={`bg-white border ${template.isActive ? 'border-slate-200/90' : 'border-slate-200 bg-slate-50/50'} rounded-sm shadow-3xs p-5 flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-2xs`}
             >
               {/* Status Ribbon (For Inactive templates) */}
@@ -334,15 +330,15 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
                 {/* Simulated Thumbnail Preview Placeholder */}
                 <div className="aspect-[16/9] w-full bg-slate-50 border border-slate-150/80 rounded-sm mb-4 flex flex-col items-center justify-center p-4 group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-slate-900/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-2 z-10">
                     {/* Xem thử bằng Shadcn Button */}
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setPreviewTemplate(template)}
-                      className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-bold rounded-sm h-8 px-3 cursor-pointer shadow-3xs"
+                      className="bg-white hover:bg-slate-100 border-none text-slate-900 text-[11px] font-black rounded-sm h-8 px-4 cursor-pointer shadow-md"
                     >
-                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      <Eye className="w-3.5 h-3.5 mr-1.5 text-indigo-600" />
                       Xem thử thiết kế
                     </Button>
                   </div>
@@ -371,7 +367,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
               {/* Footer controls inside Card */}
               <div className="border-t border-slate-100 pt-4 flex items-center justify-between mt-auto">
-                
+
                 {/* Active switch slider (Luồng thay thế) */}
                 <div className="flex items-center gap-2">
                   <button
@@ -401,7 +397,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   >
                     <Eye className="w-3.5 h-3.5" />
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="icon"
@@ -411,7 +407,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="icon"
@@ -441,7 +437,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
           <div className="bg-white border border-slate-200 rounded-sm w-full max-w-lg shadow-xl overflow-hidden animate-slide-up text-left">
             <div className="h-1 bg-indigo-600 w-full"></div>
-            
+
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-900">
                 <Layout className="w-5 h-5 text-indigo-600" />
@@ -449,7 +445,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   {formMode === 'add' ? 'Đăng ký Template CV mới' : 'Cập nhật thiết kế Template CV'}
                 </h3>
               </div>
-              <button 
+              <button
                 onClick={() => setIsFormModalOpen(false)}
                 className="text-slate-400 hover:text-slate-650 cursor-pointer"
               >
@@ -459,7 +455,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
             <form onSubmit={handleFormSubmit}>
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                
+
                 {/* 1. Template Name - Sử dụng Shadcn UI Input */}
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">TÊN MẪU THIẾT KẾ</label>
@@ -506,14 +502,14 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">ẢNH THIẾT KẾ (THUMBNAIL)</label>
                     <div className="relative">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
+                      <input
+                        type="file"
+                        accept="image/*"
                         id="thumbnail-upload"
-                        className="hidden" 
+                        className="hidden"
                         onChange={() => setFormThumbnailName(`${formName.toLowerCase().replace(/ /g, '_')}_preview.png`)}
                       />
-                      <label 
+                      <label
                         htmlFor="thumbnail-upload"
                         className="w-full h-10 border border-slate-200 rounded-sm px-3 flex items-center justify-between text-xs font-semibold text-slate-500 bg-white hover:bg-slate-50 cursor-pointer"
                       >
@@ -527,14 +523,14 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">CẤU HÌNH TRƯỜNG (JSON)</label>
                     <div className="relative">
-                      <input 
-                        type="file" 
-                        accept=".json" 
+                      <input
+                        type="file"
+                        accept=".json"
                         id="config-upload"
-                        className="hidden" 
+                        className="hidden"
                         onChange={() => setFormConfigName('layout_config_schema.json')}
                       />
-                      <label 
+                      <label
                         htmlFor="config-upload"
                         className="w-full h-10 border border-slate-200 rounded-sm px-3 flex items-center justify-between text-xs font-semibold text-slate-500 bg-white hover:bg-slate-50 cursor-pointer"
                       >
@@ -570,8 +566,8 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   {formFeaturesList.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3 bg-slate-50 border border-slate-150 p-2.5 rounded-sm">
                       {formFeaturesList.map((feat, index) => (
-                        <Badge 
-                          key={index} 
+                        <Badge
+                          key={index}
                           variant="outline"
                           className="bg-white border-slate-200 text-slate-650 inline-flex items-center gap-1 normal-case font-semibold"
                         >
@@ -620,7 +616,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
       {previewTemplate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#090d16]/85 backdrop-blur-xs animate-fade-in">
           <div className="bg-slate-100 border border-slate-200 rounded-sm w-full max-w-4xl h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-slide-up text-left">
-            
+
             {/* Header */}
             <div className="px-6 py-4 bg-[#0f172a] text-white flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -634,7 +630,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                   </span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setPreviewTemplate(null)}
                 className="text-slate-400 hover:text-white p-1 hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
               >
@@ -644,12 +640,12 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
             {/* Interactive Preview Workstation */}
             <div className="flex-1 overflow-y-auto p-8 bg-slate-250 flex justify-center items-start">
-              
+
               {/* Simulated Paper CV Document Sheet */}
               <div className="w-full max-w-2xl bg-white border border-slate-300 rounded-sm shadow-lg overflow-hidden flex flex-col text-slate-800 font-sans min-h-[842px]">
-                
+
                 {/* 1. Render Template Style variant based on category */}
-                
+
                 {previewTemplate.category === 'Đơn giản' && (
                   <div className="p-8 space-y-6">
                     {/* Header Minimal */}
@@ -895,14 +891,14 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
             {/* Bottom bar đóng xem trước */}
             <div className="px-6 py-4 bg-[#0f172a] border-t border-slate-800 flex items-center justify-between flex-shrink-0">
-              <span className="text-[10px] text-slate-400 font-bold">Bản xem trước dữ liệu mẫu • Phiên bản tối ưu desktop</span>
+              <span className="text-[10px] text-slate-400 font-bold">Bản xem trước dữ liệu mẫu</span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPreviewTemplate(null)}
                 className="bg-transparent border-slate-700 hover:bg-slate-800 hover:border-slate-500 text-slate-300 hover:text-white font-bold text-xs h-9 px-4 cursor-pointer"
               >
-                Đóng chế độ xem thử
+                Đóng
               </Button>
             </div>
 

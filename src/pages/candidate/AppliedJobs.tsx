@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -122,7 +121,6 @@ export default function AppliedJobs() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -132,9 +130,6 @@ export default function AppliedJobs() {
             Theo dõi trạng thái và phản hồi từ các vị trí bạn đã nộp hồ sơ.
           </p>
         </div>
-        <Button variant="outline" className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 text-sm rounded-lg px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 shadow-sm transition-colors duration-150 cursor-pointer">
-          Xuất báo cáo
-        </Button>
       </div>
 
       {/* Counters */}

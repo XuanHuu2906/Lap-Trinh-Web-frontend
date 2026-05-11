@@ -41,9 +41,6 @@ export function RecruiterOverviewPage() {
           <p className="text-[14px] text-slate-500 mt-1">Theo dõi hiệu suất chiến dịch và quản lý ứng viên mới trong hệ thống.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-10 px-5 border border-slate-300 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-            XUẤT BÁO CÁO
-          </button>
           <button className="h-10 px-5 bg-[#0f1f3d] text-white text-[13px] font-semibold hover:bg-[#1a2f52] transition-colors flex items-center gap-2">
             <span>+</span> ĐĂNG TIN MỚI
           </button>
@@ -158,22 +155,6 @@ export function RecruiterOverviewPage() {
 
         {/* Right panel */}
         <div className="flex flex-col gap-4">
-          {/* Campaign card */}
-          <div className="bg-[#0f1f3d] text-white p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
-              <svg viewBox="0 0 80 80" fill="white">
-                <circle cx="60" cy="20" r="40" />
-              </svg>
-            </div>
-            <h3 className="text-[16px] font-bold leading-snug mb-3">Chiến dịch tuyển dụng</h3>
-            <p className="text-[13px] text-white/60 leading-relaxed mb-5">
-              Khởi tạo chiến dịch mới để thu hút nhân tài cho các vị trí đang cần gấp.
-            </p>
-            <button className="w-full h-10 bg-white text-[#0f1f3d] text-[12px] font-bold tracking-widest hover:bg-slate-100 transition-colors">
-              BẮT ĐẦU NGAY
-            </button>
-          </div>
-
           {/* Urgent tasks */}
           <div className="bg-white border border-slate-200 p-5 flex-1">
             <h3 className="text-[14px] font-bold text-slate-800 mb-4">Cần xử lý gấp</h3>

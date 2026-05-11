@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Check, 
-  X, 
-  Building2, 
-  MapPin, 
-  DollarSign, 
-  Calendar, 
+import {
+  Search,
+  Filter,
+  Check,
+  X,
+  Building2,
+  MapPin,
+  DollarSign,
+  Calendar,
   AlertTriangle,
   Eye,
   Trash2
@@ -172,10 +172,10 @@ export const AdminJobs: React.FC = () => {
 
     setJobs(prev => prev.map(job => {
       if (job.id === rejectingJobId) {
-        return { 
-          ...job, 
+        return {
+          ...job,
           status: 'closed' as const, // Chuyển sang rejected (closed)
-          rejectionReason: rejectionReasonInput 
+          rejectionReason: rejectionReasonInput
         };
       }
       return job;
@@ -197,13 +197,13 @@ export const AdminJobs: React.FC = () => {
   // Bộ lọc dữ liệu tin tuyển dụng theo Tìm kiếm, Loại công việc và Bộ lọc Tab hoạt động
   const filteredJobs = jobs.filter(job => {
     const matchesTab = job.status === getTabStatusFilter();
-    
-    const matchesSearch = 
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.companyName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesType = 
-      selectedJobType === 'Tất cả' || 
+    const matchesType =
+      selectedJobType === 'Tất cả' ||
       (selectedJobType === 'Full-time' && job.jobType === 'full_time') ||
       (selectedJobType === 'Remote' && job.jobType === 'remote');
 
@@ -224,17 +224,11 @@ export const AdminJobs: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans text-slate-800">
-      
+
       {/* 1. TOP CONTROL PANEL */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-150 rounded-xs text-[10px] font-black text-indigo-700 tracking-wider">UC-20 SHADCN COMPLIANT</span>
-          </div>
           <h1 className="text-xl font-black text-slate-900 tracking-tight mt-1.5">DUYỆT & KIỂM DUYỆT TIN ĐĂNG</h1>
-          <p className="text-xs text-slate-500 font-semibold mt-0.5">
-            Phê duyệt bài đăng tuyển dụng hợp lệ, hoặc gỡ bỏ các tin đăng vi phạm tiêu chuẩn cộng đồng.
-          </p>
         </div>
       </div>
 
@@ -273,39 +267,36 @@ export const AdminJobs: React.FC = () => {
 
       {/* 3. TABS NAVIGATION & SEARCH SEARCH */}
       <div className="bg-white border border-slate-200 rounded-sm shadow-3xs overflow-hidden">
-        
+
         {/* Navigation tabs row */}
         <div className="flex flex-col sm:flex-row items-center justify-between border-b border-slate-200 px-6 py-4 gap-4 bg-slate-50/50">
-          
+
           {/* Tabs switch list */}
           <div className="flex border-b border-transparent gap-2 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                activeTab === 'pending'
-                  ? 'border-slate-900 text-slate-900 font-extrabold'
-                  : 'border-transparent text-slate-400 hover:text-slate-650'
-              }`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === 'pending'
+                ? 'border-slate-900 text-slate-900 font-extrabold'
+                : 'border-transparent text-slate-400 hover:text-slate-650'
+                }`}
             >
               Chờ phê duyệt ({jobs.filter(j => j.status === 'draft').length})
             </button>
             <button
               onClick={() => setActiveTab('approved')}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                activeTab === 'approved'
-                  ? 'border-slate-900 text-slate-900 font-extrabold'
-                  : 'border-transparent text-slate-400 hover:text-slate-650'
-              }`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === 'approved'
+                ? 'border-slate-900 text-slate-900 font-extrabold'
+                : 'border-transparent text-slate-400 hover:text-slate-650'
+                }`}
             >
               Đã kích hoạt ({jobs.filter(j => j.status === 'active').length})
             </button>
             <button
               onClick={() => setActiveTab('rejected')}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                activeTab === 'rejected'
-                  ? 'border-slate-900 text-slate-900 font-extrabold'
-                  : 'border-transparent text-slate-400 hover:text-slate-650'
-              }`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === 'rejected'
+                ? 'border-slate-900 text-slate-900 font-extrabold'
+                : 'border-transparent text-slate-400 hover:text-slate-650'
+                }`}
             >
               Đã từ chối ({jobs.filter(j => j.status === 'closed').length})
             </button>
@@ -347,11 +338,11 @@ export const AdminJobs: React.FC = () => {
           <div className="divide-y divide-slate-150 text-left">
             {filteredJobs.map((job) => (
               <div key={job.id} className="p-6 hover:bg-slate-50/50 transition-all flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-                
+
                 {/* Left info */}
                 <div className="flex items-start gap-4">
-                  <img 
-                    src={job.companyLogo} 
+                  <img
+                    src={job.companyLogo}
                     alt={job.companyName}
                     className="w-12 h-12 rounded-sm border border-slate-200/80 shadow-3xs flex-shrink-0 object-cover"
                   />
@@ -372,8 +363,8 @@ export const AdminJobs: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <DollarSign className="w-3.5 h-3.5 text-slate-400" />
                         <span>
-                          {job.salaryMin && job.salaryMax 
-                            ? `${job.salaryMin}$ - ${job.salaryMax}$ / tháng` 
+                          {job.salaryMin && job.salaryMax
+                            ? `${job.salaryMin}$ - ${job.salaryMax}$ / tháng`
                             : 'Thỏa thuận'}
                         </span>
                       </div>
@@ -409,7 +400,7 @@ export const AdminJobs: React.FC = () => {
 
                 {/* Right: Actions (Sử dụng các component Shadcn/UI Button) */}
                 <div className="flex items-center gap-2 self-end md:self-start flex-shrink-0">
-                  
+
                   {/* Button Xem chi tiết từ thư viện Shadcn */}
                   <Button
                     variant="outline"
@@ -481,14 +472,14 @@ export const AdminJobs: React.FC = () => {
                 <AlertTriangle className="w-5 h-5" />
                 <h3 className="text-sm font-black uppercase tracking-wider">Từ chối phê duyệt bài tuyển dụng</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setIsRejectingModalOpen(false)}
                 className="text-slate-400 hover:text-slate-650 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                 Nhà tuyển dụng sẽ nhận được thông báo giải trình vì sao bài tuyển dụng bị từ chối phê duyệt hiển thị. Vui lòng ghi rõ lý do chi tiết dưới đây:
@@ -515,7 +506,7 @@ export const AdminJobs: React.FC = () => {
               >
                 Hủy bỏ
               </Button>
-              
+
               {/* Button Xác nhận từ Shadcn UI Destructive */}
               <Button
                 variant="destructive"
@@ -534,12 +525,12 @@ export const AdminJobs: React.FC = () => {
       {previewingJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in text-left">
           <div className="bg-white border border-slate-200 rounded-sm w-full max-w-2xl shadow-xl overflow-hidden animate-slide-up h-[90vh] flex flex-col">
-            
+
             {/* Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50">
               <div className="flex items-center gap-3">
-                <img 
-                  src={previewingJob.companyLogo} 
+                <img
+                  src={previewingJob.companyLogo}
                   alt={previewingJob.companyName}
                   className="w-10 h-10 border border-slate-200 rounded-sm flex-shrink-0 object-cover"
                 />
@@ -548,7 +539,7 @@ export const AdminJobs: React.FC = () => {
                   <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide block mt-1">Yêu cầu kiểm duyệt tin đăng</span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setPreviewingJob(null)}
                 className="text-slate-400 hover:text-slate-650 cursor-pointer"
               >
@@ -558,7 +549,7 @@ export const AdminJobs: React.FC = () => {
 
             {/* Scrollable details view */}
             <div className="p-6 overflow-y-auto flex-1 space-y-6 text-slate-700">
-              
+
               <div>
                 <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase block mb-1">TIÊU ĐỀ CÔNG VIỆC</span>
                 <h1 className="text-xl font-black text-slate-950 leading-snug">{previewingJob.title}</h1>
@@ -584,8 +575,8 @@ export const AdminJobs: React.FC = () => {
                   <span className="text-[10px] font-black text-slate-400 block tracking-wider uppercase mb-1">MỨC LƯƠNG</span>
                   <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
                     <DollarSign className="w-3.5 h-3.5 text-slate-400" />
-                    {previewingJob.salaryMin && previewingJob.salaryMax 
-                      ? `${previewingJob.salaryMin}$ - ${previewingJob.salaryMax}$ / tháng` 
+                    {previewingJob.salaryMin && previewingJob.salaryMax
+                      ? `${previewingJob.salaryMin}$ - ${previewingJob.salaryMax}$ / tháng`
                       : 'Thỏa thuận'}
                   </span>
                 </div>
@@ -620,7 +611,7 @@ export const AdminJobs: React.FC = () => {
                 >
                   Đóng lại
                 </Button>
-                
+
                 {previewingJob.status === 'draft' && (
                   <>
                     {/* Button Duyệt ngay từ Shadcn Default */}
