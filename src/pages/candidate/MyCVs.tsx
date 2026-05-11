@@ -8,10 +8,22 @@ import {
   Lightbulb,
   BarChart2,
   CheckCircle,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const cvList = [
+interface CVItem {
+  id: number;
+  name: string;
+  subtitle: string;
+  updatedAt: string;
+  bgClass: string;
+  lineColors: string[];
+  isPdf?: boolean;
+}
+
+const cvList: CVItem[] = [
   {
     id: 1,
     name: "CV Kỹ sư phần mềm",
@@ -63,10 +75,23 @@ const tips = [
 function CVThumbnail({
   bgClass,
   lineColors,
+  isPdf,
 }: {
   bgClass: string;
   lineColors: string[];
+  isPdf?: boolean;
 }) {
+  if (isPdf) {
+    return (
+      <div className="w-full h-full bg-red-50 dark:bg-red-950/20 rounded-sm p-1 flex flex-col items-center justify-center gap-1">
+        <FileText className="w-7 h-7 text-red-600 dark:text-red-400" />
+        <span className="text-[8px] font-extrabold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 px-1 rounded-sm leading-none">
+          PDF
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`w-full h-full ${bgClass} rounded-sm p-2 flex flex-col gap-1.5`}
@@ -121,10 +146,44 @@ function CircularProgress({ pct }: { pct: number }) {
 
 export default function MyCVs() {
   const navigate = useNavigate();
-  const [cvs, setCvs] = useState(cvList);
+  const [cvs, setCvs] = useState<CVItem[]>(cvList);
 
   const handleDelete = (id: number) => {
     setCvs((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleUploadPDF = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Kiểm tra file PDF
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      alert("Vui lòng tải lên tệp tin định dạng PDF hợp lệ.");
+      return;
+    }
+
+    const newCV: CVItem = {
+      id: Date.now(),
+      name: file.name.replace(/\.[^/.]+$/, ""), // loại bỏ đuôi mở rộng .pdf
+      subtitle: "Tài liệu PDF tải lên",
+      updatedAt: new Date().toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      bgClass: "bg-gradient-to-br from-red-100 to-red-50",
+      lineColors: [],
+      isPdf: true,
+    };
+
+    setCvs((prev) => [newCV, ...prev]);
+    alert(`Đã tải lên hồ sơ PDF thành công: "${newCV.name}"!`);
+
+    // reset input để cho phép upload lại cùng 1 file nếu cần
+    e.target.value = "";
   };
 
   return (
@@ -132,26 +191,44 @@ export default function MyCVs() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">CV của tôi</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            CV của tôi
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Quản lý và tối ưu hóa hồ sơ năng lực chuyên nghiệp của bạn.
           </p>
         </div>
-        <button
-          onClick={() => navigate("/candidate/cv-builder")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-colors shadow-sm"
-        >
-          <Plus size={15} />
-          Tạo CV mới
-        </button>
+
+        <div className="flex items-center gap-3">
+          {/* Nút Upload PDF (UC-10) */}
+          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-lg px-4 py-2 transition-all border border-gray-250 dark:border-slate-700 shadow-xs cursor-pointer">
+            <Upload size={15} className="text-gray-500 dark:text-gray-400" />
+            Upload CV (PDF)
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handleUploadPDF}
+            />
+          </label>
+
+          {/* Nút Tạo CV mới */}
+          <button
+            onClick={() => navigate("/candidate/cv-builder")}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-colors shadow-sm cursor-pointer border-0"
+          >
+            <Plus size={15} />
+            Tạo CV mới
+          </button>
+        </div>
       </div>
 
-      {/* CV list */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+      {/* CV list table */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden mb-6 transition-colors duration-150">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-gray-400 text-xs uppercase tracking-wide">
+              <tr className="bg-gray-50 dark:bg-slate-950 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100 dark:border-slate-800">
                 <th className="px-5 py-3 text-left font-medium">
                   Bản xem trước
                 </th>
@@ -162,49 +239,81 @@ export default function MyCVs() {
                 <th className="px-5 py-3 text-left font-medium">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
               {cvs.map((cv) => (
                 <tr
                   key={cv.id}
-                  className="hover:bg-gray-50/50 transition-colors"
+                  className="hover:bg-gray-50/50 dark:hover:bg-slate-850/40 transition-colors"
                 >
                   <td className="px-5 py-4 w-24">
-                    <div className="w-14 h-20 rounded border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="w-14 h-20 rounded border border-gray-200 dark:border-slate-800 overflow-hidden shadow-sm">
                       <CVThumbnail
                         bgClass={cv.bgClass}
                         lineColors={cv.lineColors}
+                        isPdf={cv.isPdf}
                       />
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <p className="font-semibold text-gray-800">{cv.name}</p>
-                    <p className="text-xs text-gray-400">{cv.subtitle}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-800 dark:text-white">
+                        {cv.name}
+                      </p>
+                      {cv.isPdf && (
+                        <span className="text-[9px] bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
+                          PDF File
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-550 mt-0.5">
+                      {cv.subtitle}
+                    </p>
                   </td>
-                  <td className="px-5 py-4 text-gray-500">{cv.updatedAt}</td>
+
+                  <td className="px-5 py-4 text-gray-500 dark:text-gray-400">
+                    {cv.updatedAt}
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       <button
-                        className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
                         title="Xem"
                       >
                         <Eye size={16} />
                       </button>
+
                       <button
-                        onClick={() => navigate("/candidate/cv-builder")}
-                        className="p-1.5 rounded-lg hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 transition-colors"
-                        title="Sửa"
+                        onClick={() => {
+                          if (cv.isPdf) {
+                            alert(
+                              "Bạn không thể chỉnh sửa trực tiếp nội dung của tệp tin PDF tĩnh.",
+                            );
+                            return;
+                          }
+                          navigate(`/candidate/cv-builder?id=${cv.id}`);
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          cv.isPdf
+                            ? "text-gray-300 dark:text-gray-700 hover:bg-transparent cursor-not-allowed"
+                            : "hover:bg-yellow-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-yellow-600 dark:hover:text-amber-400"
+                        }`}
+                        title={
+                          cv.isPdf ? "Không hỗ trợ chỉnh sửa PDF tĩnh" : "Sửa"
+                        }
+                        disabled={cv.isPdf}
                       >
                         <Pencil size={16} />
                       </button>
+
                       <button
-                        className="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-emerald-450 transition-colors cursor-pointer"
                         title="Tải xuống"
                       >
                         <Download size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(cv.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
                         title="Xóa"
                       >
                         <Trash2 size={16} />
@@ -219,13 +328,13 @@ export default function MyCVs() {
 
         {cvs.length === 0 && (
           <div className="py-16 text-center">
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 dark:text-gray-550 text-sm">
               Bạn chưa tạo CV nào. Hãy tạo CV đầu tiên!
             </p>
           </div>
         )}
 
-        <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
+        <div className="px-5 py-3 border-t border-gray-100 dark:border-slate-800 text-xs text-gray-450 dark:text-gray-500">
           Đang hiển thị {cvs.length} trên tổng số {cvList.length} hồ sơ
         </div>
       </div>
@@ -235,21 +344,23 @@ export default function MyCVs() {
         {tips.map(({ icon: Icon, title, desc, color, progress }) => (
           <div
             key={title}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+            className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 transition-colors duration-150"
           >
             <div className="flex items-start gap-3">
               {progress !== undefined ? (
                 <CircularProgress pct={progress} />
               ) : (
                 <div
-                  className={`${color} w-10 h-10 rounded-lg flex items-center justify-center shrink-0`}
+                  className={`${color} dark:bg-slate-800 dark:text-indigo-400 w-10 h-10 rounded-lg flex items-center justify-center shrink-0`}
                 >
                   <Icon size={18} />
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-800 text-sm">{title}</p>
-                <p className="text-gray-500 text-xs mt-1 leading-relaxed">
+                <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                  {title}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 leading-relaxed">
                   {desc}
                 </p>
               </div>

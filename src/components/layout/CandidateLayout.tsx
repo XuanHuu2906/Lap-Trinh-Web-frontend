@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   { to: "/candidate/my-cvs", icon: FileText, label: "CV của tôi" },
   { to: "/candidate/cv-builder", icon: FileText, label: "Tạo CV mới" },
   { to: "/candidate/cv-templates", icon: FileText, label: "Mẫu CV" },
-  { to: "/candidate/job-search", icon: Search, label: "Tìm việc làm" },
+  { to: "/job-search", icon: Search, label: "Tìm việc làm" },
   { to: "/candidate/notifications", icon: Bell, label: "Thông báo", badge: 3 },
 ];
 
@@ -129,7 +129,7 @@ export default function CandidateLayout() {
       </aside>
 
       {/* ── MAIN AREA ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden ">
         {/* TOPBAR */}
         <header className="h-14 bg-white border-b border-gray-200 flex items-center px-5 gap-4 shrink-0">
           {/* Hamburger — mobile only */}

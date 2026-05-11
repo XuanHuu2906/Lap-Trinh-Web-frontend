@@ -49,19 +49,25 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden mb-3">
+    <div className="border border-gray-200 dark:border-slate-800 rounded-xl overflow-hidden mb-3">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+        className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/60 hover:bg-gray-100 dark:hover:bg-slate-850/80 transition-colors text-left cursor-pointer"
       >
-        <span className="font-semibold text-gray-700 text-sm">{title}</span>
+        <span className="font-semibold text-gray-700 dark:text-slate-300 text-sm">
+          {title}
+        </span>
         {open ? (
-          <ChevronUp size={16} className="text-gray-400" />
+          <ChevronUp size={16} className="text-gray-400 dark:text-gray-500" />
         ) : (
-          <ChevronDown size={16} className="text-gray-400" />
+          <ChevronDown size={16} className="text-gray-400 dark:text-gray-500" />
         )}
       </button>
-      {open && <div className="px-4 py-4 space-y-3 bg-white">{children}</div>}
+      {open && (
+        <div className="px-4 py-4 space-y-3 bg-white dark:bg-slate-900">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -81,7 +87,7 @@ function Input({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-500 mb-1">
+      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
         {label}
       </label>
       <input
@@ -89,7 +95,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+        className="w-full border border-gray-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white dark:bg-slate-950 text-slate-800 dark:text-white"
       />
     </div>
   );
@@ -106,14 +112,14 @@ function Textarea({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-500 mb-1">
+      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
         {label}
       </label>
       <textarea
         rows={4}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none"
+        className="w-full border border-gray-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none bg-white dark:bg-slate-950 text-slate-800 dark:text-white"
       />
     </div>
   );
@@ -401,27 +407,40 @@ export default function CVBuilder() {
     setTimeout(() => setSaving(false), 1200);
   };
 
+  const handleDownload = () => {
+    alert(
+      "Để tải PDF: cài html2canvas + jspdf, sau đó gọi html2canvas(document.getElementById('cv-preview')) rồi dùng jsPDF để xuất file.",
+    );
+  };
+
   return (
-    <div className="flex flex-col h-full -m-6">
+    <div className="flex flex-col h-full -m-6 bg-white dark:bg-slate-900 transition-colors duration-150">
       {/* Topbar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shrink-0">
+      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shrink-0 transition-colors">
         <div>
-          <h1 className="text-base font-bold text-gray-900">Trình Tạo Hồ Sơ</h1>
-          <p className="text-xs text-gray-400">Đã lưu lần cuối 2 phút trước</p>
+          <h1 className="text-base font-bold text-gray-900 dark:text-white">
+            Trình Tạo Hồ Sơ
+          </h1>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            Đã lưu lần cuối 2 phút trước
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 text-sm rounded-lg px-3 py-1.5 hover:bg-gray-50"
+            className="flex items-center gap-1.5 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 text-sm rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-slate-805 cursor-pointer"
           >
             <Save size={14} />
             {saving ? "Đang lưu..." : "Lưu nháp"}
           </button>
-          <button className="flex items-center gap-1.5 border border-gray-200 text-gray-600 text-sm rounded-lg px-3 py-1.5 hover:bg-gray-50">
+          <button className="flex items-center gap-1.5 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 text-sm rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-slate-805 cursor-pointer">
             <Eye size={14} />
             Xem trước
           </button>
-          <button className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-3 py-1.5 transition-colors">
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg px-3 py-1.5 transition-colors cursor-pointer"
+          >
             <Download size={14} />
             Tải PDF
           </button>
@@ -431,7 +450,8 @@ export default function CVBuilder() {
       {/* Split body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left - editor */}
-        <div className="w-80 xl:w-96 shrink-0 border-r border-gray-200 overflow-y-auto bg-gray-50 p-4">
+        <div className="w-80 xl:w-96 shrink-0 border-r border-gray-200 dark:border-slate-800 overflow-y-auto bg-gray-50 dark:bg-slate-950 p-4 transition-colors">
+          {/* Personal */}
           <Section
             title="Thông tin cá nhân"
             open={openSections.personal}
@@ -501,11 +521,11 @@ export default function CVBuilder() {
             {data.workExp.map((w) => (
               <div
                 key={w.id}
-                className="border border-gray-200 rounded-lg p-3 mb-3 relative bg-white"
+                className="border border-gray-200 dark:border-slate-800 rounded-lg p-3 mb-3 relative bg-white dark:bg-slate-900"
               >
                 <button
                   onClick={() => removeWork(w.id)}
-                  className="absolute top-2 right-2 text-gray-300 hover:text-red-400 transition-colors"
+                  className="absolute top-2 right-2 text-gray-300 hover:text-red-450 transition-colors cursor-pointer"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -536,7 +556,7 @@ export default function CVBuilder() {
             ))}
             <button
               onClick={addWork}
-              className="flex items-center gap-1.5 text-blue-600 text-xs font-semibold hover:underline"
+              className="flex items-center gap-1.5 text-blue-600 dark:text-indigo-400 text-xs font-semibold hover:underline cursor-pointer"
             >
               <Plus size={13} /> Thêm kinh nghiệm
             </button>
@@ -550,11 +570,11 @@ export default function CVBuilder() {
             {data.education.map((e) => (
               <div
                 key={e.id}
-                className="border border-gray-200 rounded-lg p-3 mb-3 relative bg-white"
+                className="border border-gray-200 dark:border-slate-800 rounded-lg p-3 mb-3 relative bg-white dark:bg-slate-900"
               >
                 <button
                   onClick={() => removeEdu(e.id)}
-                  className="absolute top-2 right-2 text-gray-300 hover:text-red-400"
+                  className="absolute top-2 right-2 text-gray-300 hover:text-red-450 cursor-pointer"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -580,7 +600,7 @@ export default function CVBuilder() {
             ))}
             <button
               onClick={addEdu}
-              className="flex items-center gap-1.5 text-blue-600 text-xs font-semibold hover:underline"
+              className="flex items-center gap-1.5 text-blue-600 dark:text-indigo-400 text-xs font-semibold hover:underline cursor-pointer"
             >
               <Plus size={13} /> Thêm học vấn
             </button>
@@ -596,14 +616,14 @@ export default function CVBuilder() {
               value={data.skills}
               onChange={(v) => setField("skills", v)}
             />
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Ví dụ: React, TypeScript, Node.js, SQL
             </p>
           </Section>
         </div>
 
         {/* Right - A4 preview */}
-        <div className="flex-1 overflow-auto bg-gray-200 p-8 flex items-start justify-center">
+        <div className="flex-1 overflow-auto bg-gray-200 dark:bg-slate-950/40 p-8 flex items-start justify-center transition-colors">
           <div
             className="shadow-2xl"
             style={{
