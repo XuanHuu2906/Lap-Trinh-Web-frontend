@@ -11,14 +11,13 @@ import {
   Search,
   Settings,
 } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface TopbarProps {
   role: "candidate" | "recruiter" | "admin";
   pathname: string;
   onOpenMobileSidebar: () => void;
   onLogout: () => void;
-  darkMode: boolean;
-  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -82,9 +81,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   pathname,
   onOpenMobileSidebar,
   onLogout,
-  darkMode,
-  setDarkMode,
 }) => {
+  const { theme, toggleTheme } = useTheme();
+  const darkMode = theme === "dark";
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const user = USERS_MOCK[role];
@@ -130,7 +129,7 @@ export const Topbar: React.FC<TopbarProps> = ({
 
         {/* Theme Toggle (Sáng / Tối) */}
         <button
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={toggleTheme}
           className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           title={
             darkMode
