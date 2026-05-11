@@ -1,6 +1,6 @@
 ﻿# LTWeb Frontend
 
-Frontend project for the LTWeb recruitment management system. The app is built with React, TypeScript, Vite, Tailwind CSS, Axios, React Hook Form, and React Router DOM.
+Frontend project for the LTWeb recruitment management system. The app is built with React, TypeScript, Vite, Tailwind CSS, Axios, React Hook Form, and React Router DOM, ShadcnUI.
 
 ## Scripts
 
