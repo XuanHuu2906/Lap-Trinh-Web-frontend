@@ -60,7 +60,6 @@ const tips = [
   },
 ];
 
-// Tiny SVG CV preview thumbnail
 function CVThumbnail({
   bgClass,
   lineColors,
@@ -79,8 +78,7 @@ function CVThumbnail({
           <div
             key={i}
             className={`h-1 rounded-sm ${lineColors[2]}`}
-            // eslint-disable-next-line react-hooks/purity
-            style={{ width: `${70 + Math.random() * 25}%` }}
+            style={{ width: `${70 + ((i * 7) % 25)}%` }}
           />
         ))}
       </div>
@@ -88,7 +86,6 @@ function CVThumbnail({
   );
 }
 
-// Circular progress SVG
 function CircularProgress({ pct }: { pct: number }) {
   const r = 28;
   const circ = 2 * Math.PI * r;
@@ -149,7 +146,7 @@ export default function MyCVs() {
         </button>
       </div>
 
-      {/* CV list table */}
+      {/* CV list */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-6">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -171,7 +168,6 @@ export default function MyCVs() {
                   key={cv.id}
                   className="hover:bg-gray-50/50 transition-colors"
                 >
-                  {/* Thumbnail */}
                   <td className="px-5 py-4 w-24">
                     <div className="w-14 h-20 rounded border border-gray-200 overflow-hidden shadow-sm">
                       <CVThumbnail
@@ -180,14 +176,11 @@ export default function MyCVs() {
                       />
                     </div>
                   </td>
-
                   <td className="px-5 py-4">
                     <p className="font-semibold text-gray-800">{cv.name}</p>
                     <p className="text-xs text-gray-400">{cv.subtitle}</p>
                   </td>
-
                   <td className="px-5 py-4 text-gray-500">{cv.updatedAt}</td>
-
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       <button
@@ -197,9 +190,7 @@ export default function MyCVs() {
                         <Eye size={16} />
                       </button>
                       <button
-                        onClick={() =>
-                          navigate(`/candidate/cv-builder?id=${cv.id}`)
-                        }
+                        onClick={() => navigate("/candidate/cv-builder")}
                         className="p-1.5 rounded-lg hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 transition-colors"
                         title="Sửa"
                       >
@@ -239,7 +230,7 @@ export default function MyCVs() {
         </div>
       </div>
 
-      {/* Tips & Analytics */}
+      {/* Tips */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {tips.map(({ icon: Icon, title, desc, color, progress }) => (
           <div

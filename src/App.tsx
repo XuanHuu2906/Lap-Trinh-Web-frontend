@@ -1,24 +1,26 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// ── Layouts ───────────────────────────────────────────────────────────────────
 import { PublicLayout } from "./components/layout/PublicLayout";
-import { CVTemplatePage } from "./pages/candidate/CVTemplatePage";
+import Home from "./pages/Home";
+import CandidateLayout from "./components/layout/CandidateLayout";
+// ── Public pages ──────────────────────────────────────────────────────────────
+import CVTemplatePage from "./pages/candidate/CVTemplatePage";
 import { LoginPage } from "./pages/auth/Login";
 import { CandidateRegisterPage } from "./pages/auth/RegisterCandidate";
 import { RecruiterRegisterPage } from "./pages/auth/RegisterEmployer";
 
-// ── Trang mới ─────────────────────────────────────────────────────────────────
-import Home from "./pages/Home";
-import JobList from "./pages/JobList.tsx";
-import JobDetail from "./pages/JobDetail.tsx";
+// ── New public pages ──────────────────────────────────────────────────────────
 
-// ── Candidate Layout & Pages ──────────────────────────────────────────────────
+// ── Candidate pages (rendered inside CandidateLayout via <Outlet>) ────────────
 import Overview from "./pages/candidate/Overview";
 import AppliedJobs from "./pages/candidate/AppliedJobs";
 import MyCVs from "./pages/candidate/MyCVs";
 import CVBuilder from "./pages/candidate/CVBuilder";
 import Notifications from "./pages/candidate/Notifications";
-
-// ── Public Job Search ─────────────────────────────────────────────────────────
+import JobList from "./pages/public/JobList";
+import JobDetail from "./pages/public/JobDetail";
 import JobSearch from "./pages/public/JobSearch";
 
 // ── Mock CV Builder ───────────────────────────────────────────────────────────
@@ -32,10 +34,10 @@ const MockCVBuilderPage: React.FC = () => {
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 mb-4">
           UC-05: Tạo CV - Bước 4 (Giả lập)
         </span>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2 font-sans">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
           Trình thiết kế CV
         </h2>
-        <p className="text-slate-500 text-sm mb-6 font-sans">
+        <p className="text-slate-500 text-sm mb-6">
           Đã tải mẫu CV:{" "}
           <strong className="text-slate-800">{templateName}</strong>. Hãy bắt
           đầu nhập thông tin cá nhân, học vấn, kỹ năng để tạo CV của bạn.
@@ -52,7 +54,7 @@ const MockCVBuilderPage: React.FC = () => {
           </button>
           <button
             onClick={() => window.history.back()}
-            className="w-full py-2.5 border border-transparent text-slate-500 font-semibold text-sm rounded-sm hover:text-slate-700 transition-all cursor-pointer"
+            className="w-full py-2.5 text-slate-500 font-semibold text-sm rounded-sm hover:text-slate-700 transition-all cursor-pointer"
           >
             Quay lại chọn mẫu khác
           </button>
@@ -68,19 +70,18 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ── Public Layout (Header & Footer) ── */}
+        {/* ── Public Layout (Header & Footer) ────────────────────────────── */}
         <Route path="/" element={<PublicLayout />}>
-          {/* Trang chủ */}
           <Route index element={<Home />} />
-
-          {/* Danh sách & chi tiết việc làm (public, có header/footer) */}
           <Route path="jobs" element={<JobList />} />
+          {/*
+            key={":id"} forces React to unmount/remount JobDetailPage
+            when navigating between different jobs — fixes the "URL changes
+            but page doesn't update" bug caused by the same component
+            instance reusing stale state.
+          */}
           <Route path="jobs/:id" element={<JobDetail />} />
 
-          {/* Tìm việc nâng cao */}
-          <Route path="job-search" element={<JobSearch />} />
-
-          {/* CV Templates */}
           <Route path="cv-templates" element={<CVTemplatePage />} />
           <Route
             path="resources"
@@ -91,13 +92,18 @@ function App() {
             element={<Navigate to="/cv-templates" replace />}
           />
 
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
 
-        {/* ── Candidate Layout (Sidebar + Topbar) ── */}
-        <Route path="/candidate" element={<Overview />}>
-          {/* Redirect /candidate → /candidate/overview */}
+        {/* ── Candidate Layout (Sidebar + Topbar) ────────────────────────── */}
+        {/*
+          CandidateLayout contains <Outlet /> so child routes render
+          inside the sidebar shell — NOT as a full page replacement.
+          Previously <Overview /> was used here which had no <Outlet />,
+          so every child URL change just re-rendered Overview itself.
+        */}
+        <Route path="/candidate" element={<CandidateLayout />}>
+          {/* /candidate → /candidate/overview */}
           <Route index element={<Navigate to="overview" replace />} />
 
           <Route path="overview" element={<Overview />} />
@@ -105,15 +111,12 @@ function App() {
           <Route path="my-cvs" element={<MyCVs />} />
           <Route path="cv-builder" element={<CVBuilder />} />
           <Route path="notifications" element={<Notifications />} />
-
-          {/* CV Templates bên trong candidate layout */}
           <Route path="cv-templates" element={<CVTemplatePage />} />
-
-          {/* Mock CV Builder (từ template chọn mẫu) — giữ nguyên route cũ */}
-          <Route path="cv-builder-mock" element={<MockCVBuilderPage />} />
+          <Route path="cv-builder" element={<MockCVBuilderPage />} />
+          <Route path="job-search" element={<JobSearch />} />
         </Route>
 
-        {/* ── Auth — layout toàn màn hình ── */}
+        {/* ── Auth — full-screen layout ───────────────────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<CandidateRegisterPage />} />
         <Route path="/register-candidate" element={<CandidateRegisterPage />} />

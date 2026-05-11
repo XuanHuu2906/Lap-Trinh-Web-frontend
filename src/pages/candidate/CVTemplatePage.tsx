@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -13,10 +13,9 @@ import { CVTemplateCard } from "../../components/cv/CVTemplateCard";
 import { Modal } from "../../components/common/Modal";
 import { Button } from "../../components/ui/button";
 
-// Mock Data Danh sách 4 Mẫu CV khớp hoàn toàn hình ảnh và Database Schema
 const MOCK_TEMPLATES: CVTemplate[] = [
   {
-    id: 1, // executive-standard
+    id: 1,
     name: "Executive Standard",
     category: "Đơn giản",
     description:
@@ -35,7 +34,7 @@ const MOCK_TEMPLATES: CVTemplate[] = [
     ],
   },
   {
-    id: 2, // corporate-split
+    id: 2,
     name: "Corporate Split",
     category: "Hiện đại",
     description:
@@ -53,7 +52,7 @@ const MOCK_TEMPLATES: CVTemplate[] = [
     ],
   },
   {
-    id: 3, // tech-minimal
+    id: 3,
     name: "Tech Minimal",
     category: "Chuyên nghiệp",
     description:
@@ -71,7 +70,7 @@ const MOCK_TEMPLATES: CVTemplate[] = [
     ],
   },
   {
-    id: 4, // consultant-pro
+    id: 4,
     name: "Consultant Pro",
     category: "Chuyên nghiệp",
     description:
@@ -90,7 +89,7 @@ const MOCK_TEMPLATES: CVTemplate[] = [
   },
 ];
 
-export const CVTemplatePage: React.FC = () => {
+export default function CVTemplatePage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] =
@@ -106,35 +105,20 @@ export const CVTemplatePage: React.FC = () => {
     "Chuyên nghiệp",
   ];
 
-  // Logic lọc và tìm kiếm thời gian thực
   const filteredTemplates = useMemo(() => {
     return MOCK_TEMPLATES.filter((template) => {
       const matchesSearch =
         template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         template.description!.toLowerCase().includes(searchTerm.toLowerCase());
-
       const matchesCategory =
         selectedCategory === "Tất cả" || template.category === selectedCategory;
-
       return matchesSearch && matchesCategory;
     });
   }, [searchTerm, selectedCategory]);
 
-  // Xử lý khi nhấn "SỬ DỤNG" - Kiểm tra Tiền điều kiện đăng nhập (UC-05 Precondition)
-  const handleUseTemplate = (template: CVTemplate) => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-    const builderUrl = `/candidate/cv-builder?template=${encodeURIComponent(template.name)}`;
-
-    if (isAuthenticated) {
-      // Đã đăng nhập -> Chuyển thẳng sang Trình thiết kế CV (UC-05 Bước 4)
-      navigate(builderUrl);
-    } else {
-      // Chưa đăng nhập -> Nhắc nhở và chuyển sang trang đăng nhập (UC-02)
-      alert(
-        `Bạn cần đăng nhập để sử dụng mẫu CV "${template.name}". Chúng tôi sẽ chuyển hướng bạn đến trang đăng nhập.`,
-      );
-      navigate(`/login?redirect=${encodeURIComponent(builderUrl)}`);
-    }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleUseTemplate = (_template: CVTemplate) => {
+    navigate("/candidate/cv-builder");
   };
 
   const handleOpenPreview = (template: CVTemplate) => {
@@ -154,22 +138,21 @@ export const CVTemplatePage: React.FC = () => {
         <span className="text-slate-600 font-semibold">Chọn template CV</span>
       </nav>
 
-      {/* Header Title Section */}
+      {/* Header */}
       <div className="text-left mb-10 max-w-3xl">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans mb-4">
           Chọn Mẫu CV
         </h1>
         <p className="text-sm sm:text-base text-slate-500 font-sans leading-relaxed">
-          Thể hiện năng lực chuyên môn với các mẫu CV được thiết kế theo
-          tirounded-sm chuẩn tuyển dụng doanh nghiệp.
+          Thể hiện năng lực chuyên môn với các mẫu CV được thiết kế theo chuẩn
+          tuyển dụng doanh nghiệp.
           <br className="hidden sm:inline" /> Lựa chọn phong cách phù hợp nhất
           với ngành nghề của bạn.
         </p>
       </div>
 
-      {/* Filters & Search Panel */}
+      {/* Filters & Search */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-6 mb-8">
-        {/* Category Buttons */}
         <div className="flex flex-wrap gap-2 order-2 md:order-1">
           {categories.map((category) => (
             <Button
@@ -188,7 +171,6 @@ export const CVTemplatePage: React.FC = () => {
           ))}
         </div>
 
-        {/* Search Input Box */}
         <div className="relative max-w-xs w-full order-1 md:order-2 self-end md:self-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-slate-400" />
@@ -203,7 +185,7 @@ export const CVTemplatePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Templates Grid Grid */}
+      {/* Templates Grid */}
       {filteredTemplates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredTemplates.map((template) => (
@@ -227,7 +209,7 @@ export const CVTemplatePage: React.FC = () => {
         </div>
       )}
 
-      {/* Preview Modal Popup (UC-05 Luồng xem trước phóng to) */}
+      {/* Preview Modal */}
       <Modal
         isOpen={previewTemplate !== null}
         onClose={handleClosePreview}
@@ -235,10 +217,9 @@ export const CVTemplatePage: React.FC = () => {
       >
         {previewTemplate && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start py-2">
-            {/* Left: Detailed Interactive Simulation rendering of the CV Template */}
+            {/* Left: Preview */}
             <div className="md:col-span-7 bg-slate-50 border border-slate-200/60 p-6 rounded-md flex justify-center items-center">
               <div className="w-70 h-93.25 bg-white shadow-lg rounded-sm border border-slate-200/40 overflow-hidden relative p-6">
-                {/* Simulated high-quality visual representation inside the modal */}
                 {previewTemplate.id === 1 && (
                   <div className="w-full h-full text-[6px] text-slate-500 flex flex-col justify-between">
                     <div>
@@ -257,26 +238,22 @@ export const CVTemplatePage: React.FC = () => {
                           <div className="font-bold text-slate-800 text-[8px] border-b border-slate-100 pb-1 mb-1.5 uppercase">
                             Kinh nghiệm làm việc
                           </div>
-                          <div className="space-y-2">
-                            <div>
-                              <div className="flex justify-between font-semibold text-slate-700 text-[7px]">
-                                <span>Trưởng phòng tài chính - ABC Group</span>
-                                <span>2022 - Hiện tại</span>
-                              </div>
-                              <div className="w-full h-1 bg-slate-100 rounded-sm mt-1"></div>
-                              <div className="w-11/12 h-1 bg-slate-100 rounded-sm mt-1"></div>
+                          <div>
+                            <div className="flex justify-between font-semibold text-slate-700 text-[7px]">
+                              <span>Trưởng phòng tài chính - ABC Group</span>
+                              <span>2022 - Hiện tại</span>
                             </div>
+                            <div className="w-full h-1 bg-slate-100 rounded-sm mt-1"></div>
+                            <div className="w-11/12 h-1 bg-slate-100 rounded-sm mt-1"></div>
                           </div>
                         </div>
                         <div>
                           <div className="font-bold text-slate-800 text-[8px] border-b border-slate-100 pb-1 mb-1.5 uppercase">
                             Học vấn
                           </div>
-                          <div>
-                            <div className="flex justify-between font-semibold text-slate-700 text-[7px]">
-                              <span>Thạc sĩ Tài chính - Đại học KTQD</span>
-                              <span>2018 - 2020</span>
-                            </div>
+                          <div className="flex justify-between font-semibold text-slate-700 text-[7px]">
+                            <span>Thạc sĩ Tài chính - Đại học KTQD</span>
+                            <span>2018 - 2020</span>
                           </div>
                         </div>
                       </div>
@@ -298,15 +275,13 @@ export const CVTemplatePage: React.FC = () => {
                         <div className="text-[5px] text-slate-500 text-center mb-4">
                           MARKETING SPECIALIST
                         </div>
-                        <div className="space-y-3">
-                          <div>
-                            <div className="font-bold text-slate-800 text-[6px] uppercase border-b border-slate-200 pb-0.5 mb-1">
-                              Kỹ năng
-                            </div>
-                            <div className="space-y-1">
-                              <div className="w-12 h-1 bg-indigo-600 rounded-sm"></div>
-                              <div className="w-10 h-1 bg-indigo-600 rounded-sm"></div>
-                            </div>
+                        <div>
+                          <div className="font-bold text-slate-800 text-[6px] uppercase border-b border-slate-200 pb-0.5 mb-1">
+                            Kỹ năng
+                          </div>
+                          <div className="space-y-1">
+                            <div className="w-12 h-1 bg-indigo-600 rounded-sm"></div>
+                            <div className="w-10 h-1 bg-indigo-600 rounded-sm"></div>
                           </div>
                         </div>
                       </div>
@@ -314,27 +289,21 @@ export const CVTemplatePage: React.FC = () => {
                         SAM BASE WORK
                       </div>
                     </div>
-                    <div className="w-2/3 pt-2 flex flex-col justify-between">
-                      <div>
-                        <div className="font-bold text-slate-900 text-[9px] border-b border-slate-200 pb-1.5 mb-3">
-                          HỒ SƠ NGHỀ NGHIỆP
-                        </div>
-                        <p className="text-[6px] leading-relaxed mb-4">
-                          Chuyên viên Marketing với 3 năm kinh nghiệm lập kế
-                          hoạch và thực thi chiến dịch quảng cáo digital.
-                        </p>
-                        <div className="font-bold text-slate-900 text-[9px] border-b border-slate-200 pb-1.5 mb-2">
-                          KINH NGHIỆM
-                        </div>
-                        <div className="space-y-3">
-                          <div>
-                            <div className="font-bold text-slate-800 text-[7px]">
-                              Senior SEO Executive - XYZ Corp
-                            </div>
-                            <div className="w-full h-1 bg-slate-100 rounded-sm mt-1"></div>
-                          </div>
-                        </div>
+                    <div className="w-2/3 pt-2">
+                      <div className="font-bold text-slate-900 text-[9px] border-b border-slate-200 pb-1.5 mb-3">
+                        HỒ SƠ NGHỀ NGHIỆP
                       </div>
+                      <p className="text-[6px] leading-relaxed mb-4">
+                        Chuyên viên Marketing với 3 năm kinh nghiệm lập kế hoạch
+                        và thực thi chiến dịch quảng cáo digital.
+                      </p>
+                      <div className="font-bold text-slate-900 text-[9px] border-b border-slate-200 pb-1.5 mb-2">
+                        KINH NGHIỆM
+                      </div>
+                      <div className="font-bold text-slate-800 text-[7px]">
+                        Senior SEO Executive - XYZ Corp
+                      </div>
+                      <div className="w-full h-1 bg-slate-100 rounded-sm mt-1"></div>
                     </div>
                   </div>
                 )}
@@ -352,23 +321,17 @@ export const CVTemplatePage: React.FC = () => {
                         <span>EMAIL: dev@example.io</span>
                         <span>IP: 192.168.1.1</span>
                       </div>
-                      <div className="space-y-3 font-mono">
-                        <div>
-                          <div className="font-bold text-[#D5A153] text-[8px] border-b border-slate-700 pb-1 mb-1.5 uppercase">
-                            SYS.EXPERIENCE()
-                          </div>
-                          <div>
-                            <div className="flex justify-between font-semibold text-[6px]">
-                              <span>Senior Node.js Developer - TechCorp</span>
-                              <span>2021 - Present</span>
-                            </div>
-                            <p className="text-[5px] text-slate-400 mt-1 leading-normal">
-                              - Build high-scalable microservices with NestJS
-                              and RabbitMQ.
-                            </p>
-                          </div>
-                        </div>
+                      <div className="font-bold text-[#D5A153] text-[8px] border-b border-slate-700 pb-1 mb-1.5 uppercase font-mono">
+                        SYS.EXPERIENCE()
                       </div>
+                      <div className="flex justify-between font-semibold text-[6px] font-mono">
+                        <span>Senior Node.js Developer - TechCorp</span>
+                        <span>2021 - Present</span>
+                      </div>
+                      <p className="text-[5px] text-slate-400 mt-1 leading-normal font-mono">
+                        - Build high-scalable microservices with NestJS and
+                        RabbitMQ.
+                      </p>
                     </div>
                     <div className="bg-[#D5A153] text-[#1F242D] text-[5px] py-1 text-center font-bold font-mono tracking-wider">
                       HTTP://PORTFOLIO.LEVAN_C.IO
@@ -414,7 +377,7 @@ export const CVTemplatePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Right: Detailed Template Information & Action Panel */}
+            {/* Right: Info */}
             <div className="md:col-span-5 flex flex-col h-full justify-between">
               <div>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 mb-3 font-sans">
@@ -427,7 +390,6 @@ export const CVTemplatePage: React.FC = () => {
                   {previewTemplate.description}
                 </p>
 
-                {/* Key features checklist */}
                 <div className="mb-8">
                   <h5 className="text-xs font-bold text-slate-900 mb-3 font-sans uppercase tracking-wider">
                     Đặc điểm nổi bật:
@@ -449,7 +411,6 @@ export const CVTemplatePage: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* Tips block */}
                 <div className="p-4 bg-indigo-50/50 rounded-md border border-indigo-100/50 flex items-start">
                   <Zap className="h-5 w-5 text-indigo-500 mr-3 shrink-0 mt-0.5" />
                   <div>
@@ -465,7 +426,6 @@ export const CVTemplatePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action buttons in modal */}
               <div className="mt-8 pt-6 border-t border-slate-100">
                 <Button
                   onClick={() => {
@@ -485,4 +445,4 @@ export const CVTemplatePage: React.FC = () => {
       </Modal>
     </div>
   );
-};
+}

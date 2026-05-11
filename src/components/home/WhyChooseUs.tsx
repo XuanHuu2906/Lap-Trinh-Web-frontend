@@ -1,30 +1,37 @@
+import {
+  ShieldCheck,
+  Clock,
+  BarChart,
+  UserCircle,
+  Astroid,
+} from "lucide-react";
 const FEATURES = [
   {
-    icon: "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z",
+    icon: <ShieldCheck />,
     title: "Nhà tuyển dụng xác thực",
     desc: "100% doanh nghiệp trên nền tảng đều được xác minh kỹ lưỡng, đảm bảo mọi thông tin việc làm an toàn và chuyên nghiệp.",
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-blue-50 hover:bg-blue-100 text-blue-600",
     highlight: "100% xác minh",
   },
   {
-    icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z",
+    icon: <Clock />,
     title: "Quy trình nhanh chóng",
     desc: "Kết nối trực tiếp với HR, giảm thiểu khâu trung gian, tiết kiệm thời gian cho cả ứng viên lẫn nhà tuyển dụng.",
-    color: "bg-amber-50 text-amber-600",
+    color: "bg-amber-50 hover:bg-amber-100 text-amber-600",
     highlight: "Kết nối trực tiếp",
   },
   {
-    icon: "M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941",
+    icon: <BarChart />,
     title: "Insights chuyên sâu",
     desc: "Cung cấp thông tin thị trường lao động và xu hướng ngành nghề liên tục cập nhật theo thời gian thực.",
-    color: "bg-green-50 text-green-600",
+    color: "bg-green-50 hover:bg-green-100 text-green-600",
     highlight: "Dữ liệu thời gian thực",
   },
   {
-    icon: "M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z",
+    icon: <UserCircle />,
     title: "Hồ sơ thông minh",
     desc: "Hệ thống AI tự động phân tích CV và đề xuất vị trí phù hợp nhất với năng lực và định hướng của bạn.",
-    color: "bg-purple-50 text-purple-600",
+    color: "bg-purple-50 hover:bg-purple-100 text-purple-600",
     highlight: "Gợi ý bằng AI",
   },
 ];
@@ -46,17 +53,17 @@ const TESTIMONIALS = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="bg-gray-50 py-16 px-4">
-      <div className="max-w-7xl mx-auto">
+    <section className="bg-gray-50 py-16 px-4 ">
+      <div className="max-w-7xl  mx-auto">
         {/* Section header */}
         <div className="text-center mb-12">
-          <span className="inline-block bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3 tracking-wide">
+          <span className="inline-block bg-blue-50 text-blue-700 text-2xl font-semibold px-3 py-1 rounded-full mb-3 tracking-wide">
             Vì sao chọn chúng tôi
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-2xl text-blue-600 sm:text-3xl font-bold  mb-3">
             Tại sao chọn HireArch?
           </h2>
-          <p className="text-gray-500 text-sm max-w-xl mx-auto">
+          <p className="flex items-center justify-center text-gray-500 text-sm ">
             Nền tảng tuyển dụng dành riêng cho doanh nghiệp — được xây dựng để
             kết nối đúng người với đúng cơ hội.
           </p>
@@ -67,26 +74,14 @@ export default function WhyChooseUs() {
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-blue-200 transition-all group"
+              className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-blue-200 transition-all group "
             >
               <div
-                className={`w-11 h-11 ${feature.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+                className={`w-11 h-11 ${feature.color} rounded-2xl flex items-center justify-center mb-4`}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d={feature.icon}
-                  />
-                </svg>
+                {feature.icon}
               </div>
-              <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">
+              <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2 ">
                 {feature.highlight}
               </span>
               <h3 className="font-semibold text-gray-900 text-sm mb-2">
@@ -99,28 +94,11 @@ export default function WhyChooseUs() {
           ))}
         </div>
 
-        {/* Split layout: left big feature + right testimonials */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Left: highlighted feature block */}
-          <div className="bg-linear-to-br from-blue-700 to-indigo-800 rounded-2xl p-8 text-white relative overflow-hidden">
-            {/* Decorative circle */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />
-            <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-white/5 rounded-full" />
+          <div className="bg-linear-to-br from-blue-700 to-indigo-800 rounded-2xl p-8 text-white">
             <div className="relative">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-5">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-                  />
-                </svg>
+                <Astroid className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">
                 Hồ sơ thông minh với AI
@@ -130,7 +108,7 @@ export default function WhyChooseUs() {
                 nghìn vị trí đang tuyển và đề xuất những cơ hội phù hợp nhất với
                 bạn — tiết kiệm hàng giờ tìm kiếm thủ công.
               </p>
-              <div className="flex gap-4 text-sm">
+              <div className="flex gap-4 justify-center text-sm">
                 <div>
                   <p className="font-bold text-xl">3x</p>
                   <p className="text-blue-300 text-xs">Nhanh hơn</p>

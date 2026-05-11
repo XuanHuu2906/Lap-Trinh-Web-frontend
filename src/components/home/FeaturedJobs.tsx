@@ -1,3 +1,5 @@
+import { ArrowRight, MapPin } from "lucide-react";
+
 interface Job {
   id: number;
   title: string;
@@ -10,7 +12,6 @@ interface Job {
   tags: string[];
   field: string;
 }
-
 interface FeaturedJobsProps {
   jobs: Job[];
   onViewAll?: () => void;
@@ -48,21 +49,7 @@ function JobCard({
           onClick={(e) => e.stopPropagation()}
           className="text-gray-300 hover:text-blue-500 transition-colors"
           aria-label="Lưu việc làm"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
-            />
-          </svg>
-        </button>
+        ></button>
       </div>
 
       {/* Title & company */}
@@ -81,25 +68,7 @@ function JobCard({
       {/* Footer */}
       <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-gray-500">
         <span className="flex items-center gap-1">
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-            />
-          </svg>
+          <MapPin />
           {job.location}
         </span>
         <span className="font-semibold text-green-600">{job.salary}</span>
@@ -114,8 +83,7 @@ export default function FeaturedJobs({
   onSelectJob,
 }: FeaturedJobsProps) {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      {/* Section header */}
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 ">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Việc làm nổi bật</h2>
@@ -123,22 +91,10 @@ export default function FeaturedJobs({
         </div>
         <button
           onClick={onViewAll}
-          className="text-sm text-blue-700 font-semibold hover:underline flex items-center gap-1"
+          className="text-sm text-blue-700 font-semibold group flex items-center gap-1 group hover:transform hover:scale-105 transition-all p-2 rounded-2xl"
         >
           Xem tất cả
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-            />
-          </svg>
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -150,7 +106,7 @@ export default function FeaturedJobs({
       </div>
 
       {/* CTA Banner */}
-      <div className="mt-12 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-white">
+      <div className="mt-12 bg-linear-to-r from-blue-400 to-indigo-600 rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-white">
         <div>
           <p className="font-bold text-lg mb-1">Không tìm thấy việc phù hợp?</p>
           <p className="text-blue-200 text-sm">

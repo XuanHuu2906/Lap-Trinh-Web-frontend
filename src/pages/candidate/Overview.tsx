@@ -16,16 +16,17 @@ const stats = [
     icon: FileText,
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
-    link: "/candidate/my-cvs",
+    link: "/candidate/MyCVs",
   },
   {
     label: "Công việc đã ứng tuyển",
     value: "12",
     note: "+2 trong tuần này",
     icon: BriefcaseBusiness,
+    action: "Xem Ứng viên đã nộp",
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
-    link: "/candidate/applied-jobs",
+    link: "/candidate/AppliedJobs",
   },
   {
     label: "Phản hồi mới",
@@ -34,7 +35,7 @@ const stats = [
     icon: Bell,
     iconBg: "bg-red-100",
     iconColor: "text-red-500",
-    link: "/candidate/notifications",
+    link: "/candidate/Notifications",
   },
 ];
 
@@ -101,8 +102,8 @@ export default function Overview() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-white">Tổng quan</h1>
+        <p className="text-white text-sm mt-1">
           Chào mừng trở lại. Cập nhật tiến độ ứng tuyển của bạn hôm nay.
         </p>
       </div>

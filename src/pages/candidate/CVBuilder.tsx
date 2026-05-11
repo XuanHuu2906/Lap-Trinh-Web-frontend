@@ -125,6 +125,7 @@ function CVPreview({ data }: { data: CVData }) {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+
   return (
     <div
       id="cv-preview"
@@ -400,12 +401,6 @@ export default function CVBuilder() {
     setTimeout(() => setSaving(false), 1200);
   };
 
-  const handleDownload = () => {
-    alert(
-      "Để tải PDF: cài html2canvas + jspdf, sau đó gọi html2canvas(document.getElementById('cv-preview')) rồi dùng jsPDF để xuất file.",
-    );
-  };
-
   return (
     <div className="flex flex-col h-full -m-6">
       {/* Topbar */}
@@ -426,10 +421,7 @@ export default function CVBuilder() {
             <Eye size={14} />
             Xem trước
           </button>
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-3 py-1.5 transition-colors"
-          >
+          <button className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-3 py-1.5 transition-colors">
             <Download size={14} />
             Tải PDF
           </button>
@@ -440,7 +432,6 @@ export default function CVBuilder() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left - editor */}
         <div className="w-80 xl:w-96 shrink-0 border-r border-gray-200 overflow-y-auto bg-gray-50 p-4">
-          {/* Personal */}
           <Section
             title="Thông tin cá nhân"
             open={openSections.personal}
@@ -490,7 +481,6 @@ export default function CVBuilder() {
             </div>
           </Section>
 
-          {/* Summary */}
           <Section
             title="Tóm tắt sự nghiệp"
             open={openSections.summary}
@@ -503,7 +493,6 @@ export default function CVBuilder() {
             />
           </Section>
 
-          {/* Work */}
           <Section
             title="Kinh nghiệm làm việc"
             open={openSections.work}
@@ -553,7 +542,6 @@ export default function CVBuilder() {
             </button>
           </Section>
 
-          {/* Education */}
           <Section
             title="Học vấn"
             open={openSections.edu}
@@ -598,7 +586,6 @@ export default function CVBuilder() {
             </button>
           </Section>
 
-          {/* Skills */}
           <Section
             title="Kỹ năng"
             open={openSections.skills}
