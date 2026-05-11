@@ -107,8 +107,10 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Icon
-                className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${
-                  active ? "text-indigo-400" : "text-slate-400 group-hover:text-slate-200"
+                className={`w-5 h-5 shrink-0 transition-colors duration-150 ${
+                  active
+                    ? "text-indigo-400"
+                    : "text-slate-400 group-hover:text-slate-200"
                 }`}
               />
               <span className="text-sm font-semibold">{item.label}</span>
@@ -120,8 +122,10 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Footer User Info */}
       <div className="p-4 border-t border-slate-800 bg-slate-950/40 mt-auto">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-            <span className="text-white text-xs font-bold">{mockUser.initials}</span>
+          <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+            <span className="text-white text-xs font-bold">
+              {mockUser.initials}
+            </span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white text-xs font-semibold truncate leading-none">
@@ -145,14 +149,14 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
 
   if (isMobile) {
     return (
-      <div className="w-[280px] bg-slate-900 text-slate-300 flex flex-col h-full animate-slide-right shadow-2xl">
+      <div className="w-70 bg-slate-900 text-slate-300 flex flex-col h-full animate-slide-right shadow-2xl">
         {content}
       </div>
     );
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-[260px] bg-slate-900 text-slate-300 border-r border-slate-800 flex-shrink-0 fixed top-0 left-0 h-full z-30">
+    <aside className="hidden lg:flex flex-col w-65 bg-slate-900 text-slate-300 border-r border-slate-800 shrink-0 fixed top-0 left-0 h-full z-30">
       {content}
     </aside>
   );

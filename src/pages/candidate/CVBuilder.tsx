@@ -54,14 +54,20 @@ function Section({
         onClick={onToggle}
         className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/60 hover:bg-gray-100 dark:hover:bg-slate-850/80 transition-colors text-left cursor-pointer"
       >
-        <span className="font-semibold text-gray-700 dark:text-slate-300 text-sm">{title}</span>
+        <span className="font-semibold text-gray-700 dark:text-slate-300 text-sm">
+          {title}
+        </span>
         {open ? (
           <ChevronUp size={16} className="text-gray-400 dark:text-gray-500" />
         ) : (
           <ChevronDown size={16} className="text-gray-400 dark:text-gray-500" />
         )}
       </button>
-      {open && <div className="px-4 py-4 space-y-3 bg-white dark:bg-slate-900">{children}</div>}
+      {open && (
+        <div className="px-4 py-4 space-y-3 bg-white dark:bg-slate-900">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -125,6 +131,7 @@ function CVPreview({ data }: { data: CVData }) {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+
   return (
     <div
       id="cv-preview"
@@ -411,8 +418,12 @@ export default function CVBuilder() {
       {/* Topbar */}
       <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shrink-0 transition-colors">
         <div>
-          <h1 className="text-base font-bold text-gray-900 dark:text-white">Trình Tạo Hồ Sơ</h1>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Đã lưu lần cuối 2 phút trước</p>
+          <h1 className="text-base font-bold text-gray-900 dark:text-white">
+            Trình Tạo Hồ Sơ
+          </h1>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            Đã lưu lần cuối 2 phút trước
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -490,7 +501,6 @@ export default function CVBuilder() {
             </div>
           </Section>
 
-          {/* Summary */}
           <Section
             title="Tóm tắt sự nghiệp"
             open={openSections.summary}
@@ -503,7 +513,6 @@ export default function CVBuilder() {
             />
           </Section>
 
-          {/* Work */}
           <Section
             title="Kinh nghiệm làm việc"
             open={openSections.work}
@@ -553,7 +562,6 @@ export default function CVBuilder() {
             </button>
           </Section>
 
-          {/* Education */}
           <Section
             title="Học vấn"
             open={openSections.edu}
@@ -598,7 +606,6 @@ export default function CVBuilder() {
             </button>
           </Section>
 
-          {/* Skills */}
           <Section
             title="Kỹ năng"
             open={openSections.skills}

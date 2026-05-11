@@ -1,5 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Search, CheckCheck, Smile, Phone, Video, Info, Circle } from "lucide-react";
+import {
+  Send,
+  Search,
+  CheckCheck,
+  Smile,
+  Phone,
+  Video,
+  Info,
+  Circle,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,15 +42,16 @@ const INITIAL_CHANNELS: Channel[] = [
     role: "HR Lead / Tech Recruiter",
     avatar: "LT",
     avatarColor: "bg-indigo-600",
-    lastMessage: "Chào bạn, hồ sơ của bạn rất ấn tượng! Bạn có thể phỏng vấn lúc 14:00 ngày mai không?",
+    lastMessage:
+      "Chào bạn, hồ sơ của bạn rất ấn tượng! Bạn có thể phỏng vấn lúc 14:00 ngày mai không?",
     time: "10:15",
     unread: 1,
     online: true,
     replies: [
       "Vâng, tôi đã nhận được thông tin. Tôi sẽ gửi cho ban công nghệ đánh giá thêm.",
       "Tuyệt vời! Tôi đã lên lịch hẹn phỏng vấn trực tuyến qua Zoom cho bạn vào lúc 14:00 ngày mai. Link Zoom sẽ gửi qua email nhé.",
-      "Cảm ơn bạn! Chúc bạn một ngày tốt lành và hẹn gặp lại bạn ngày mai."
-    ]
+      "Cảm ơn bạn! Chúc bạn một ngày tốt lành và hẹn gặp lại bạn ngày mai.",
+    ],
   },
   {
     id: 2,
@@ -50,15 +60,16 @@ const INITIAL_CHANNELS: Channel[] = [
     role: "Talent Acquisition Specialist",
     avatar: "AD",
     avatarColor: "bg-orange-500",
-    lastMessage: "Cảm ơn bạn đã nộp hồ sơ, chúng tôi sẽ phản hồi kết quả trong vòng 3 ngày làm việc.",
+    lastMessage:
+      "Cảm ơn bạn đã nộp hồ sơ, chúng tôi sẽ phản hồi kết quả trong vòng 3 ngày làm việc.",
     time: "Hôm qua",
     unread: 0,
     online: false,
     replies: [
       "Chào bạn, kết quả đánh giá bài test chuyên môn của bạn rất xuất sắc. Chúng tôi rất mong muốn trao đổi chi tiết hơn.",
       "Dự án này sử dụng React và Node.js, quy mô team hiện tại là 12 người.",
-      "Được chứ, chúng tôi rất linh hoạt về thời gian làm việc."
-    ]
+      "Được chứ, chúng tôi rất linh hoạt về thời gian làm việc.",
+    ],
   },
   {
     id: 3,
@@ -67,14 +78,15 @@ const INITIAL_CHANNELS: Channel[] = [
     role: "HR Partner",
     avatar: "HG",
     avatarColor: "bg-pink-600",
-    lastMessage: "Bạn có tiện gửi lại bản thiết kế portfolio định dạng Figma link không?",
+    lastMessage:
+      "Bạn có tiện gửi lại bản thiết kế portfolio định dạng Figma link không?",
     time: "08/05",
     unread: 0,
     online: true,
     replies: [
       "Cảm ơn bạn đã gửi link Figma. Đội ngũ UI/UX đang đánh giá thiết kế của bạn.",
-      "Chúng tôi thấy phong cách thiết kế của bạn rất hiện đại, rất khớp với định hướng sản phẩm của MoMo."
-    ]
+      "Chúng tôi thấy phong cách thiết kế của bạn rất hiện đại, rất khớp với định hướng sản phẩm của MoMo.",
+    ],
   },
 ];
 
@@ -83,22 +95,62 @@ export default function Chat() {
   const [activeChannelId, setActiveChannelId] = useState(1);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  
+
   const [messages, setMessages] = useState<{ [key: number]: Message[] }>({
     1: [
-      { id: 1, sender: "them", text: "Xin chào Nguyễn Văn A, tôi là Tuấn đại diện tuyển dụng từ TechNova Solutions.", time: "10:00" },
-      { id: 2, sender: "me", text: "Chào anh Tuấn, rất vui được kết nối với anh. Cảm ơn anh đã quan tâm đến hồ sơ của em.", time: "10:02" },
-      { id: 3, sender: "them", text: "Chào bạn, hồ sơ của bạn rất ấn tượng! Bạn có thể phỏng vấn lúc 14:00 ngày mai không?", time: "10:15" },
+      {
+        id: 1,
+        sender: "them",
+        text: "Xin chào Nguyễn Văn A, tôi là Tuấn đại diện tuyển dụng từ TechNova Solutions.",
+        time: "10:00",
+      },
+      {
+        id: 2,
+        sender: "me",
+        text: "Chào anh Tuấn, rất vui được kết nối với anh. Cảm ơn anh đã quan tâm đến hồ sơ của em.",
+        time: "10:02",
+      },
+      {
+        id: 3,
+        sender: "them",
+        text: "Chào bạn, hồ sơ của bạn rất ấn tượng! Bạn có thể phỏng vấn lúc 14:00 ngày mai không?",
+        time: "10:15",
+      },
     ],
     2: [
-      { id: 1, sender: "me", text: "Dạ em chào anh/chị, em đã gửi hồ sơ ứng tuyển vị trí Fullstack Developer ạ.", time: "15:30" },
-      { id: 2, sender: "them", text: "Cảm ơn bạn đã nộp hồ sơ, chúng tôi sẽ phản hồi kết quả trong vòng 3 ngày làm việc.", time: "15:45" },
+      {
+        id: 1,
+        sender: "me",
+        text: "Dạ em chào anh/chị, em đã gửi hồ sơ ứng tuyển vị trí Fullstack Developer ạ.",
+        time: "15:30",
+      },
+      {
+        id: 2,
+        sender: "them",
+        text: "Cảm ơn bạn đã nộp hồ sơ, chúng tôi sẽ phản hồi kết quả trong vòng 3 ngày làm việc.",
+        time: "15:45",
+      },
     ],
     3: [
-      { id: 1, sender: "them", text: "Chào Giang, mình thấy portfolio của bạn có nhiều thiết kế Mobile App rất đẹp.", time: "Hôm kia" },
-      { id: 2, sender: "me", text: "Dạ em cảm ơn chị Giang nhiều ạ! Em có thể gửi thêm link Figma dự án thực tế cho chị xem nhé.", time: "Hôm kia" },
-      { id: 3, sender: "them", text: "Bạn có tiện gửi lại bản thiết kế portfolio định dạng Figma link không?", time: "Hôm qua" },
-    ]
+      {
+        id: 1,
+        sender: "them",
+        text: "Chào Giang, mình thấy portfolio của bạn có nhiều thiết kế Mobile App rất đẹp.",
+        time: "Hôm kia",
+      },
+      {
+        id: 2,
+        sender: "me",
+        text: "Dạ em cảm ơn chị Giang nhiều ạ! Em có thể gửi thêm link Figma dự án thực tế cho chị xem nhé.",
+        time: "Hôm kia",
+      },
+      {
+        id: 3,
+        sender: "them",
+        text: "Bạn có tiện gửi lại bản thiết kế portfolio định dạng Figma link không?",
+        time: "Hôm qua",
+      },
+    ],
   });
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -113,7 +165,7 @@ export default function Chat() {
   const handleSelectChannel = (id: number) => {
     setActiveChannelId(id);
     setChannels((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c))
+      prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c)),
     );
   };
 
@@ -126,7 +178,10 @@ export default function Chat() {
       id: Date.now(),
       sender: "me",
       text: inputMessage,
-      time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
 
     // Update messages
@@ -139,8 +194,10 @@ export default function Chat() {
     // Update last message in channel list
     setChannels((prev) =>
       prev.map((c) =>
-        c.id === activeChannelId ? { ...c, lastMessage: inputMessage, time: "Vừa xong" } : c
-      )
+        c.id === activeChannelId
+          ? { ...c, lastMessage: inputMessage, time: "Vừa xong" }
+          : c,
+      ),
     );
 
     setInputMessage("");
@@ -149,16 +206,21 @@ export default function Chat() {
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
-      
+
       // Lấy ngẫu nhiên câu phản hồi trong kho của kênh đó
       const autoReplies = activeChannel.replies;
-      const responseText = autoReplies[Math.floor(Math.random() * autoReplies.length)] || "Cảm ơn bạn đã phản hồi, tôi sẽ kiểm tra lại.";
+      const responseText =
+        autoReplies[Math.floor(Math.random() * autoReplies.length)] ||
+        "Cảm ơn bạn đã phản hồi, tôi sẽ kiểm tra lại.";
 
       const replyMessage: Message = {
         id: Date.now() + 1,
         sender: "them",
         text: responseText,
-        time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
 
       setMessages((prevMsgs) => ({
@@ -168,8 +230,10 @@ export default function Chat() {
 
       setChannels((prev) =>
         prev.map((c) =>
-          c.id === activeChannelId ? { ...c, lastMessage: responseText, time: "Vừa xong" } : c
-        )
+          c.id === activeChannelId
+            ? { ...c, lastMessage: responseText, time: "Vừa xong" }
+            : c,
+        ),
       );
     }, 1500);
   };
@@ -177,7 +241,6 @@ export default function Chat() {
   return (
     <div className="font-sans flex flex-col h-[calc(100vh-140px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-3xs transition-colors duration-150">
       <div className="flex flex-1 overflow-hidden min-w-0">
-        
         {/* ── 1. Sidebar Trò chuyện (Danh sách liên hệ) ── */}
         <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
           {/* Header tìm kiếm */}
@@ -204,12 +267,16 @@ export default function Chat() {
                   key={chan.id}
                   onClick={() => handleSelectChannel(chan.id)}
                   className={`p-4 flex gap-3 cursor-pointer transition-all ${
-                    active ? "bg-white dark:bg-slate-950 border-l-4 border-indigo-500 font-medium shadow-3xs" : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
+                    active
+                      ? "bg-white dark:bg-slate-950 border-l-4 border-indigo-500 font-medium shadow-3xs"
+                      : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
                   }`}
                 >
                   {/* Avatar */}
                   <div className="relative shrink-0">
-                    <div className={`w-11 h-11 rounded-xl ${chan.avatarColor} text-white flex items-center justify-center font-bold text-sm shadow-3xs`}>
+                    <div
+                      className={`w-11 h-11 rounded-xl ${chan.avatarColor} text-white flex items-center justify-center font-bold text-sm shadow-3xs`}
+                    >
                       {chan.avatar}
                     </div>
                     {chan.online && (
@@ -220,11 +287,19 @@ export default function Chat() {
                   {/* Info preview */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{chan.name}</p>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">{chan.time}</span>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                        {chan.name}
+                      </p>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                        {chan.time}
+                      </span>
                     </div>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate uppercase mt-0.5">{chan.company}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-1 leading-snug">{chan.lastMessage}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate uppercase mt-0.5">
+                      {chan.company}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-1 leading-snug">
+                      {chan.lastMessage}
+                    </p>
                   </div>
 
                   {/* Unread badge */}
@@ -246,54 +321,83 @@ export default function Chat() {
           {/* Header của Khung chat đang mở */}
           <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0 shadow-3xs">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl ${activeChannel.avatarColor} text-white flex items-center justify-center font-bold text-sm shadow-3xs`}>
+              <div
+                className={`w-10 h-10 rounded-xl ${activeChannel.avatarColor} text-white flex items-center justify-center font-bold text-sm shadow-3xs`}
+              >
                 {activeChannel.avatar}
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{activeChannel.name}</h3>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">
+                    {activeChannel.name}
+                  </h3>
                   <span className="flex items-center gap-0.5 text-[9px] text-slate-400 dark:text-slate-500">
-                    <Circle className={`w-1.5 h-1.5 ${activeChannel.online ? "fill-emerald-500 text-emerald-500" : "fill-slate-300 text-slate-300 dark:fill-slate-700 dark:text-slate-700"}`} />
+                    <Circle
+                      className={`w-1.5 h-1.5 ${activeChannel.online ? "fill-emerald-500 text-emerald-500" : "fill-slate-300 text-slate-300 dark:fill-slate-700 dark:text-slate-700"}`}
+                    />
                     {activeChannel.online ? "Đang online" : "Offline"}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 leading-none">
-                  {activeChannel.role} • <strong className="text-indigo-600 dark:text-indigo-400">{activeChannel.company}</strong>
+                  {activeChannel.role} •{" "}
+                  <strong className="text-indigo-600 dark:text-indigo-400">
+                    {activeChannel.company}
+                  </strong>
                 </p>
               </div>
             </div>
 
             {/* Quick action icons */}
             <div className="flex items-center gap-2">
-              <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-not-allowed" title="Tính năng nâng cao">
+              <button
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-not-allowed"
+                title="Tính năng nâng cao"
+              >
                 <Phone className="w-4 h-4" />
               </button>
-              <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-not-allowed" title="Tính năng nâng cao">
+              <button
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-not-allowed"
+                title="Tính năng nâng cao"
+              >
                 <Video className="w-4 h-4" />
               </button>
-              <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer" title="Thông tin chi tiết">
+              <button
+                className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                title="Thông tin chi tiết"
+              >
                 <Info className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Danh sách tin nhắn */}
-          <div className="flex-grow overflow-y-auto p-6 space-y-4 bg-slate-50/20 dark:bg-slate-950/10">
+          <div className="grow overflow-y-auto p-6 space-y-4 bg-slate-50/20 dark:bg-slate-950/10">
             {messages[activeChannelId]?.map((msg) => {
               const isMe = msg.sender === "me";
               return (
-                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} animate-fade-in`}>
-                  <div className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}>
+                <div
+                  key={msg.id}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"} animate-fade-in`}
+                >
+                  <div
+                    className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}
+                  >
                     {/* Bong bóng tin nhắn */}
-                    <div className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${
-                      isMe
-                        ? "bg-indigo-600 text-white rounded-br-none"
-                        : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none"
-                    }`}>
+                    <div
+                      className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${
+                        isMe
+                          ? "bg-indigo-600 text-white rounded-br-none"
+                          : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none"
+                      }`}
+                    >
                       <p>{msg.text}</p>
-                      <div className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${isMe ? "text-indigo-200" : "text-slate-400 dark:text-slate-550"}`}>
+                      <div
+                        className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${isMe ? "text-indigo-200" : "text-slate-400 dark:text-slate-550"}`}
+                      >
                         <span>{msg.time}</span>
-                        {isMe && <CheckCheck className="w-3.5 h-3.5 text-indigo-200" />}
+                        {isMe && (
+                          <CheckCheck className="w-3.5 h-3.5 text-indigo-200" />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -305,11 +409,22 @@ export default function Chat() {
             {isTyping && (
               <div className="flex justify-start animate-fade-in">
                 <div className="flex items-center gap-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-2.5 shadow-3xs">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Nhà tuyển dụng đang nhập tin nhắn</span>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                    Nhà tuyển dụng đang nhập tin nhắn
+                  </span>
                   <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0s" }}></span>
-                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }}></span>
-                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }}></span>
+                    <span
+                      className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0s" }}
+                    ></span>
+                    <span
+                      className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.15s" }}
+                    ></span>
+                    <span
+                      className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.3s" }}
+                    ></span>
                   </div>
                 </div>
               </div>
@@ -319,8 +434,15 @@ export default function Chat() {
 
           {/* Ô nhập tin nhắn */}
           <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-              <button type="button" className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer" title="Biểu cảm">
+            <form
+              onSubmit={handleSendMessage}
+              className="flex items-center gap-3"
+            >
+              <button
+                type="button"
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                title="Biểu cảm"
+              >
                 <Smile className="w-5 h-5" />
               </button>
               <Input
@@ -328,7 +450,7 @@ export default function Chat() {
                 placeholder="Nhập nội dung trao đổi với nhà tuyển dụng tại đây..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                className="flex-grow h-11 px-4 border border-slate-200 dark:border-slate-800 rounded-xl text-xs bg-white dark:bg-slate-950 outline-none focus:border-indigo-500 transition-all text-slate-800 dark:text-white"
+                className="grow h-11 px-4 border border-slate-200 dark:border-slate-800 rounded-xl text-xs bg-white dark:bg-slate-950 outline-none focus:border-indigo-500 transition-all text-slate-800 dark:text-white"
               />
               <Button
                 type="submit"
@@ -339,9 +461,7 @@ export default function Chat() {
               </Button>
             </form>
           </div>
-
         </div>
-
       </div>
     </div>
   );

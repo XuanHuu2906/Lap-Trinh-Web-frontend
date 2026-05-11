@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Star, MapPin, DollarSign, Calendar, ChevronRight, CheckCircle, FileText, Send, Trash2 } from "lucide-react";
+import {
+  Star,
+  MapPin,
+  DollarSign,
+  Calendar,
+  ChevronRight,
+  CheckCircle,
+  FileText,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -36,7 +46,8 @@ const JOBS_DATA: Job[] = [
     type: "Toàn thời gian",
     experience: "3 - 5 năm",
     level: "Senior",
-    description: "Chịu trách nhiệm thiết kế kiến trúc frontend và phát triển các tính năng phức tạp cho nền tảng tuyển dụng doanh nghiệp SaaS. Tối ưu hóa hiệu năng tải trang và trải nghiệm người dùng.",
+    description:
+      "Chịu trách nhiệm thiết kế kiến trúc frontend và phát triển các tính năng phức tạp cho nền tảng tuyển dụng doanh nghiệp SaaS. Tối ưu hóa hiệu năng tải trang và trải nghiệm người dùng.",
   },
   {
     id: 2,
@@ -52,7 +63,8 @@ const JOBS_DATA: Job[] = [
     type: "Làm việc từ xa (Remote)",
     experience: "2 - 4 năm",
     level: "Middle",
-    description: "Tham gia phát triển các dịch vụ thanh toán trực tuyến và game portal. Xây dựng Restful API có hiệu năng cao và tích hợp mượt mà với UI frontend.",
+    description:
+      "Tham gia phát triển các dịch vụ thanh toán trực tuyến và game portal. Xây dựng Restful API có hiệu năng cao và tích hợp mượt mà với UI frontend.",
   },
   {
     id: 3,
@@ -68,7 +80,8 @@ const JOBS_DATA: Job[] = [
     type: "Toàn thời gian",
     experience: "2 - 3 năm",
     level: "Middle",
-    description: "Nghiên cứu hành vi người dùng, vẽ luồng trải nghiệm (user flow) và thiết kế giao diện ứng dụng ví điện tử MoMo thân thiện, hiện đại.",
+    description:
+      "Nghiên cứu hành vi người dùng, vẽ luồng trải nghiệm (user flow) và thiết kế giao diện ứng dụng ví điện tử MoMo thân thiện, hiện đại.",
   },
   {
     id: 4,
@@ -84,7 +97,8 @@ const JOBS_DATA: Job[] = [
     type: "Toàn thời gian",
     experience: "2 - 5 năm",
     level: "Senior",
-    description: "Thu thập, xử lý dữ liệu hành vi mua sắm thương mại điện tử để xây dựng các báo cáo trực quan cho ban giám đốc phục vụ chiến lược kinh doanh.",
+    description:
+      "Thu thập, xử lý dữ liệu hành vi mua sắm thương mại điện tử để xây dựng các báo cáo trực quan cho ban giám đốc phục vụ chiến lược kinh doanh.",
   },
   {
     id: 5,
@@ -100,13 +114,14 @@ const JOBS_DATA: Job[] = [
     type: "Toàn thời gian",
     experience: "3+ năm",
     level: "Senior",
-    description: "Nghiên cứu và tinh chỉnh các mô hình học máy, xử lý ngôn ngữ tự nhiên phục vụ sản xuất AI Agent thông minh cho doanh nghiệp toàn cầu.",
+    description:
+      "Nghiên cứu và tinh chỉnh các mô hình học máy, xử lý ngôn ngữ tự nhiên phục vụ sản xuất AI Agent thông minh cho doanh nghiệp toàn cầu.",
   },
 ];
 
 export default function SavedJobs() {
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
-  
+
   // Modal ứng tuyển
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedCV, setSelectedCV] = useState("cv_goc_2026.pdf");
@@ -126,6 +141,7 @@ export default function SavedJobs() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSavedJobs();
   }, []);
 
@@ -146,7 +162,10 @@ export default function SavedJobs() {
     e.preventDefault();
     setIsSubmitted(true);
     setTimeout(() => {
-      const applied = localStorage.getItem("appliedJobs") ? JSON.parse(localStorage.getItem("appliedJobs")!) : [];
+      const applied = localStorage.getItem("appliedJobs")
+        ? JSON.parse(localStorage.getItem("appliedJobs")!)
+        : [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (!applied.some((a: any) => a.id === selectedJob?.id)) {
         applied.push({
           id: selectedJob?.id,
@@ -173,8 +192,13 @@ export default function SavedJobs() {
     <div className="font-sans">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Việc làm đã lưu (UC-09)</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Lưu trữ các cơ hội việc làm tốt để xem lại và tiến hành nộp đơn tuyển dụng bất cứ lúc nào.</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Việc làm đã lưu (UC-09)
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          Lưu trữ các cơ hội việc làm tốt để xem lại và tiến hành nộp đơn tuyển
+          dụng bất cứ lúc nào.
+        </p>
       </div>
 
       {/* Danh sách việc đã lưu */}
@@ -182,9 +206,12 @@ export default function SavedJobs() {
         {savedJobs.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-16 text-center transition-colors duration-150">
             <Star className="w-12 h-12 text-amber-400 mx-auto mb-3 animate-pulse" />
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Bạn chưa lưu việc làm nào</p>
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+              Bạn chưa lưu việc làm nào
+            </p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
-              Hãy truy cập mục <strong>Tìm việc</strong> trên Sidebar, nhấp biểu tượng Ngôi sao/Bookmark để lưu lại các tin đăng hấp dẫn nhé!
+              Hãy truy cập mục <strong>Tìm việc</strong> trên Sidebar, nhấp biểu
+              tượng Ngôi sao/Bookmark để lưu lại các tin đăng hấp dẫn nhé!
             </p>
           </div>
         ) : (
@@ -197,36 +224,49 @@ export default function SavedJobs() {
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 {/* Left info */}
                 <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-lg ${job.logoColor} text-white flex items-center justify-center text-lg font-black shrink-0 shadow-3xs`}>
+                  <div
+                    className={`w-12 h-12 rounded-lg ${job.logoColor} text-white flex items-center justify-center text-lg font-black shrink-0 shadow-3xs`}
+                  >
                     {job.logo}
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {job.title}
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">{job.company}</p>
-                    
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      {job.company}
+                    </p>
+
                     {/* Metadata */}
                     <div className="flex flex-wrap items-center gap-y-1.5 gap-x-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5" /> {job.location}
                       </span>
                       <span className="flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> {job.salary}
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-500" />{" "}
+                        {job.salary}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" /> Hạn nộp: {job.deadline}
+                        <Calendar className="w-3.5 h-3.5" /> Hạn nộp:{" "}
+                        {job.deadline}
                       </span>
                     </div>
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {job.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="px-2 py-0.5 text-[10px] lowercase first-letter:uppercase font-bold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none">
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="px-2 py-0.5 text-[10px] lowercase first-letter:uppercase font-bold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none"
+                        >
                           {tag}
                         </Badge>
                       ))}
-                      <Badge variant="outline" className="px-2 py-0.5 text-[10px] lowercase first-letter:uppercase font-bold rounded-md bg-indigo-50 border-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-none">
+                      <Badge
+                        variant="outline"
+                        className="px-2 py-0.5 text-[10px] lowercase first-letter:uppercase font-bold rounded-md bg-indigo-50 border-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-none"
+                      >
                         {job.type}
                       </Badge>
                     </div>
@@ -268,8 +308,12 @@ export default function SavedJobs() {
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 text-[9px] font-bold rounded-full">UC-03: Ứng tuyển</span>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Nộp hồ sơ trực tuyến</span>
+                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 text-[9px] font-bold rounded-full">
+                  UC-03: Ứng tuyển
+                </span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Nộp hồ sơ trực tuyến
+                </span>
               </div>
               <button
                 onClick={handleCloseModal}
@@ -284,10 +328,18 @@ export default function SavedJobs() {
               {!isSubmitted ? (
                 <form onSubmit={handleApplySubmit} className="space-y-5">
                   <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl">
-                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">Vị trí ứng tuyển:</p>
-                    <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">{selectedJob.title}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{selectedJob.company} — {selectedJob.location}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 leading-relaxed">{selectedJob.description}</p>
+                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">
+                      Vị trí ứng tuyển:
+                    </p>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                      {selectedJob.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      {selectedJob.company} — {selectedJob.location}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 leading-relaxed">
+                      {selectedJob.description}
+                    </p>
                   </div>
 
                   {/* CV Selection */}
@@ -307,8 +359,12 @@ export default function SavedJobs() {
                             className="w-4 h-4 text-indigo-600 dark:text-indigo-500 focus:ring-indigo-500 cursor-pointer"
                           />
                           <div className="text-left">
-                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">CV_Nguyen_Van_A_Chuan.pdf (Mặc định)</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Tạo từ mẫu: Executive Standard • Cập nhật hôm qua</p>
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                              CV_Nguyen_Van_A_Chuan.pdf (Mặc định)
+                            </p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                              Tạo từ mẫu: Executive Standard • Cập nhật hôm qua
+                            </p>
                           </div>
                         </div>
                         <FileText className="w-5 h-5 text-indigo-500 shrink-0" />
@@ -353,9 +409,16 @@ export default function SavedJobs() {
                   <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 dark:border-emerald-900">
                     <CheckCircle className="w-8 h-8 text-emerald-500" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ứng tuyển thành công!</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Ứng tuyển thành công!
+                  </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed">
-                    Hồ sơ của bạn đã được chuyển thẳng đến bộ phận Tuyển dụng của <strong className="text-slate-800 dark:text-white">{selectedJob.company}</strong>.
+                    Hồ sơ của bạn đã được chuyển thẳng đến bộ phận Tuyển dụng
+                    của{" "}
+                    <strong className="text-slate-800 dark:text-white">
+                      {selectedJob.company}
+                    </strong>
+                    .
                   </p>
                   <button
                     onClick={handleCloseModal}

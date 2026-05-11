@@ -46,7 +46,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <main>
+    <main className="bg-white">
       <HeroSection onSearch={() => navigate("/jobs")} />
       <FeaturedJobs
         jobs={FEATURED_JOBS}

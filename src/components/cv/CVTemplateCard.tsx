@@ -1,6 +1,6 @@
-import React from 'react';
-import { type CVTemplate } from '../../types/cv.type';
-import { Button } from '../../components/ui/button';
+import React from "react";
+import { type CVTemplate } from "../../types/cv.type";
+import { Button } from "../../components/ui/button";
 
 interface CVTemplateCardProps {
   template: CVTemplate;
@@ -8,17 +8,23 @@ interface CVTemplateCardProps {
   onUse: (template: CVTemplate) => void;
 }
 
-export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPreview, onUse }) => {
+export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({
+  template,
+  onPreview,
+  onUse,
+}) => {
   // Trình bày giao diện thu nhỏ (mockup layout) trực tiếp bằng HTML/CSS mô phỏng chuẩn xác thiết kế
   const renderMockup = () => {
     switch (template.id) {
       case 1: // executive-standard
         return (
-          <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-[6px] text-slate-400 select-none">
+          <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-400 select-none">
             <div>
               {/* Header */}
-              <div className="border-b-[1px] border-slate-100 pb-2 mb-3">
-                <div className="font-extrabold text-slate-850 text-[10px] leading-none mb-1 font-sans">CV</div>
+              <div className="border-b border-slate-100 pb-2 mb-3">
+                <div className="font-extrabold text-slate-850 text-[10px] leading-none mb-1 font-sans">
+                  CV
+                </div>
                 <div className="w-12 h-1 bg-slate-350 rounded-sm mb-1"></div>
                 <div className="w-20 h-1 bg-slate-200 rounded-sm"></div>
               </div>
@@ -41,7 +47,7 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
               </div>
             </div>
             {/* Footer mockup */}
-            <div className="flex justify-between items-center text-[3px] border-t-[1px] border-slate-50 pt-2 text-slate-300">
+            <div className="flex justify-between items-center text-[3px] border-t border-slate-50 pt-2 text-slate-300">
               <span>ATS Friendly</span>
               <span>1 Page</span>
             </div>
@@ -49,9 +55,9 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
         );
       case 2: // corporate-split
         return (
-          <div className="w-full h-full bg-white p-4 flex text-[4px] leading-[6px] text-slate-400 select-none">
+          <div className="w-full h-full bg-white p-4 flex text-[4px] leading-1.5 text-slate-400 select-none">
             {/* Left Sidebar */}
-            <div className="w-[32%] border-r-[1px] border-slate-100 pr-1.5 mr-1.5 flex flex-col justify-between">
+            <div className="w-[32%] border-r border-slate-100 pr-1.5 mr-1.5 flex flex-col justify-between">
               <div>
                 <div className="w-6 h-6 rounded-full bg-slate-200 mb-2 mx-auto"></div>
                 <div className="w-10 h-0.5 bg-slate-400 rounded-sm mb-2 mx-auto"></div>
@@ -70,12 +76,14 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
                   </div>
                 </div>
               </div>
-              <div className="text-[3px] text-slate-300 tracking-wider">SAM BASE WORK</div>
+              <div className="text-[3px] text-slate-300 tracking-wider">
+                SAM BASE WORK
+              </div>
             </div>
             {/* Right Main Body */}
             <div className="w-[68%] flex flex-col justify-between">
               <div>
-                <div className="border-b-[1px] border-slate-100 pb-1.5 mb-2">
+                <div className="border-b border-slate-100 pb-1.5 mb-2">
                   <div className="w-16 h-1 bg-slate-500 rounded-sm mb-1"></div>
                   <div className="w-24 h-0.5 bg-slate-200 rounded-sm"></div>
                 </div>
@@ -101,17 +109,21 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
         );
       case 3: // tech-minimal
         return (
-          <div className="w-full h-full bg-[#1F242D] p-4 flex flex-col justify-between text-[4px] leading-[6px] text-slate-300 select-none">
+          <div className="w-full h-full bg-[#1F242D] p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-300 select-none">
             <div>
               {/* Header */}
-              <div className="border-b-[1px] border-slate-700 pb-2 mb-3">
-                <div className="font-extrabold text-[#D5A153] text-[12px] leading-none mb-1 font-serif">CV</div>
+              <div className="border-b border-slate-700 pb-2 mb-3">
+                <div className="font-extrabold text-[#D5A153] text-[12px] leading-none mb-1 font-serif">
+                  CV
+                </div>
                 <div className="w-12 h-1 bg-slate-400 rounded-sm mb-1"></div>
                 <div className="w-20 h-0.5 bg-slate-500 rounded-sm"></div>
               </div>
               {/* Section 1 */}
               <div className="mb-3">
-                <div className="w-12 h-1 text-[#D5A153] rounded-sm mb-1.5 font-bold font-mono">EXPERIENCE</div>
+                <div className="w-12 h-1 text-[#D5A153] rounded-sm mb-1.5 font-bold font-mono">
+                  EXPERIENCE
+                </div>
                 <div className="space-y-1">
                   <div className="w-full h-0.5 bg-slate-600 rounded-sm"></div>
                   <div className="w-5/6 h-0.5 bg-slate-600 rounded-sm"></div>
@@ -124,7 +136,9 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
               </div>
               {/* Section 2 */}
               <div>
-                <div className="w-10 h-1 text-[#D5A153] rounded-sm mb-1.5 font-bold font-mono">SKILLS</div>
+                <div className="w-10 h-1 text-[#D5A153] rounded-sm mb-1.5 font-bold font-mono">
+                  SKILLS
+                </div>
                 <div className="space-y-1">
                   <div className="w-11/12 h-0.5 bg-slate-600 rounded-sm"></div>
                 </div>
@@ -134,29 +148,37 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
         );
       case 4: // consultant-pro
         return (
-          <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-[6px] text-slate-400 select-none">
+          <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-400 select-none">
             <div>
               {/* Header */}
               <div className="mb-3">
-                <div className="font-serif text-[11px] font-bold text-slate-900 leading-none mb-1">CVM</div>
+                <div className="font-serif text-[11px] font-bold text-slate-900 leading-none mb-1">
+                  CVM
+                </div>
                 <div className="w-16 h-[1.5px] bg-slate-800 rounded-sm mb-1"></div>
                 <div className="w-24 h-0.5 bg-slate-300 rounded-sm"></div>
               </div>
               {/* Split layout simulation */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-1 space-y-1.5 border-r-[0.5px] border-slate-100 pr-1">
-                  <div className="w-8 h-1 bg-slate-500 rounded-sm font-bold">CONTACT</div>
+                  <div className="w-8 h-1 bg-slate-500 rounded-sm font-bold">
+                    CONTACT
+                  </div>
                   <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
                   <div className="w-11/12 h-0.5 bg-slate-100 rounded-sm"></div>
                 </div>
                 <div className="col-span-2 space-y-2">
                   <div>
-                    <div className="w-12 h-1 bg-slate-500 rounded-sm mb-1 font-bold">EDUCATION</div>
+                    <div className="w-12 h-1 bg-slate-500 rounded-sm mb-1 font-bold">
+                      EDUCATION
+                    </div>
                     <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
                     <div className="w-5/6 h-0.5 bg-slate-100 rounded-sm"></div>
                   </div>
                   <div>
-                    <div className="w-14 h-1 bg-slate-500 rounded-sm mb-1 font-bold">PROJECTS</div>
+                    <div className="w-14 h-1 bg-slate-500 rounded-sm mb-1 font-bold">
+                      PROJECTS
+                    </div>
                     <div className="w-11/12 h-0.5 bg-slate-100 rounded-sm"></div>
                   </div>
                 </div>
@@ -171,7 +193,9 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
       default:
         return (
           <div className="w-full h-full bg-slate-100 rounded-sm flex items-center justify-center">
-            <span className="text-xs text-slate-400 font-semibold">{template.name}</span>
+            <span className="text-xs text-slate-400 font-semibold">
+              {template.name}
+            </span>
           </div>
         );
     }
@@ -179,28 +203,27 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
 
   return (
     <div className="flex flex-col bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-
       {/* Thumbnail area */}
-      <div className="relative aspect-[3/4] p-6 bg-slate-50/50 border-b border-slate-100 overflow-hidden flex items-center justify-center">
+      <div className="relative aspect-3/4 p-6 bg-slate-50/50 border-b border-slate-100 overflow-hidden flex items-center justify-center">
         {/* Huy hiệu MỚI */}
         {template.isNew && (
-          <span className="absolute top-4 left-4 z-10 inline-flex items-center px-2 py-0.5 bg-slate-900 text-white text-[9px] font-bold tracking-widest rounded-[2px] shadow-sm uppercase">
+          <span className="absolute top-4 left-4 z-10 inline-flex items-center px-2 py-0.5 bg-slate-900 text-white text-[9px] font-bold tracking-widest rounded-xs shadow-sm uppercase">
             Mới
           </span>
         )}
 
         {/* Animated container */}
-        <div className="w-[144px] h-[192px] transition-transform duration-300 group-hover:scale-[1.03] shadow-md hover:shadow-lg border border-slate-200/40 rounded-sm overflow-hidden bg-white">
+        <div className="w-36 h-48 transition-transform duration-300 group-hover:scale-[1.03] shadow-md hover:shadow-lg border border-slate-200/40 rounded-sm overflow-hidden bg-white">
           {renderMockup()}
         </div>
       </div>
 
       {/* Details Area */}
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-5 flex flex-col grow">
         <h4 className="text-[15px] font-bold text-slate-900 mb-1.5 font-sans group-hover:text-slate-800 transition-colors">
           {template.name}
         </h4>
-        <p className="text-xs text-slate-400 font-sans leading-relaxed mb-5 flex-grow">
+        <p className="text-xs text-slate-400 font-sans leading-relaxed mb-5 grow">
           {template.description}
         </p>
 
@@ -210,7 +233,7 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
             onClick={() => onPreview(template)}
             variant="outline"
             size="sm"
-            className="text-[11px] font-bold tracking-wider rounded-[4px]"
+            className="text-[11px] font-bold tracking-wider rounded-sm"
           >
             XEM TRƯỚC
           </Button>
@@ -218,13 +241,12 @@ export const CVTemplateCard: React.FC<CVTemplateCardProps> = ({ template, onPrev
             onClick={() => onUse(template)}
             variant="default"
             size="sm"
-            className="text-[11px] font-bold tracking-wider rounded-[4px]"
+            className="text-[11px] font-bold tracking-wider rounded-sm"
           >
             SỬ DỤNG
           </Button>
         </div>
       </div>
-
     </div>
   );
 };

@@ -18,16 +18,17 @@ const stats = [
     icon: FileText,
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
-    link: "/candidate/my-cvs",
+    link: "/candidate/MyCVs",
   },
   {
     label: "Công việc đã ứng tuyển",
     value: "12",
     note: "+2 trong tuần này",
     icon: BriefcaseBusiness,
+    action: "Xem Ứng viên đã nộp",
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
-    link: "/candidate/applied-jobs",
+    link: "/candidate/AppliedJobs",
   },
   {
     label: "Phản hồi mới",
@@ -36,7 +37,7 @@ const stats = [
     icon: Bell,
     iconBg: "bg-red-100",
     iconColor: "text-red-500",
-    link: "/candidate/notifications",
+    link: "/candidate/Notifications",
   },
 ];
 
@@ -103,8 +104,8 @@ export default function Overview() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tổng quan</h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
+        <p className="text-gray-500 text-sm mt-1">
           Chào mừng trở lại. Cập nhật tiến độ ứng tuyển của bạn hôm nay.
         </p>
       </div>
@@ -122,9 +123,13 @@ export default function Overview() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                   {s.label}
                 </p>
-                <p className="text-4xl font-bold text-gray-900 dark:text-white">{s.value}</p>
+                <p className="text-4xl font-bold text-gray-900 dark:text-white">
+                  {s.value}
+                </p>
                 {s.note && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{s.note}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    {s.note}
+                  </p>
                 )}
                 {s.action && (
                   <a
@@ -185,8 +190,12 @@ export default function Overview() {
                     <td className="px-5 py-3.5 font-medium text-gray-800 dark:text-slate-100">
                       {row.position}
                     </td>
-                    <td className="px-5 py-3.5 text-gray-500 dark:text-slate-400">{row.company}</td>
-                    <td className="px-5 py-3.5 text-gray-500 dark:text-slate-400">{row.date}</td>
+                    <td className="px-5 py-3.5 text-gray-500 dark:text-slate-400">
+                      {row.company}
+                    </td>
+                    <td className="px-5 py-3.5 text-gray-500 dark:text-slate-400">
+                      {row.date}
+                    </td>
                     <td className="px-5 py-3.5">
                       <Badge
                         variant="secondary"
@@ -234,7 +243,9 @@ export default function Overview() {
                     <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">
                       {job.title}
                     </p>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">{job.company}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">
+                      {job.company}
+                    </p>
                     <div className="flex items-center gap-3 mt-1.5">
                       <span className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
                         <MapPin size={10} /> {job.location}

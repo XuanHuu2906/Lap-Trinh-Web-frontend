@@ -134,6 +134,7 @@ export const AdminSystem: React.FC = () => {
                       <td className="px-5 py-3.5 uppercase">
                         <select
                           value={user.role}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           onChange={(e) => handleChangeUserRole(user.id, e.target.value as any, user.email)}
                           className="bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 px-2 py-1 rounded-sm outline-none cursor-pointer"
                           disabled={user.role === 'admin'} // Không đổi quyền của chính super admin

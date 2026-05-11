@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect } from "react";
+import { X } from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,16 +8,21 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+}) => {
   // Prevent background scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
@@ -26,14 +31,13 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
         onClick={onClose}
       />
-      
+
       {/* Modal Container */}
       <div className="relative bg-white rounded-lg shadow-xl border border-slate-100 max-w-4xl w-full max-h-[90vh] flex flex-col z-10 overflow-hidden transform transition-all duration-300 scale-95 animate-scale-up">
-        
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <h3 className="text-lg font-bold text-slate-950 font-sans tracking-tight">
@@ -48,10 +52,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
         </div>
 
         {/* Modal Body */}
-        <div className="flex-grow p-6 overflow-y-auto">
-          {children}
-        </div>
-
+        <div className="grow p-6 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

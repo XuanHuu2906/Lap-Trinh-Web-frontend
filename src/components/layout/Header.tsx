@@ -25,7 +25,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className=" flex items-center gap-6">
           <NavLink to="/jobs" className={linkClass}>
             Tìm việc
           </NavLink>

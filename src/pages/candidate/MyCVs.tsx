@@ -72,7 +72,6 @@ const tips = [
   },
 ];
 
-// Tiny SVG CV preview thumbnail
 function CVThumbnail({
   bgClass,
   lineColors,
@@ -104,8 +103,7 @@ function CVThumbnail({
           <div
             key={i}
             className={`h-1 rounded-sm ${lineColors[2]}`}
-            // eslint-disable-next-line react-hooks/purity
-            style={{ width: `${70 + Math.random() * 25}%` }}
+            style={{ width: `${70 + ((i * 7) % 25)}%` }}
           />
         ))}
       </div>
@@ -113,7 +111,6 @@ function CVThumbnail({
   );
 }
 
-// Circular progress SVG
 function CircularProgress({ pct }: { pct: number }) {
   const r = 28;
   const circ = 2 * Math.PI * r;
@@ -160,7 +157,10 @@ export default function MyCVs() {
     if (!file) return;
 
     // Kiểm tra file PDF
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       alert("Vui lòng tải lên tệp tin định dạng PDF hợp lệ.");
       return;
     }
@@ -181,7 +181,7 @@ export default function MyCVs() {
 
     setCvs((prev) => [newCV, ...prev]);
     alert(`Đã tải lên hồ sơ PDF thành công: "${newCV.name}"!`);
-    
+
     // reset input để cho phép upload lại cùng 1 file nếu cần
     e.target.value = "";
   };
@@ -191,12 +191,14 @@ export default function MyCVs() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">CV của tôi</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            CV của tôi
+          </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Quản lý và tối ưu hóa hồ sơ năng lực chuyên nghiệp của bạn.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {/* Nút Upload PDF (UC-10) */}
           <label className="flex items-center gap-2 bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-lg px-4 py-2 transition-all border border-gray-250 dark:border-slate-700 shadow-xs cursor-pointer">
@@ -243,7 +245,6 @@ export default function MyCVs() {
                   key={cv.id}
                   className="hover:bg-gray-50/50 dark:hover:bg-slate-850/40 transition-colors"
                 >
-                  {/* Thumbnail */}
                   <td className="px-5 py-4 w-24">
                     <div className="w-14 h-20 rounded border border-gray-200 dark:border-slate-800 overflow-hidden shadow-sm">
                       <CVThumbnail
@@ -253,21 +254,25 @@ export default function MyCVs() {
                       />
                     </div>
                   </td>
-
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-800 dark:text-white">{cv.name}</p>
+                      <p className="font-semibold text-gray-800 dark:text-white">
+                        {cv.name}
+                      </p>
                       {cv.isPdf && (
                         <span className="text-[9px] bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
                           PDF File
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-550 mt-0.5">{cv.subtitle}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-550 mt-0.5">
+                      {cv.subtitle}
+                    </p>
                   </td>
 
-                  <td className="px-5 py-4 text-gray-500 dark:text-gray-400">{cv.updatedAt}</td>
-
+                  <td className="px-5 py-4 text-gray-500 dark:text-gray-400">
+                    {cv.updatedAt}
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       <button
@@ -276,11 +281,13 @@ export default function MyCVs() {
                       >
                         <Eye size={16} />
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (cv.isPdf) {
-                            alert("Bạn không thể chỉnh sửa trực tiếp nội dung của tệp tin PDF tĩnh.");
+                            alert(
+                              "Bạn không thể chỉnh sửa trực tiếp nội dung của tệp tin PDF tĩnh.",
+                            );
                             return;
                           }
                           navigate(`/candidate/cv-builder?id=${cv.id}`);
@@ -290,7 +297,9 @@ export default function MyCVs() {
                             ? "text-gray-300 dark:text-gray-700 hover:bg-transparent cursor-not-allowed"
                             : "hover:bg-yellow-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-yellow-600 dark:hover:text-amber-400"
                         }`}
-                        title={cv.isPdf ? "Không hỗ trợ chỉnh sửa PDF tĩnh" : "Sửa"}
+                        title={
+                          cv.isPdf ? "Không hỗ trợ chỉnh sửa PDF tĩnh" : "Sửa"
+                        }
                         disabled={cv.isPdf}
                       >
                         <Pencil size={16} />
@@ -314,7 +323,7 @@ export default function MyCVs() {
                 </tr>
               ))}
             </tbody>
-            </table>
+          </table>
         </div>
 
         {cvs.length === 0 && (
@@ -330,7 +339,7 @@ export default function MyCVs() {
         </div>
       </div>
 
-      {/* Tips & Analytics */}
+      {/* Tips */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {tips.map(({ icon: Icon, title, desc, color, progress }) => (
           <div
@@ -348,7 +357,9 @@ export default function MyCVs() {
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-800 dark:text-white text-sm">{title}</p>
+                <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                  {title}
+                </p>
                 <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 leading-relaxed">
                   {desc}
                 </p>

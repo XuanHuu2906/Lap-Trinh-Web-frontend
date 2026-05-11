@@ -1,16 +1,13 @@
-import { Link } from 'react-router-dom';
-import Footer from '../../components/layout/Footer';
+import { Link } from "react-router-dom";
+import Footer from "../../components/layout/Footer";
 
 export function CandidateRegisterPage() {
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col justify-between text-slate-800">
-
       {/* Vùng không gian ở giữa để căn thẻ đăng ký */}
       <main className="flex-1 flex items-center justify-center px-4">
-
         {/* Thẻ đăng ký (Card) màu trắng nổi bật ở giữa */}
-        <div className="w-full max-w-[500px] bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
-
+        <div className="w-full max-w-125 bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-slate-900 leading-none tracking-tight">
               Đăng ký ứng viên
@@ -28,8 +25,18 @@ export function CandidateRegisterPage() {
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </span>
                 <input
@@ -47,8 +54,18 @@ export function CandidateRegisterPage() {
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </span>
                 <input
@@ -67,8 +84,18 @@ export function CandidateRegisterPage() {
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
                     </svg>
                   </span>
                   <input
@@ -84,8 +111,18 @@ export function CandidateRegisterPage() {
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
                     </svg>
                   </span>
                   <input
@@ -102,46 +139,70 @@ export function CandidateRegisterPage() {
               <input
                 type="checkbox"
                 id="candidate-terms"
-                className="mt-1 w-4 h-4 border border-slate-200 accent-slate-900 cursor-pointer flex-shrink-0"
+                className="mt-1 w-4 h-4 border border-slate-200 accent-slate-900 cursor-pointer shrink-0"
               />
-              <label htmlFor="candidate-terms" className="text-xs text-slate-500 leading-relaxed cursor-pointer selection:bg-slate-100">
-                Tôi đồng ý với{' '}
-                <span className="text-slate-900 font-bold underline hover:text-black cursor-pointer">Điều khoản dịch vụ</span>
-                {' '}và{' '}
-                <span className="text-slate-900 font-bold underline hover:text-black cursor-pointer">Chính sách bảo mật</span>
-                {' '}của HireArch Enterprise.
+              <label
+                htmlFor="candidate-terms"
+                className="text-xs text-slate-500 leading-relaxed cursor-pointer selection:bg-slate-100"
+              >
+                Tôi đồng ý với{" "}
+                <span className="text-slate-900 font-bold underline hover:text-black cursor-pointer">
+                  Điều khoản dịch vụ
+                </span>{" "}
+                và{" "}
+                <span className="text-slate-900 font-bold underline hover:text-black cursor-pointer">
+                  Chính sách bảo mật
+                </span>{" "}
+                của HireArch Enterprise.
               </label>
             </div>
 
             {/* Nút đăng ký */}
             <button className="w-full h-11 bg-slate-900 text-white font-bold text-xs tracking-widest hover:bg-slate-850 transition-all rounded shadow-sm flex items-center justify-center gap-2 mt-2 cursor-pointer">
               ĐĂNG KÝ ỨNG VIÊN
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
               </svg>
             </button>
           </form>
 
           {/* Đường gạch ngang và dẫn hướng Đăng nhập */}
           <div className="mt-6 pt-5 border-t border-slate-150 text-center">
-            <span className="text-xs text-slate-400 font-semibold">Đã có tài khoản? </span>
-            <Link to="/login" className="text-xs font-bold text-slate-900 uppercase tracking-wider hover:underline ml-1">
+            <span className="text-xs text-slate-400 font-semibold">
+              Đã có tài khoản?{" "}
+            </span>
+            <Link
+              to="/login"
+              className="text-xs font-bold text-slate-900 uppercase tracking-wider hover:underline ml-1"
+            >
               Đăng nhập
             </Link>
           </div>
         </div>
       </main>
       {/* Hướng dẫn tạo trang doanh nghiệp dưới ô đăng ký */}
-      <div className="text-center text-[13px] font-medium text-slate-500 mb-10" >
+      <div className="text-center text-[13px] font-medium text-slate-500 mb-10">
         <span>Bạn đang muốn tạo tài khoản doanh nghiệp? </span>
-        <Link to="/register-enterprise" className="text-[#6366f1] hover:text-[#4f46e5] font-semibold hover:underline transition-all">
+        <Link
+          to="/register-enterprise"
+          className="text-[#6366f1] hover:text-[#4f46e5] font-semibold hover:underline transition-all"
+        >
           Đăng ký tài khoản doanh nghiệp
         </Link>
       </div>
 
       {/* Footer chung dưới đáy trang */}
       <Footer />
-
     </div>
   );
 }

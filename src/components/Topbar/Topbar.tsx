@@ -9,7 +9,7 @@ import {
   User,
   LogOut,
   Search,
-  Settings
+  Settings,
 } from "lucide-react";
 
 interface TopbarProps {
@@ -33,7 +33,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/candidate/cv-builder": "Thiết kế CV (UC-05)",
   "/candidate/my-cvs": "Quản lý CV",
   "/candidate/notifications": "Thông báo cá nhân",
-  
+
   "/recruiter": "Tổng quan hoạt động",
   "/recruiter/post-job": "Đăng tin tuyển dụng mới",
   "/recruiter/manage-jobs": "Quản lý tin tuyển dụng",
@@ -91,13 +91,12 @@ export const Topbar: React.FC<TopbarProps> = ({
 
   // Tìm kiếm tiêu đề phù hợp
   const matchedKey = Object.keys(PAGE_TITLES).find(
-    (key) => pathname === key || pathname.startsWith(key + "/")
+    (key) => pathname === key || pathname.startsWith(key + "/"),
   );
   const pageTitle = matchedKey ? PAGE_TITLES[matchedKey] : "Bảng điều khiển";
 
   return (
-    <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800/80 px-6 sm:px-8 flex items-center justify-between flex-shrink-0 z-30 sticky top-0 transition-colors duration-150">
-      
+    <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800/80 px-6 sm:px-8 flex items-center justify-between shrink-0 z-30 sticky top-0 transition-colors duration-150">
       {/* Left: Hamburger (mobile) & Breadcrumbs */}
       <div className="flex items-center gap-4">
         <button
@@ -118,7 +117,6 @@ export const Topbar: React.FC<TopbarProps> = ({
 
       {/* Right: Actions, Theme toggle, Notification & Account */}
       <div className="flex items-center gap-4">
-        
         {/* Search Bar for Recruiter and Candidate (Desktop only) */}
         {role !== "admin" && (
           <div className="relative hidden md:block">
@@ -130,15 +128,21 @@ export const Topbar: React.FC<TopbarProps> = ({
           </div>
         )}
 
-
-
         {/* Theme Toggle (Sáng / Tối) */}
         <button
           onClick={() => setDarkMode(!darkMode)}
           className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          title={darkMode ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+          title={
+            darkMode
+              ? "Chuyển sang giao diện Sáng"
+              : "Chuyển sang giao diện Tối"
+          }
         >
-          {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-500" />}
+          {darkMode ? (
+            <Sun className="w-5 h-5 text-amber-400" />
+          ) : (
+            <Moon className="w-5 h-5 text-slate-500" />
+          )}
         </button>
 
         {/* Notification Bell */}
@@ -156,26 +160,53 @@ export const Topbar: React.FC<TopbarProps> = ({
 
           {isNotifOpen && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)}></div>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsNotifOpen(false)}
+              ></div>
               <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-lg rounded-xl py-1.5 z-50 animate-fade-in">
                 <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <p className="text-[13px] font-bold text-slate-800 dark:text-white">Thông báo mới</p>
-                  <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded-full">3 chưa đọc</span>
+                  <p className="text-[13px] font-bold text-slate-800 dark:text-white">
+                    Thông báo mới
+                  </p>
+                  <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded-full">
+                    3 chưa đọc
+                  </span>
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {[
-                    { text: "Cập nhật trạng thái phỏng vấn cho vị trí Senior Frontend Engineer", time: "5 phút trước" },
-                    { text: "Lịch hẹn phỏng vấn trực tuyến lúc 14:00 ngày mai", time: "1 giờ trước" },
-                    { text: "Tin tuyển dụng bạn lưu trữ đã được cập nhật mức lương mới", time: "3 giờ trước" },
+                    {
+                      text: "Cập nhật trạng thái phỏng vấn cho vị trí Senior Frontend Engineer",
+                      time: "5 phút trước",
+                    },
+                    {
+                      text: "Lịch hẹn phỏng vấn trực tuyến lúc 14:00 ngày mai",
+                      time: "1 giờ trước",
+                    },
+                    {
+                      text: "Tin tuyển dụng bạn lưu trữ đã được cập nhật mức lương mới",
+                      time: "3 giờ trước",
+                    },
                   ].map((n, i) => (
-                    <div key={i} className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
-                      <p className="text-[12px] text-slate-700 dark:text-slate-350 leading-snug">{n.text}</p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-550 mt-1">{n.time}</p>
+                    <div
+                      key={i}
+                      className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                    >
+                      <p className="text-[12px] text-slate-700 dark:text-slate-350 leading-snug">
+                        {n.text}
+                      </p>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-550 mt-1">
+                        {n.time}
+                      </p>
                     </div>
                   ))}
                 </div>
                 <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 text-center">
-                  <Link to={role === "candidate" ? "/candidate/notifications" : "#"} onClick={() => setIsNotifOpen(false)} className="text-[12px] text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+                  <Link
+                    to={role === "candidate" ? "/candidate/notifications" : "#"}
+                    onClick={() => setIsNotifOpen(false)}
+                    className="text-[12px] text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+                  >
                     Xem tất cả thông báo
                   </Link>
                 </div>
@@ -199,7 +230,9 @@ export const Topbar: React.FC<TopbarProps> = ({
               {user.initials}
             </div>
             <div className="hidden md:block text-left leading-none">
-              <span className="text-xs font-bold text-slate-800 dark:text-white block">{user.name}</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-white block">
+                {user.name}
+              </span>
               <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-wider mt-0.5 block uppercase">
                 {user.role}
               </span>
@@ -209,13 +242,20 @@ export const Topbar: React.FC<TopbarProps> = ({
 
           {isProfileOpen && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)}></div>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsProfileOpen(false)}
+              ></div>
               <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-md rounded-xl py-1.5 z-50 animate-fade-in">
                 <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider">Tài khoản hiện tại</span>
-                  <span className="text-xs font-bold text-slate-700 dark:text-white block truncate mt-0.5">{user.email}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider">
+                    Tài khoản hiện tại
+                  </span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-white block truncate mt-0.5">
+                    {user.email}
+                  </span>
                 </div>
-                
+
                 <Link
                   to={user.profilePath}
                   onClick={() => setIsProfileOpen(false)}
@@ -250,9 +290,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             </>
           )}
         </div>
-
       </div>
-
     </header>
   );
 };

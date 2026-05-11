@@ -21,12 +21,18 @@ export function ForgotPasswordPage() {
 
   return (
     <div className="full-screen-page min-h-screen bg-[#f8fafc] font-sans flex flex-col justify-between text-slate-800">
-      
       {/* HEADER LOGO */}
       <header className="w-full px-6 sm:px-12 md:px-16 pt-6 pb-2 flex justify-start items-center">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <Link
+          to="/"
+          className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+        >
           <div className="w-8 h-8 bg-slate-900 flex items-center justify-center rounded-sm shadow-sm">
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z" />
             </svg>
           </div>
@@ -38,8 +44,7 @@ export function ForgotPasswordPage() {
 
       {/* CENTERED CARD CONTAINER */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-6">
-        <div className="w-full max-w-[420px] bg-white border border-slate-200/85 rounded-2xl shadow-sm p-8 relative transition-all duration-200">
-          
+        <div className="w-full max-w-105 bg-white border border-slate-200/85 rounded-2xl shadow-sm p-8 relative transition-all duration-200">
           {!isSubmitted ? (
             <>
               <div className="mb-6">
@@ -47,7 +52,8 @@ export function ForgotPasswordPage() {
                   Quên mật khẩu?
                 </h1>
                 <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-                  Đừng lo lắng! Nhập địa chỉ email tài khoản của bạn dưới đây, chúng tôi sẽ gửi liên kết khôi phục mật khẩu.
+                  Đừng lo lắng! Nhập địa chỉ email tài khoản của bạn dưới đây,
+                  chúng tôi sẽ gửi liên kết khôi phục mật khẩu.
                 </p>
               </div>
 
@@ -93,10 +99,12 @@ export function ForgotPasswordPage() {
                 Kiểm tra email của bạn
               </h2>
               <p className="text-slate-500 text-sm mt-3 leading-relaxed">
-                Chúng tôi đã gửi một email hướng dẫn đặt lại mật khẩu đến hộp thư <strong className="text-slate-800">{email}</strong>.
+                Chúng tôi đã gửi một email hướng dẫn đặt lại mật khẩu đến hộp
+                thư <strong className="text-slate-800">{email}</strong>.
               </p>
               <p className="text-slate-400 text-xs mt-4 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
-                Nếu không nhận được thư, vui lòng kiểm tra mục thư rác (Spam) hoặc thử lại sau vài phút.
+                Nếu không nhận được thư, vui lòng kiểm tra mục thư rác (Spam)
+                hoặc thử lại sau vài phút.
               </p>
             </div>
           )}
@@ -111,13 +119,11 @@ export function ForgotPasswordPage() {
               Quay lại trang Đăng nhập
             </Link>
           </div>
-
         </div>
       </main>
 
       {/* FOOTER */}
       <Footer />
-
     </div>
   );
 }

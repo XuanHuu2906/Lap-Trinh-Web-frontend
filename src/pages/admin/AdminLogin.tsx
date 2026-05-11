@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldAlert, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
+import React, { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  ShieldAlert,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +25,7 @@ export const AdminLogin: React.FC = () => {
     setError(null);
 
     if (!email || !password) {
-      setError('Vui lòng nhập đầy đủ địa chỉ email và mật khẩu.');
+      setError("Vui lòng nhập đầy đủ địa chỉ email và mật khẩu.");
       return;
     }
 
@@ -27,30 +34,31 @@ export const AdminLogin: React.FC = () => {
     // Giả lập độ trễ kết nối mạng để tạo cảm giác chuyên nghiệp
     setTimeout(() => {
       setIsLoading(false);
-      
+
       // Kiểm tra tài khoản admin demo
-      if (email === 'admin@hirearch.com' && password === 'admin123') {
-        localStorage.setItem('isAdminAuthenticated', 'true');
-        
+      if (email === "admin@hirearch.com" && password === "admin123") {
+        localStorage.setItem("isAdminAuthenticated", "true");
+
         // Điều hướng sau đăng nhập
-        const redirectUrl = searchParams.get('redirect') || '/admin/dashboard';
+        const redirectUrl = searchParams.get("redirect") || "/admin/dashboard";
         navigate(redirectUrl);
       } else {
-        setError('Địa chỉ email hoặc mật khẩu quản trị viên không hợp lệ. Vui lòng thử lại.');
+        setError(
+          "Địa chỉ email hoặc mật khẩu quản trị viên không hợp lệ. Vui lòng thử lại.",
+        );
       }
     }, 800);
   };
 
   // Đăng nhập nhanh dành cho nhà phát triển/giám khảo tuyển dụng
   const handleQuickLogin = () => {
-    setEmail('admin@hirearch.com');
-    setPassword('admin123');
+    setEmail("admin@hirearch.com");
+    setPassword("admin123");
     setError(null);
   };
 
   return (
     <section className="full-screen-page flex flex-col items-center justify-center min-h-screen bg-[#f1f5f9] font-sans p-6 text-left">
-      
       {/* 1. BRAND LOGO */}
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-3 mb-1">
@@ -63,13 +71,13 @@ export const AdminLogin: React.FC = () => {
         </div>
         <p className="text-[10px] tracking-[4px] text-slate-400 font-bold uppercase">
           SYSTEM ADMINISTRATION PORTAL
-          </p>
+        </p>
       </div>
 
       {/* 2. CARD FORM */}
-      <div className="w-full max-w-[500px] bg-white border border-slate-200/90 shadow-md overflow-hidden rounded-sm">
+      <div className="w-full max-w-125 bg-white border border-slate-200/90 shadow-md overflow-hidden rounded-sm">
         {/* Top thick indicator */}
-        <div className="h-[4px] bg-slate-900 w-full"></div>
+        <div className="h-1 bg-slate-900 w-full"></div>
 
         <div className="px-10 py-12">
           <div className="text-center mb-8">
@@ -84,7 +92,7 @@ export const AdminLogin: React.FC = () => {
           {/* Alert Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-red-700 font-bold text-xs">Lỗi đăng nhập</p>
                 <p className="text-red-600 text-xs mt-1 font-medium leading-relaxed">
@@ -120,7 +128,7 @@ export const AdminLogin: React.FC = () => {
                 <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">
                   MẬT KHẨU BẢO MẬT
                 </label>
-                <button 
+                <button
                   type="button"
                   className="text-[11px] text-slate-400 hover:text-slate-600 font-semibold transition-colors cursor-pointer"
                 >
@@ -132,7 +140,7 @@ export const AdminLogin: React.FC = () => {
                   <Lock className="w-4 h-4" />
                 </span>
                 <Input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -143,7 +151,11 @@ export const AdminLogin: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer z-20"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -151,8 +163,12 @@ export const AdminLogin: React.FC = () => {
             {/* Quick Login Helper Box */}
             <div className="bg-slate-50 border border-slate-200/70 p-3 rounded-sm flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase leading-none">Môi trường thử nghiệm</span>
-                <span className="text-[11px] font-semibold text-slate-600 block mt-1">Tài khoản: admin@hirearch.com / admin123</span>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase leading-none">
+                  Môi trường thử nghiệm
+                </span>
+                <span className="text-[11px] font-semibold text-slate-600 block mt-1">
+                  Tài khoản: admin@hirearch.com / admin123
+                </span>
               </div>
               <Button
                 type="button"
@@ -186,10 +202,10 @@ export const AdminLogin: React.FC = () => {
 
         {/* Footer info link */}
         <div className="bg-slate-50/50 border-t border-slate-150 px-8 py-4 text-center flex items-center justify-center">
-          <Button 
+          <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/')} 
+            onClick={() => navigate("/")}
             className="text-xs text-slate-500 hover:text-slate-850 font-bold transition-colors cursor-pointer h-9 px-4"
           >
             ← Quay về cổng tuyển dụng ngoài
@@ -201,7 +217,6 @@ export const AdminLogin: React.FC = () => {
       <div className="mt-8 text-center text-[11px] text-slate-400">
         <p>© 2026 HireArch. Cổng quản trị bảo mật tối cao.</p>
       </div>
-
     </section>
   );
 };

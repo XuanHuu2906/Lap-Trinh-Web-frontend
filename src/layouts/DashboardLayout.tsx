@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
-import { CandidateSidebar } from "../components/Sidebar/CandidateSidebar";
+import CandidateLayout from "../components/layout/CandidateLayout";
 import { RecruiterSidebar } from "../components/Sidebar/RecruiterSidebar";
 import { AdminSidebar } from "../components/Sidebar/AdminSidebar";
 import { Topbar } from "../components/Topbar/Topbar";
@@ -13,11 +13,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
   // Quản lý trạng thái Chế độ tối (Dark Mode)
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("theme");
-    return saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    return (
+      saved === "dark" ||
+      (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
   });
 
   useEffect(() => {
@@ -32,6 +35,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
 
   // Đóng sidebar di động khi thay đổi đường dẫn (URL)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSidebarOpen(false);
   }, [pathname]);
 
@@ -58,7 +62,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
 
     switch (role) {
       case "candidate":
-        return <CandidateSidebar {...props} />;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return <CandidateLayout {...(props as any)} />;
       case "recruiter":
         return <RecruiterSidebar {...props} />;
       case "admin":
@@ -68,7 +73,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
 
   return (
     <div className="flex min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans overflow-x-hidden transition-colors duration-150">
-      
       {/* ── 1. Sidebar cho Desktop (Cố định góc trái) ── */}
       {renderSidebar(false)}
 
@@ -76,13 +80,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden bg-black/60 backdrop-blur-xs">
           {/* Click ra ngoài để đóng */}
-          <div className="fixed inset-0" onClick={() => setIsSidebarOpen(false)}></div>
+          <div
+            className="fixed inset-0"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
           {renderSidebar(true)}
         </div>
       )}
 
       {/* ── 3. Khu vực nội dung chính phía bên phải ── */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-[260px] min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-65 min-h-screen">
         {/* Topbar dùng chung */}
         <Topbar
           role={role}
@@ -100,7 +107,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
           </div>
         </main>
       </div>
-
     </div>
   );
 };
