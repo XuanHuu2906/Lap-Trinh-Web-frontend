@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import {
   BriefcaseBusiness,
   Mail,
@@ -111,15 +113,15 @@ export default function Notifications() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Thông báo</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Thông báo</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Cập nhật mới nhất về hồ sơ và quy trình tuyển dụng của bạn.
           </p>
         </div>
         {unreadCount > 0 && (
           <button
             onClick={markAllRead}
-            className="flex items-center gap-2 text-sm text-blue-600 font-semibold hover:underline"
+            className="flex items-center gap-2 text-sm text-blue-600 dark:text-indigo-400 font-semibold hover:underline cursor-pointer"
           >
             <CheckCheck size={15} />
             Đánh dấu tất cả là đã đọc
@@ -128,16 +130,16 @@ export default function Notifications() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200 mb-5">
+      <div className="flex gap-1 border-b border-gray-200 dark:border-slate-800 mb-5">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer
               ${
                 activeTab === key
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-blue-600 dark:border-indigo-500 text-blue-600 dark:text-indigo-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-slate-200"
               }`}
           >
             {label}
@@ -151,9 +153,9 @@ export default function Notifications() {
       </div>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+      <Card className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden divide-y divide-gray-50 dark:divide-slate-800 transition-colors duration-150 rounded-xl">
         {filtered.length === 0 && (
-          <div className="py-16 text-center text-gray-400 text-sm">
+          <div className="py-16 text-center text-gray-400 dark:text-gray-550 text-sm">
             Không có thông báo nào.
           </div>
         )}
@@ -165,11 +167,11 @@ export default function Notifications() {
             <div
               key={n.id}
               onClick={() => markRead(n.id)}
-              className={`flex gap-4 px-5 py-4 cursor-pointer transition-colors hover:bg-gray-50/70 ${!n.read ? "bg-blue-50/30" : ""}`}
+              className={`flex gap-4 px-5 py-4 cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-slate-850/40 ${!n.read ? "bg-blue-50/30 dark:bg-indigo-950/20" : ""}`}
             >
               {/* Icon circle */}
               <div
-                className={`${iconCls} w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
+                className={`${iconCls} dark:bg-slate-800 dark:text-indigo-400 w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
               >
                 <Icon size={18} />
               </div>
@@ -177,23 +179,24 @@ export default function Notifications() {
               {/* Body */}
               <div className="flex-1 min-w-0">
                 <p
-                  className={`text-sm leading-snug mb-0.5 ${!n.read ? "font-semibold text-gray-900" : "font-medium text-gray-800"}`}
+                  className={`text-sm leading-snug mb-0.5 ${!n.read ? "font-semibold text-gray-900 dark:text-white" : "font-medium text-gray-800 dark:text-slate-100"}`}
                 >
                   {n.title}
                 </p>
-                <p className="text-xs text-gray-500 leading-relaxed mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
                   {n.body}
                 </p>
-                <span
-                  className={`${badge.cls} text-[10px] font-bold px-2 py-0.5 rounded-full`}
+                <Badge
+                  variant="secondary"
+                  className={`${badge.cls} dark:bg-slate-800 dark:text-indigo-400 text-[10px] font-bold px-2 py-0.5 rounded-full border-none lowercase first-letter:uppercase`}
                 >
                   {badge.label}
-                </span>
+                </Badge>
               </div>
 
               {/* Time + unread dot */}
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <p className="text-[11px] text-gray-400 whitespace-nowrap">
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
                   {n.time}
                 </p>
                 {!n.read && (
@@ -203,7 +206,7 @@ export default function Notifications() {
             </div>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 }

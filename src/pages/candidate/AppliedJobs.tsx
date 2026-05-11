@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import {
   Search,
   ChevronDown,
@@ -121,66 +125,66 @@ export default function AppliedJobs() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Quản lý ứng tuyển
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Theo dõi trạng thái và phản hồi từ các vị trí bạn đã nộp hồ sơ.
           </p>
         </div>
-        <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-600 text-sm rounded-lg px-4 py-2 hover:bg-gray-50 shadow-sm">
+        <Button variant="outline" className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 text-sm rounded-lg px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 shadow-sm transition-colors duration-150 cursor-pointer">
           Xuất báo cáo
-        </button>
+        </Button>
       </div>
 
       {/* Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {counters.map(({ label, value, icon: Icon, color }) => (
-          <div
+          <Card
             key={label}
-            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
+            className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 shadow-sm transition-colors duration-150"
           >
             <div className="flex items-center gap-3">
               <div
-                className={`${color} w-9 h-9 rounded-lg flex items-center justify-center`}
+                className={`${color} dark:bg-slate-800 dark:text-indigo-400 w-9 h-9 rounded-lg flex items-center justify-center`}
               >
                 <Icon size={16} />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
-                <p className="text-[11px] text-gray-400">{label}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500">{label}</p>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Table card */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-150">
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 p-4 border-b border-gray-100">
+        <div className="flex flex-wrap items-center gap-3 p-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="relative flex-1 min-w-48">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10"
             />
-            <input
+            <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm kiếm vị trí, công ty..."
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
             />
           </div>
 
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 bg-white hover:bg-gray-50"
+              className="flex items-center gap-2 border border-gray-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
             >
               Lọc theo: {status} <ChevronDown size={14} />
             </button>
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-52 py-1">
+              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg shadow-lg z-20 w-52 py-1">
                 {STATUS_OPTIONS.map((opt) => (
                   <button
                     key={opt}
@@ -188,7 +192,7 @@ export default function AppliedJobs() {
                       setStatus(opt);
                       setDropdownOpen(false);
                     }}
-                    className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 ${status === opt ? "text-blue-600 font-semibold" : "text-gray-700"}`}
+                    className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-slate-800 ${status === opt ? "text-blue-600 dark:text-indigo-400 font-semibold" : "text-gray-700 dark:text-slate-300"}`}
                   >
                     {opt}
                   </button>
@@ -202,7 +206,7 @@ export default function AppliedJobs() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-gray-400 text-xs uppercase tracking-wide">
+              <tr className="bg-gray-50 dark:bg-slate-950 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100 dark:border-slate-800">
                 <th className="px-5 py-3 text-left font-medium">
                   Vị trí ứng tuyển
                 </th>
@@ -213,17 +217,17 @@ export default function AppliedJobs() {
                 <th className="px-5 py-3 text-left font-medium">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
               {filtered.map((row) => (
                 <tr
                   key={row.position}
-                  className="hover:bg-gray-50/60 transition-colors"
+                  className="hover:bg-gray-50/60 dark:hover:bg-slate-850/40 transition-colors"
                 >
                   <td className="px-5 py-4">
-                    <p className="font-semibold text-gray-800">
+                    <p className="font-semibold text-gray-800 dark:text-white">
                       {row.position}
                     </p>
-                    <p className="text-xs text-gray-400">{row.skills}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{row.skills}</p>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
@@ -232,32 +236,33 @@ export default function AppliedJobs() {
                       >
                         {row.companyLogo}
                       </div>
-                      <span className="text-gray-700">{row.company}</span>
+                      <span className="text-gray-700 dark:text-slate-300">{row.company}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-gray-500">{row.date}</td>
+                  <td className="px-5 py-4 text-gray-500 dark:text-slate-400">{row.date}</td>
                   <td className="px-5 py-4">
                     <a
                       href="#"
-                      className="flex items-center gap-1 text-blue-600 hover:underline text-xs"
+                      className="flex items-center gap-1 text-blue-600 dark:text-indigo-400 hover:underline text-xs"
                     >
                       <FileText size={12} /> {row.cv}
                     </a>
                   </td>
                   <td className="px-5 py-4">
-                    <span
-                      className={`${row.statusColor} text-[11px] font-semibold px-2.5 py-1 rounded-full`}
+                    <Badge
+                      variant="secondary"
+                      className={`${row.statusColor} text-[11px] font-semibold px-2.5 py-0.5 rounded-full dark:bg-opacity-20 lowercase first-letter:uppercase border-none`}
                     >
                       {row.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="text-xs text-blue-600 font-semibold hover:underline">
+                      <button className="text-xs text-blue-600 dark:text-indigo-400 font-semibold hover:underline">
                         Chi tiết
                       </button>
                       {row.hasReply && (
-                        <button className="flex items-center gap-1 text-xs text-orange-500 font-semibold hover:underline">
+                        <button className="flex items-center gap-1 text-xs text-orange-500 dark:text-orange-400 font-semibold hover:underline">
                           <MessageSquare size={11} /> Phản hồi
                         </button>
                       )}
@@ -270,15 +275,15 @@ export default function AppliedJobs() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 text-sm">
-          <p className="text-gray-400 text-xs">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-slate-800 text-sm bg-white dark:bg-slate-900">
+          <p className="text-gray-400 dark:text-gray-500 text-xs">
             Hiển thị 1–4 trên tổng số 12 ứng tuyển
           </p>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={15} />
             </button>
@@ -286,7 +291,7 @@ export default function AppliedJobs() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold ${p === page ? "bg-blue-600 text-white" : "hover:bg-gray-100 text-gray-600"}`}
+                className={`w-8 h-8 rounded-lg text-xs font-semibold ${p === page ? "bg-blue-600 dark:bg-indigo-600 text-white" : "hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-400"}`}
               >
                 {p}
               </button>
@@ -294,7 +299,7 @@ export default function AppliedJobs() {
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
-              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight size={15} />
             </button>
