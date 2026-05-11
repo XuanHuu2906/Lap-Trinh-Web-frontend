@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Footer } from '../../components/layout/Footer';
+import Footer from '../../components/layout/Footer';
 
 export function EnterpriseRegisterPage() {
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col justify-between text-slate-800">
 
-      {/* Vùng không gian ở giữa để căn thẻ đăng ký */}
-      <main className="flex-1 flex items-center justify-center px-4">
+      {/* Vùng không gian để căn thẻ đăng ký */}
+      <main className="flex-1 flex items-start justify-center px-4 pt-[50px]">
 
         {/* Thẻ đăng ký nhà tuyển dụng (Card) màu trắng nổi bật */}
         <div className="w-full max-w-[500px] bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
@@ -130,7 +130,7 @@ export function EnterpriseRegisterPage() {
       </main>
 
       {/* Hướng dẫn đăng ký ứng viên dưới ô đăng ký */}
-      <div className="text-center text-[13px] font-medium text-slate-500 mb-10" >
+      <div className="text-center text-[13px] font-medium text-slate-500 mb-10 pt-[20px]" >
         <span>Bạn đang tìm kiếm cơ hội nghề nghiệp? </span>
         <Link to="/register-candidate" className="text-[#6366f1] hover:text-[#4f46e5] font-semibold hover:underline transition-all">
           Đăng ký tài khoản ứng viên

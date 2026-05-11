@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Footer } from '../../components/layout/Footer';
+import Footer from '../../components/layout/Footer';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -129,12 +129,12 @@ export function LoginPage() {
 
             {/* Forgot Password Link */}
             <div className="flex justify-start">
-              <button
-                type="button"
+              <Link
+                to="/forgot-password"
                 className="text-[13px] font-bold text-slate-900 hover:text-slate-700 hover:underline transition-all cursor-pointer"
               >
                 Quên mật khẩu?
-              </button>
+              </Link>
             </div>
 
             {/* Keep Signed In Checkbox */}

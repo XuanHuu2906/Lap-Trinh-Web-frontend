@@ -148,27 +148,27 @@ export const CVTemplatePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grow flex flex-col justify-start">
       {/* Breadcrumbs */}
-      <nav className="flex items-center space-x-2 text-xs text-slate-400 mb-6 font-medium font-sans">
-        <span className="hover:text-slate-600 cursor-pointer">Resources</span>
+      <nav className="flex items-center space-x-2 text-xs text-slate-400 dark:text-slate-500 mb-6 font-medium font-sans">
+        <span className="hover:text-slate-600 dark:hover:text-slate-350 cursor-pointer">Resources</span>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-slate-600 font-semibold">Chọn template CV</span>
+        <span className="text-slate-600 dark:text-slate-400 font-semibold">Chọn template CV</span>
       </nav>
 
       {/* Header Title Section */}
       <div className="text-left mb-10 max-w-3xl">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans mb-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight font-sans mb-4">
           Chọn Mẫu CV
         </h1>
-        <p className="text-sm sm:text-base text-slate-500 font-sans leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
           Thể hiện năng lực chuyên môn với các mẫu CV được thiết kế theo
-          tirounded-sm chuẩn tuyển dụng doanh nghiệp.
+          tiêu chuẩn tuyển dụng doanh nghiệp.
           <br className="hidden sm:inline" /> Lựa chọn phong cách phù hợp nhất
           với ngành nghề của bạn.
         </p>
       </div>
 
       {/* Filters & Search Panel */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6 mb-8">
         {/* Category Buttons */}
         <div className="flex flex-wrap gap-2 order-2 md:order-1">
           {categories.map((category) => (
@@ -179,8 +179,8 @@ export const CVTemplatePage: React.FC = () => {
               size="sm"
               className={`rounded-sm border font-semibold text-xs cursor-pointer ${
                 selectedCategory === category
-                  ? "border-slate-300 text-slate-900 font-bold shadow-sm"
-                  : "border-slate-200 text-slate-500 hover:text-slate-800"
+                  ? "border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold shadow-sm"
+                  : "border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               {category}
@@ -198,7 +198,7 @@ export const CVTemplatePage: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm kiếm mẫu..."
-            className="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-sm text-xs font-medium placeholder-slate-450 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 bg-white"
+            className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-sm text-xs font-medium placeholder-slate-450 dark:placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-100 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
           />
         </div>
       </div>
@@ -216,12 +216,12 @@ export const CVTemplatePage: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-200 rounded-lg bg-white/50">
-          <FileText className="h-12 w-12 text-slate-300 mb-3" />
-          <p className="text-sm font-semibold text-slate-600 mb-1">
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg bg-white/50 dark:bg-slate-900/50">
+          <FileText className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-3" />
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-450 mb-1">
             Không tìm thấy mẫu CV nào
           </p>
-          <p className="text-xs text-slate-400 max-w-xs">
+          <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs">
             Hãy thử đổi bộ lọc hoặc gõ một từ khóa tìm kiếm khác!
           </p>
         </div>
@@ -236,44 +236,44 @@ export const CVTemplatePage: React.FC = () => {
         {previewTemplate && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start py-2">
             {/* Left: Detailed Interactive Simulation rendering of the CV Template */}
-            <div className="md:col-span-7 bg-slate-50 border border-slate-200/60 p-6 rounded-md flex justify-center items-center">
-              <div className="w-70 h-93.25 bg-white shadow-lg rounded-sm border border-slate-200/40 overflow-hidden relative p-6">
+            <div className="md:col-span-7 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-md flex justify-center items-center">
+              <div className="w-70 h-93.25 bg-white dark:bg-slate-900 shadow-lg rounded-sm border border-slate-200/40 dark:border-slate-800/40 overflow-hidden relative p-6">
                 {/* Simulated high-quality visual representation inside the modal */}
                 {previewTemplate.id === 1 && (
-                  <div className="w-full h-full text-[6px] text-slate-500 flex flex-col justify-between">
+                  <div className="w-full h-full text-[6px] text-slate-500 dark:text-slate-400 flex flex-col justify-between">
                     <div>
-                      <div className="font-extrabold text-[16px] text-slate-900 leading-none mb-1">
+                      <div className="font-extrabold text-[16px] text-slate-900 dark:text-white leading-none mb-1">
                         NGUYỄN VĂN A
                       </div>
-                      <div className="text-[8px] text-indigo-700 font-bold mb-3">
+                      <div className="text-[8px] text-indigo-700 dark:text-indigo-400 font-bold mb-3">
                         FINANCE MANAGER
                       </div>
-                      <div className="border-b border-slate-200 pb-2 mb-4 flex justify-between">
+                      <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 flex justify-between">
                         <span>Email: info@example.com</span>
                         <span>Phone: 0987 654 321</span>
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <div className="font-bold text-slate-800 text-[8px] border-b border-slate-100 pb-1 mb-1.5 uppercase">
+                          <div className="font-bold text-slate-800 dark:text-slate-200 text-[8px] border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5 uppercase">
                             Kinh nghiệm làm việc
                           </div>
                           <div className="space-y-2">
                             <div>
-                              <div className="flex justify-between font-semibold text-slate-700 text-[7px]">
+                              <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300 text-[7px]">
                                 <span>Trưởng phòng tài chính - ABC Group</span>
                                 <span>2022 - Hiện tại</span>
                               </div>
-                              <div className="w-full h-1 bg-slate-100 rounded-sm mt-1"></div>
-                              <div className="w-11/12 h-1 bg-slate-100 rounded-sm mt-1"></div>
+                              <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-sm mt-1"></div>
+                              <div className="w-11/12 h-1 bg-slate-100 dark:bg-slate-800 rounded-sm mt-1"></div>
                             </div>
                           </div>
                         </div>
                         <div>
-                          <div className="font-bold text-slate-800 text-[8px] border-b border-slate-100 pb-1 mb-1.5 uppercase">
-                            Học vấn
+                          <div className="font-bold text-slate-800 dark:text-slate-200 text-[8px] border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5 uppercase">
+                            Học văn
                           </div>
                           <div>
-                            <div className="flex justify-between font-semibold text-slate-700 text-[7px]">
+                            <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300 text-[7px]">
                               <span>Thạc sĩ Tài chính - Đại học KTQD</span>
                               <span>2018 - 2020</span>
                             </div>
@@ -281,26 +281,26 @@ export const CVTemplatePage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="text-[5px] text-slate-300 border-t border-slate-100 pt-2 text-center font-bold">
+                    <div className="text-[5px] text-slate-300 dark:text-slate-600 border-t border-slate-100 dark:border-slate-800 pt-2 text-center font-bold">
                       ATS OPTIMIZED STANDARD
                     </div>
                   </div>
                 )}
 
                 {previewTemplate.id === 2 && (
-                  <div className="w-full h-full text-[6px] text-slate-500 flex">
-                    <div className="w-1/3 bg-slate-50 p-3 border-r border-slate-200 -m-6 mr-4 flex flex-col justify-between">
+                  <div className="w-full h-full text-[6px] text-slate-500 dark:text-slate-400 flex">
+                    <div className="w-1/3 bg-slate-50 dark:bg-slate-950 p-3 border-r border-slate-200 dark:border-slate-800 -m-6 mr-4 flex flex-col justify-between">
                       <div>
-                        <div className="w-12 h-12 rounded-full bg-slate-200 mx-auto mb-3"></div>
-                        <div className="font-bold text-slate-900 text-center text-[8px] mb-1">
+                        <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 mx-auto mb-3"></div>
+                        <div className="font-bold text-slate-900 dark:text-white text-center text-[8px] mb-1">
                           TRẦN THỊ B
                         </div>
-                        <div className="text-[5px] text-slate-500 text-center mb-4">
+                        <div className="text-[5px] text-slate-500 dark:text-slate-450 text-center mb-4">
                           MARKETING SPECIALIST
                         </div>
                         <div className="space-y-3">
                           <div>
-                            <div className="font-bold text-slate-800 text-[6px] uppercase border-b border-slate-200 pb-0.5 mb-1">
+                            <div className="font-bold text-slate-800 dark:text-slate-200 text-[6px] uppercase border-b border-slate-200 dark:border-slate-800 pb-0.5 mb-1">
                               Kỹ năng
                             </div>
                             <div className="space-y-1">
@@ -310,28 +310,28 @@ export const CVTemplatePage: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="text-[5px] text-slate-400 font-mono tracking-widest text-center">
+                      <div className="text-[5px] text-slate-400 dark:text-slate-500 font-mono tracking-widest text-center">
                         SAM BASE WORK
                       </div>
                     </div>
                     <div className="w-2/3 pt-2 flex flex-col justify-between">
                       <div>
-                        <div className="font-bold text-slate-900 text-[9px] border-b border-slate-200 pb-1.5 mb-3">
+                        <div className="font-bold text-slate-900 dark:text-white text-[9px] border-b border-slate-200 dark:border-slate-800 pb-1.5 mb-3">
                           HỒ SƠ NGHỀ NGHIỆP
                         </div>
-                        <p className="text-[6px] leading-relaxed mb-4">
+                        <p className="text-[6px] leading-relaxed mb-4 text-slate-600 dark:text-slate-300">
                           Chuyên viên Marketing với 3 năm kinh nghiệm lập kế
                           hoạch và thực thi chiến dịch quảng cáo digital.
                         </p>
-                        <div className="font-bold text-slate-900 text-[9px] border-b border-slate-200 pb-1.5 mb-2">
+                        <div className="font-bold text-slate-900 dark:text-white text-[9px] border-b border-slate-200 dark:border-slate-800 pb-1.5 mb-2">
                           KINH NGHIỆM
                         </div>
                         <div className="space-y-3">
                           <div>
-                            <div className="font-bold text-slate-800 text-[7px]">
+                            <div className="font-bold text-slate-800 dark:text-slate-200 text-[7px]">
                               Senior SEO Executive - XYZ Corp
                             </div>
-                            <div className="w-full h-1 bg-slate-100 rounded-sm mt-1"></div>
+                            <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-sm mt-1"></div>
                           </div>
                         </div>
                       </div>
@@ -377,30 +377,30 @@ export const CVTemplatePage: React.FC = () => {
                 )}
 
                 {previewTemplate.id === 4 && (
-                  <div className="w-full h-full text-[6px] text-slate-500 flex flex-col justify-between font-sans">
+                  <div className="w-full h-full text-[6px] text-slate-500 dark:text-slate-400 flex flex-col justify-between font-sans">
                     <div>
-                      <div className="font-serif font-extrabold text-[18px] text-slate-900 leading-tight mb-1">
+                      <div className="font-serif font-extrabold text-[18px] text-slate-900 dark:text-white leading-tight mb-1">
                         CVM
                       </div>
-                      <div className="w-20 h-0.5 bg-slate-800 mb-3"></div>
-                      <div className="font-bold text-[9px] text-slate-800 uppercase mb-2">
+                      <div className="w-20 h-0.5 bg-slate-800 dark:bg-slate-750 mb-3"></div>
+                      <div className="font-bold text-[9px] text-slate-800 dark:text-slate-200 uppercase mb-2">
                         PHẠM THỊ D
                       </div>
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-1 border-r border-slate-100 pr-2">
-                          <div className="font-bold text-slate-800 text-[6px] mb-1 uppercase">
+                        <div className="col-span-1 border-r border-slate-100 dark:border-slate-800 pr-2">
+                          <div className="font-bold text-slate-800 dark:text-slate-200 text-[6px] mb-1 uppercase">
                             Kỹ năng
                           </div>
-                          <ul className="space-y-1">
+                          <ul className="space-y-1 text-slate-600 dark:text-slate-400">
                             <li>• Tư vấn giải pháp</li>
                             <li>• Thương lượng</li>
                           </ul>
                         </div>
                         <div className="col-span-2">
-                          <div className="font-bold text-slate-800 text-[6px] mb-1 uppercase">
+                          <div className="font-bold text-slate-800 dark:text-slate-200 text-[6px] mb-1 uppercase">
                             Học vấn
                           </div>
-                          <div className="font-semibold text-slate-700 text-[6px]">
+                          <div className="font-semibold text-slate-700 dark:text-slate-300 text-[6px]">
                             Đại học Ngoại Thương - Cử nhân QTKD
                           </div>
                         </div>
@@ -417,32 +417,32 @@ export const CVTemplatePage: React.FC = () => {
             {/* Right: Detailed Template Information & Action Panel */}
             <div className="md:col-span-5 flex flex-col h-full justify-between">
               <div>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 mb-3 font-sans">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 mb-3 font-sans">
                   Phong cách: {previewTemplate.category}
                 </span>
-                <h4 className="text-xl font-extrabold text-slate-900 mb-3 font-sans">
+                <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mb-3 font-sans">
                   {previewTemplate.name}
                 </h4>
-                <p className="text-xs text-slate-500 font-sans leading-relaxed mb-6">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-sans leading-relaxed mb-6">
                   {previewTemplate.description}
                 </p>
 
                 {/* Key features checklist */}
                 <div className="mb-8">
-                  <h5 className="text-xs font-bold text-slate-900 mb-3 font-sans uppercase tracking-wider">
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white mb-3 font-sans uppercase tracking-wider">
                     Đặc điểm nổi bật:
                   </h5>
                   <ul className="space-y-2.5">
                     {previewTemplate.features?.map((feat, idx) => (
                       <li
                         key={idx}
-                        className="flex items-start text-xs text-slate-600 font-sans"
+                        className="flex items-start text-xs text-slate-600 dark:text-slate-450 font-sans"
                       >
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 mr-2.5 shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </li>
                     ))}
-                    <li className="flex items-start text-xs text-slate-600 font-sans">
+                    <li className="flex items-start text-xs text-slate-600 dark:text-slate-450 font-sans">
                       <Award className="h-4 w-4 text-amber-500 mr-2.5 shrink-0 mt-0.5" />
                       <span>Nhà tuyển dụng khuyên dùng</span>
                     </li>
@@ -450,13 +450,13 @@ export const CVTemplatePage: React.FC = () => {
                 </div>
 
                 {/* Tips block */}
-                <div className="p-4 bg-indigo-50/50 rounded-md border border-indigo-100/50 flex items-start">
+                <div className="p-4 bg-indigo-50/50 dark:bg-indigo-950/10 rounded-md border border-indigo-100/50 dark:border-indigo-950/20 flex items-start">
                   <Zap className="h-5 w-5 text-indigo-500 mr-3 shrink-0 mt-0.5" />
                   <div>
-                    <h6 className="text-xs font-bold text-indigo-950 mb-1 font-sans">
+                    <h6 className="text-xs font-bold text-indigo-950 dark:text-indigo-400 mb-1 font-sans">
                       Mẹo viết CV chuẩn:
                     </h6>
-                    <p className="text-[11px] text-indigo-800/80 font-sans leading-relaxed">
+                    <p className="text-[11px] text-indigo-800/80 dark:text-indigo-400/80 font-sans leading-relaxed">
                       Hãy điền đầy đủ và chi tiết các dự án của bạn, đồng thời
                       sử dụng các từ khóa chuyên ngành để nâng cao điểm số quét
                       ATS!
@@ -466,7 +466,7 @@ export const CVTemplatePage: React.FC = () => {
               </div>
 
               {/* Action buttons in modal */}
-              <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   onClick={() => {
                     handleClosePreview();
@@ -474,7 +474,7 @@ export const CVTemplatePage: React.FC = () => {
                   }}
                   variant="default"
                   size="lg"
-                  className="w-full text-xs font-bold tracking-wider rounded-sm shadow-md hover:shadow-lg"
+                  className="w-full text-xs font-bold tracking-wider rounded-sm shadow-md hover:shadow-lg bg-indigo-600 dark:bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white cursor-pointer"
                 >
                   SỬ DỤNG MẪU NÀY BẮT ĐẦU TẠO CV
                 </Button>
