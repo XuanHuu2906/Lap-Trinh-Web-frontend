@@ -1,6 +1,6 @@
 import React from 'react';
 import { type CVTemplate } from '../../types/cv.type';
-import { Button } from '../ui/button';
+import { Button } from '../../components/ui/button';
 
 interface CVTemplateCardProps {
   template: CVTemplate;

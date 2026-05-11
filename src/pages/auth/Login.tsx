@@ -1,188 +1,185 @@
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Footer } from '../../components/layout/Footer';
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showError, setShowError] = useState(false);
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Giả lập mật khẩu chính xác là '123456'
+    if (password === '123456') {
+      setShowError(false);
+      alert('Đăng nhập thành công!');
+      navigate('/');
+    } else {
+      setShowError(true);
+    }
+  };
+
   return (
-    <section className="flex flex-col items-center justify-center min-h-screen bg-[#f1f5f9] font-sans p-6">
-      {/* Logo Header */}
-      <div className="flex flex-col items-center mb-10">
-        <div className="flex items-center gap-3 mb-2">
-          {/* Icon grid/building */}
-          <div className="w-12 h-12 bg-[#0f172a] flex items-center justify-center rounded-sm shadow-sm">
-            <svg
-              className="w-7 h-7 text-white"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+    <div className="full-screen-page min-h-screen bg-[#f8fafc] font-sans flex flex-col justify-between text-slate-800">
+
+      {/* HEADER LOGO */}
+      <header className="w-full px-6 sm:px-12 md:px-16 pt-6 pb-2 flex justify-start items-center">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <div className="w-8 h-8 bg-slate-900 flex items-center justify-center rounded-sm shadow-sm">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z" />
             </svg>
           </div>
-          <span className="text-[#0f172a] text-[42px] font-black tracking-[1px] uppercase">
-            HireArch
+          <span className="text-slate-900 text-[20px] font-extrabold tracking-widest uppercase font-sans">
+            HIREARCH <span className="text-slate-500 font-medium text-base">ENTERPRISE</span>
           </span>
-        </div>
-        <p className="text-[12px] tracking-[5px] text-slate-400 font-bold uppercase">
-          ENTERPRISE PORTAL
-        </p>
-      </div>
+        </Link>
+      </header>
 
-      {/* Login Card */}
-      <div className="w-full max-w-140 bg-white border border-slate-200 shadow-sm overflow-hidden">
-        {/* Top dark border */}
-        <div className="h-0.75 bg-[#1e293b] w-full"></div>
+      {/* CENTERED LOGIN CARD CONTAINER */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-2">
+        <div className="w-full max-w-[400px] bg-white border border-slate-200/80 rounded-lg shadow-sm p-6 relative">
 
-        <div className="px-16 pt-14 pb-12">
-          <div className="text-center mb-8">
-            <h2
-              className="text-[44px] font-black mb-2 leading-none"
-              style={{ color: "#0f172a" }}
+          <div className="mb-6">
+            <h1 className="text-[32px] font-bold text-slate-900 leading-none tracking-tight">Đăng nhập</h1>
+          </div>
+
+          {/* Social login buttons */}
+          <div className="space-y-3">
+            {/* Google */}
+            <button
+              type="button"
+              className="w-full h-10 border border-slate-300 hover:border-slate-400 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 bg-white hover:bg-slate-50/50 transition-all cursor-pointer shadow-3xs"
             >
-              Đăng nhập
-            </h2>
-            <p className="text-[15px]" style={{ color: "#475569" }}>
-              Truy cập hệ thống quản lý tuyển dụng
-            </p>
+              <svg className="w-4 h-4 mr-2.5" viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
+              </svg>
+              Continue with Google
+            </button>
           </div>
 
-          {/* Error message - left-aligned with icon on left */}
-          <div className="bg-[#fff1f2] border border-red-100 p-3 rounded-sm flex items-start gap-3 mb-7">
-            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-white text-[11px] font-black">!</span>
-            </div>
-            <div>
-              <p className="text-red-600 font-bold text-[13px] leading-snug">
-                Đăng nhập thất bại
-              </p>
-              <p className="text-red-500 text-[12px] leading-relaxed">
-                Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông
-                tin.
-              </p>
-            </div>
+          {/* Terms Agreement */}
+          <p className="text-[10px] text-slate-400 font-semibold leading-relaxed my-4">
+            Khi nhấp vào Tiếp tục, bạn đồng ý với <span className="text-slate-900 hover:underline cursor-pointer">Thỏa thuận người dùng</span>, <span className="text-slate-900 hover:underline cursor-pointer">Chính sách quyền riêng tư</span> và <span className="text-slate-900 hover:underline cursor-pointer">Chính sách cookie</span> của HireArch.
+          </p>
+
+          {/* Divider line */}
+          <div className="flex items-center my-4">
+            <div className="flex-1 h-[1px] bg-slate-200"></div>
+            <span className="px-3 text-xs text-slate-400 font-bold">hoặc</span>
+            <div className="flex-1 h-[1px] bg-slate-200"></div>
           </div>
 
-          <div className="space-y-5">
-            {/* Email */}
+          {/* Error message block */}
+          {showError && (
+            <div className="bg-[#fff1f2] border border-red-100 p-3 rounded-sm flex items-start gap-3 mb-4 animate-fade-in">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white text-[11px] font-black">!</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-red-600 font-bold text-[12px] leading-snug">Đăng nhập thất bại</p>
+                <p className="text-red-500 text-[11px] leading-relaxed">
+                  Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Credentials Inputs Form */}
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+
+            {/* Email / Phone */}
             <div>
-              <label className="block text-[13px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                ĐỊA CHỈ EMAIL
-              </label>
               <div className="relative w-full">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                </span>
                 <input
                   type="email"
-                  placeholder="name@company.com"
-                  className="w-full border border-slate-200 h-14 pl-11 pr-4 text-[16px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-600 transition-all bg-white"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email hoặc số điện thoại"
+                  className="w-full border border-slate-300 h-12 px-3 text-[14px] outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 placeholder:text-slate-400 text-slate-800 transition-all bg-white rounded-sm"
                 />
               </div>
             </div>
 
             {/* Password */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">
-                  MẬT KHẨU
-                </label>
-                <button className="text-[13px] text-slate-400 hover:text-slate-600 transition-colors">
-                  Quên mật khẩu?
-                </button>
-              </div>
-              <div className="relative w-full">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </span>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full border border-slate-200 h-14 pl-11 pr-4 text-[16px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-600 transition-all bg-white"
-                />
-              </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mật khẩu"
+                className="w-full border border-slate-300 h-12 pl-3 pr-16 text-[14px] outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 placeholder:text-slate-400 text-slate-800 transition-all bg-white rounded-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] font-bold text-slate-900 hover:text-slate-700 transition-colors cursor-pointer select-none"
+              >
+                {showPassword ? 'Ẩn' : 'Hiển thị'}
+              </button>
             </div>
 
-            {/* Login Button */}
-            <button className="w-full h-16 bg-[#1a2332] text-white font-bold text-[15px] tracking-[2px] flex items-center justify-center gap-3 hover:bg-[#111827] transition-colors mt-1">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Forgot Password Link */}
+            <div className="flex justify-start">
+              <button
+                type="button"
+                className="text-[13px] font-bold text-slate-900 hover:text-slate-700 hover:underline transition-all cursor-pointer"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                />
-              </svg>
-              ĐĂNG NHẬP
+                Quên mật khẩu?
+              </button>
+            </div>
+
+            {/* Keep Signed In Checkbox */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                className="w-4 h-4 border-slate-300 rounded text-slate-900 focus:ring-slate-900 cursor-pointer"
+              />
+              <label
+                htmlFor="rememberMe"
+                className="text-xs text-slate-500 font-bold hover:text-slate-700 cursor-pointer select-none"
+              >
+                Duy trì trạng thái đăng nhập của tôi
+              </label>
+            </div>
+
+            {/* Login Button (Pill shape) */}
+            <button
+              type="submit"
+              className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[15px] rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer shadow-3xs mt-2 active:scale-[0.98]"
+            >
+              Đăng nhập
             </button>
-          </div>
+          </form>
         </div>
 
-        {/* Card Footer */}
-        <div className="bg-[#f8fafc] border-t border-slate-100 px-10 py-6 flex items-center justify-center gap-5">
-          <span className="text-[15px] text-slate-400">Chưa có tài khoản?</span>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/register-candidate"
-              className="text-[16px] font-semibold text-slate-700 hover:text-black transition-colors"
-            >
-              Ứng viên
+        {/* BOTTOM REGISTER OPTIONS */}
+        <div className="text-center mt-6 text-[13px] font-semibold text-slate-500">
+          <span>Bạn mới sử dụng HireArch? </span>
+          <div className="inline-flex gap-2.5 mt-1.5 sm:mt-0">
+            <Link to="/register-candidate" className="font-extrabold text-slate-900 hover:underline">
+              Đăng ký ứng viên
             </Link>
             <span className="text-slate-300">|</span>
-            <Link
-              to="/register-employer"
-              className="text-[16px] font-semibold text-slate-700 hover:text-black transition-colors"
-            >
-              Nhà tuyển dụng
+            <Link to="/register-enterprise" className="font-extrabold text-slate-900 hover:underline">
+              Đăng ký nhà tuyển dụng
             </Link>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Page Footer */}
-      <div className="mt-10 text-center">
-        <p className="text-[12px] text-slate-400 mb-2">
-          © 2024 HireArch Enterprise. All rights reserved.
-        </p>
-        <div className="flex items-center justify-center gap-4">
-          <button className="text-[12px] text-slate-400 hover:text-slate-600 transition-colors">
-            Bảo mật
-          </button>
-          <span className="text-slate-300 text-[10px]">•</span>
-          <button className="text-[12px] text-slate-400 hover:text-slate-600 transition-colors">
-            Điều khoản
-          </button>
-          <span className="text-slate-300 text-[10px]">•</span>
-          <button className="text-[12px] text-slate-400 hover:text-slate-600 transition-colors">
-            Trợ giúp
-          </button>
-        </div>
-      </div>
-    </section>
+      {/* FOOTER */}
+      <Footer />
+
+    </div>
   );
 }
