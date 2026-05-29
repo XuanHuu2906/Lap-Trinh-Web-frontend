@@ -1,4 +1,4 @@
-import { type UserRole } from './user.type';
+import type { UserRole } from './user.type';
 
 export interface LoginRequest {
   email: string;
@@ -9,6 +9,7 @@ export interface RegisterCandidateRequest {
   fullName: string;
   email: string;
   password?: string;
+  confirmPassword?: string;
 }
 
 export interface RegisterRecruiterRequest {
@@ -17,6 +18,7 @@ export interface RegisterRecruiterRequest {
   email: string;
   password?: string;
   phone?: string;
+  confirmPassword?: string;
 }
 
 export interface ResetPasswordRequest {
@@ -25,6 +27,17 @@ export interface ResetPasswordRequest {
 
 export interface AuthResponse {
   token: string;
+  user: {
+    id: number;
+    email: string;
+    fullName: string;
+    role: UserRole;
+  };
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
   user: {
     id: number;
     email: string;

@@ -1,11 +1,69 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import Footer from "../../components/layout/Footer";
 
 export function CandidateRegisterPage() {
+  const navigate = useNavigate();
+  const { registerCandidate } = useAuth();
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMsg(null);
+
+    if (!agreeTerms) {
+      setError("Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await registerCandidate({ fullName, email, password, confirmPassword });
+      if (res.success) {
+        setSuccessMsg(res.message || "Đăng ký ứng viên thành công! Vui lòng kiểm tra email để xác nhận tài khoản.");
+        
+        // Làm sạch các trường dữ liệu
+        setFullName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setAgreeTerms(false);
+
+        // Chuyển hướng sau 3 giây sang trang login
+        setTimeout(() => {
+          navigate("/login");
+        }, 4000);
+      }
+    } catch (err: any) {
+      console.error("Lỗi đăng ký ứng viên:", err);
+      const errMsg = err.response?.data?.message || err.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
+      setError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col justify-between text-slate-800">
       {/* Vùng không gian ở giữa để căn thẻ đăng ký */}
-      <main className="flex-1 flex items-center justify-center px-4">
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
         {/* Thẻ đăng ký (Card) màu trắng nổi bật ở giữa */}
         <div className="w-full max-w-125 bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
           <div className="mb-6">
@@ -17,7 +75,44 @@ export function CandidateRegisterPage() {
             </p>
           </div>
 
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+          {/* Success Message Block */}
+          {successMsg && (
+            <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
+              <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-white text-[11px] font-black">✓</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-emerald-800 font-bold text-[13px] leading-snug">
+                  Đăng ký thành công!
+                </p>
+                <p className="text-emerald-600 text-[12px] mt-1 leading-relaxed">
+                  {successMsg}
+                </p>
+                <p className="text-emerald-500 text-[11px] mt-2 italic">
+                  Đang chuyển hướng về trang đăng nhập trong giây lát...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message Block */}
+          {error && (
+            <div className="bg-[#fff1f2] border border-red-100 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-white text-[11px] font-black">!</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-red-600 font-bold text-[12px] leading-snug">
+                  Lỗi đăng ký
+                </p>
+                <p className="text-red-500 text-[11px] mt-1 leading-relaxed">
+                  {error}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Họ và tên */}
             <div>
               <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
@@ -41,6 +136,9 @@ export function CandidateRegisterPage() {
                 </span>
                 <input
                   type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="VD: Nguyễn Văn A"
                   className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
                 />
@@ -70,6 +168,9 @@ export function CandidateRegisterPage() {
                 </span>
                 <input
                   type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="VD: ungvien@congty.vn"
                   className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
                 />
@@ -77,7 +178,7 @@ export function CandidateRegisterPage() {
             </div>
 
             {/* Mật khẩu + Xác nhận - 2 cột */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
                   Mật khẩu
@@ -100,6 +201,9 @@ export function CandidateRegisterPage() {
                   </span>
                   <input
                     type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
                   />
@@ -127,6 +231,9 @@ export function CandidateRegisterPage() {
                   </span>
                   <input
                     type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
                   />
@@ -139,6 +246,8 @@ export function CandidateRegisterPage() {
               <input
                 type="checkbox"
                 id="candidate-terms"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="mt-1 w-4 h-4 border border-slate-200 accent-slate-900 cursor-pointer shrink-0"
               />
               <label
@@ -158,21 +267,34 @@ export function CandidateRegisterPage() {
             </div>
 
             {/* Nút đăng ký */}
-            <button className="w-full h-11 bg-slate-900 text-white font-bold text-xs tracking-widest hover:bg-slate-850 transition-all rounded shadow-sm flex items-center justify-center gap-2 mt-2 cursor-pointer">
-              ĐĂNG KÝ ỨNG VIÊN
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 bg-slate-900 text-white font-bold text-xs tracking-widest hover:bg-slate-850 transition-all rounded shadow-sm flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:bg-slate-500 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ĐANG XỬ LÝ...
+                </>
+              ) : (
+                <>
+                  ĐĂNG KÝ ỨNG VIÊN
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </>
+              )}
             </button>
           </form>
 

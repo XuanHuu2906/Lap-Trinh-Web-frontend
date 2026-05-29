@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(rtk ls *)"
+      "Bash(rtk ls *)",
+      "Bash(mkdir -p src/config)",
+      "Bash(mkdir -p src/common/middleware)",
+      "Bash(mkdir -p src/common/utils)",
+      "Bash(mkdir -p src/common/types)",
+      "Bash(mkdir -p src/modules/auth)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(rtk prisma *)",
+      "Bash(rtk tsc *)",
+      "Bash(rtk find *)"
     ]
   }
 }

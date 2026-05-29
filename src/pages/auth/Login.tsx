@@ -1,24 +1,159 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { supabase } from "../../utils/supabase";
 import Footer from "../../components/layout/Footer";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login, loginWithGoogle } = useAuth();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleSyncing, setIsGoogleSyncing] = useState(false);
+  
+  // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
+  const processingRef = useRef(false);
+  // Cờ hủy effect để chống Strict Mode double-invoke (React 18)
+  const cancelledRef = useRef(false);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Lắng nghe và xử lý callback từ Google OAuth
+  useEffect(() => {
+    const client = supabase;
+    // Nếu chưa cấu hình Supabase thì không thực hiện lắng nghe callback
+    if (!client) return;
+
+    // Reset lại cờ cho lần mount này (strict mode mount lần 2 sẽ thấy cờ này khác)
+    cancelledRef.current = false;
+
+    const handleGoogleCallback = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await client.auth.getSession();
+
+        if (sessionError) {
+          console.error("Lỗi lấy session từ Supabase:", sessionError);
+          return;
+        }
+
+        // Kiểm tra cờ hủy: nếu effect đã bị cleanup (strict mode re-mount), bỏ qua
+        if (cancelledRef.current) return;
+
+        if (session && session.access_token && !processingRef.current) {
+          processingRef.current = true;
+          setIsGoogleSyncing(true);
+          setError(null);
+
+          const supabaseAccessToken = session.access_token;
+
+          // Gọi API đồng bộ tài khoản Google với PostgreSQL backend
+          const res = await loginWithGoogle(supabaseAccessToken);
+
+          if (cancelledRef.current) return; // Strict Mode đã cleanup, không tiếp tục
+
+          // Đăng xuất khỏi Supabase để làm sạch session tạm thời
+          await client.auth.signOut();
+
+          if (res.success && res.data) {
+            const { user } = res.data;
+            // Điều hướng người dùng dựa vào vai trò
+            if (user.role === "admin") {
+              navigate("/admin/dashboard");
+            } else if (user.role === "candidate") {
+              navigate("/candidate/overview");
+            } else if (user.role === "recruiter") {
+              navigate("/recruiter/overview");
+            } else if (user.role === "pending") {
+              navigate("/auth/setup-profile");
+            } else {
+              navigate("/");
+            }
+          }
+        }
+      } catch (err: any) {
+        if (cancelledRef.current) return;
+        console.error("Đồng bộ tài khoản Google thất bại:", err);
+        const errMsg = err.response?.data?.message || err.message || "Đồng bộ tài khoản Google thất bại. Vui lòng thử lại.";
+        setError(errMsg);
+        processingRef.current = false; // Reset lại cờ khóa nếu lỗi để người dùng có thể thử lại
+        await client.auth.signOut();
+      } finally {
+        if (!cancelledRef.current) {
+          setIsGoogleSyncing(false);
+        }
+      }
+    };
+
+    handleGoogleCallback();
+
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [loginWithGoogle, navigate]);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
-    // Giả lập mật khẩu chính xác là '123456'
-    if (password === "123456") {
-      setShowError(false);
-      alert("Đăng nhập thành công!");
-      navigate("/");
-    } else {
-      setShowError(true);
+    try {
+      const res = await login(email, password);
+      if (res.success && res.data) {
+        const { user } = res.data;
+        
+        // Điều hướng dựa trên vai trò của người dùng
+        if (user.role === "admin") {
+          navigate("/admin/dashboard");
+        } else if (user.role === "candidate") {
+          navigate("/candidate/overview");
+        } else if (user.role === "recruiter") {
+          navigate("/recruiter/overview");
+        } else if (user.role === "pending") {
+          navigate("/auth/setup-profile");
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (err: any) {
+      console.error("Lỗi đăng nhập:", err);
+      const errMsg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+      setError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+
+    const client = supabase;
+    // Kiểm tra an toàn xem Supabase đã được cấu hình chưa
+    if (!client) {
+      setError("Cấu hình đăng nhập bằng Google chưa hoàn tất. Vui lòng thêm VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY vào tệp .env của bạn.");
+      return;
+    }
+
+    try {
+      // Xóa token cũ trước khi redirect Google để tránh AuthProvider restore session cũ
+      // sau khi OAuth redirect back về /login (gây conflict với Google callback)
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+
+      const { error: oauthError } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/login",
+          queryParams: {
+            prompt: "select_account", // Ép buộc Google luôn hiển thị màn hình chọn tài khoản
+          },
+        },
+      });
+      if (oauthError) throw oauthError;
+    } catch (err: any) {
+      console.error("Supabase Google Auth Error:", err);
+      setError("Không thể bắt đầu đăng nhập bằng Google. Vui lòng kiểm tra lại cấu hình Supabase.");
     }
   };
 
@@ -51,6 +186,20 @@ export function LoginPage() {
       {/* CENTERED LOGIN CARD CONTAINER */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-2">
         <div className="w-full max-w-100 bg-white border border-slate-200/80 rounded-lg shadow-sm p-6 relative">
+          
+          {/* Lớp phủ màn hình đồng bộ tài khoản Google chuyên nghiệp */}
+          {isGoogleSyncing && (
+            <div className="absolute inset-0 bg-white/95 rounded-lg flex flex-col items-center justify-center z-50 transition-all duration-300">
+              <div className="relative h-12 w-12 mb-3">
+                <div className="absolute inset-0 rounded-full border-4 border-slate-100"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-slate-900 border-t-transparent animate-spin"></div>
+              </div>
+              <span className="text-xs font-bold text-slate-700 animate-pulse">
+                Đang đồng bộ tài khoản Google...
+              </span>
+            </div>
+          )}
+
           <div className="mb-6">
             <h1 className="text-[32px] font-bold text-slate-900 leading-none tracking-tight">
               Đăng nhập
@@ -62,7 +211,9 @@ export function LoginPage() {
             {/* Google */}
             <button
               type="button"
-              className="w-full h-10 border border-slate-300 hover:border-slate-400 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 bg-white hover:bg-slate-50/50 transition-all cursor-pointer shadow-3xs"
+              onClick={handleGoogleLogin}
+              disabled={isLoading || isGoogleSyncing}
+              className="w-full h-10 border border-slate-300 hover:border-slate-400 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 bg-white hover:bg-slate-50/50 transition-all cursor-pointer shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4 mr-2.5" viewBox="0 0 24 24" fill="none">
                 <path
@@ -111,7 +262,7 @@ export function LoginPage() {
           </div>
 
           {/* Error message block */}
-          {showError && (
+          {error && (
             <div className="bg-[#fff1f2] border border-red-100 p-3 rounded-sm flex items-start gap-3 mb-4 animate-fade-in">
               <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                 <span className="text-white text-[11px] font-black">!</span>
@@ -121,7 +272,7 @@ export function LoginPage() {
                   Đăng nhập thất bại
                 </p>
                 <p className="text-red-500 text-[11px] leading-relaxed">
-                  Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.
+                  {error}
                 </p>
               </div>
             </div>
@@ -137,7 +288,7 @@ export function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email hoặc số điện thoại"
+                  placeholder="Email đăng ký"
                   className="w-full border border-slate-300 h-12 px-3 text-[14px] outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 placeholder:text-slate-400 text-slate-800 transition-all bg-white rounded-sm"
                 />
               </div>
@@ -190,9 +341,17 @@ export function LoginPage() {
             {/* Login Button (Pill shape) */}
             <button
               type="submit"
-              className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[15px] rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer shadow-3xs mt-2 active:scale-[0.98]"
+              disabled={isLoading || isGoogleSyncing}
+              className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[15px] rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer shadow-3xs mt-2 active:scale-[0.98] disabled:bg-slate-500 disabled:cursor-not-allowed"
             >
-              Đăng nhập
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Đang đăng nhập...</span>
+                </>
+              ) : (
+                "Đăng nhập"
+              )}
             </button>
           </form>
         </div>
