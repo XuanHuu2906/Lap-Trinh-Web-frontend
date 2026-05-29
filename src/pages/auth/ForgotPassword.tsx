@@ -1,22 +1,33 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import { post } from "../../services/api-client";
 import Footer from "../../components/layout/Footer";
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Giả lập gửi mã xác nhận qua email trong 1.5 giây
-    setTimeout(() => {
+    try {
+      // Gọi API yêu cầu đặt lại mật khẩu thật từ backend
+      const res = await post<{ success: boolean; message: string }>("/auth/forgot-password", { email });
+      if (res.success) {
+        setIsSubmitted(true);
+      }
+    } catch (err: any) {
+      console.error("Lỗi yêu cầu quên mật khẩu:", err);
+      const errMsg = err.response?.data?.message || err.message || "Không thể gửi yêu cầu đặt lại mật khẩu. Vui lòng kiểm tra lại địa chỉ email.";
+      setError(errMsg);
+    } finally {
       setIsLoading(false);
-      setIsSubmitted(true);
-    }, 1500);
+    }
   };
 
   return (
@@ -45,6 +56,20 @@ export function ForgotPasswordPage() {
       {/* CENTERED CARD CONTAINER */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         <div className="w-full max-w-105 bg-white border border-slate-200/85 rounded-2xl shadow-sm p-8 relative transition-all duration-200">
+          
+          {/* Error Message Block */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-700 font-bold text-xs">Lỗi yêu cầu</p>
+                <p className="text-red-600 text-xs mt-1 font-medium leading-relaxed">
+                  {error}
+                </p>
+              </div>
+            </div>
+          )}
+
           {!isSubmitted ? (
             <>
               <div className="mb-6">
@@ -71,7 +96,7 @@ export function ForgotPasswordPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@example.com"
-                      className="w-full h-12 pl-11 pr-4 border border-slate-300 rounded-lg outline-none text-sm transition-all focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      className="w-full h-12 pl-11 pr-4 border border-slate-300 rounded-lg outline-none text-sm transition-all focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                     />
                   </div>
                 </div>
@@ -99,7 +124,7 @@ export function ForgotPasswordPage() {
                 Kiểm tra email của bạn
               </h2>
               <p className="text-slate-500 text-sm mt-3 leading-relaxed">
-                Chúng tôi đã gửi một email hướng dẫn đặt lại mật khẩu đến hộp
+                Nếu tài khoản tồn tại trong hệ thống, chúng tôi đã gửi một email hướng dẫn đặt lại mật khẩu đến hộp
                 thư <strong className="text-slate-800">{email}</strong>.
               </p>
               <p className="text-slate-400 text-xs mt-4 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
