@@ -22,6 +22,27 @@ export interface Job {
   deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  recruiter?: {
+    recruiterProfile?: {
+      companyName: string;
+      logoUrl?: string | null;
+      contactName?: string | null;
+    } | null;
+  };
+  category?: {
+    id: number;
+    name: string;
+  } | null;
+  skills?: Array<{
+    skill: {
+      id: number;
+      name: string;
+      slug?: string;
+    };
+  }>;
+  _count?: {
+    applications: number;
+  };
 }
 
 export interface JobFilter {
@@ -30,4 +51,28 @@ export interface JobFilter {
   categoryId?: number;
   jobType?: JobType;
   minSalary?: number;
+}
+
+export interface JobQuery {
+  page?: number;
+  limit?: number;
+  keyword?: string;
+  location?: string;
+  categoryId?: number;
+  jobType?: string;
+  experienceLevel?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+}
+
+export interface JobsApiResponse<T = Job[]> {
+  success: boolean;
+  data: T;
+  message?: string;
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

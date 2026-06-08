@@ -6,148 +6,149 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { jobService } from "@/services/job.service";
+import type { Job } from "@/types/job.type";
 
-const JOBS = [
-  {
-    id: 1,
-    title: "Frontend Developer",
-    company: "FPT Software",
-    logo: "F",
-    logoColor: "bg-blue-500",
-    location: "Hồ Chí Minh",
-    salary: "15 - 20 triệu",
-    salaryMin: 15,
-    deadline: "30/05/2026",
-    tags: ["React", "TypeScript", "Tailwind"],
-    field: "IT / Software",
-    type: "Toàn thời gian",
-    experience: "1 - 3 năm",
-    level: "Junior",
-  },
-  {
-    id: 2,
-    title: "Backend Developer",
-    company: "VNG",
-    logo: "V",
-    logoColor: "bg-orange-500",
-    location: "Hà Nội",
-    salary: "20 - 30 triệu",
-    salaryMin: 20,
-    deadline: "15/06/2026",
-    tags: ["NodeJS", "Express", "MongoDB"],
-    field: "IT / Software",
-    type: "Remote",
-    experience: "2 năm",
-    level: "Middle",
-  },
-  {
-    id: 3,
-    title: "UI/UX Designer",
-    company: "Momo",
-    logo: "M",
-    logoColor: "bg-pink-500",
-    location: "Hồ Chí Minh",
-    salary: "18 - 25 triệu",
-    salaryMin: 18,
-    deadline: "01/07/2026",
-    tags: ["Figma", "Prototyping", "UX Research"],
-    field: "Design",
-    type: "Toàn thời gian",
-    experience: "2 - 4 năm",
-    level: "Middle",
-  },
-  {
-    id: 4,
-    title: "Data Analyst",
-    company: "Shopee",
-    logo: "S",
-    logoColor: "bg-orange-400",
-    location: "Hà Nội",
-    salary: "25 - 35 triệu",
-    salaryMin: 25,
-    deadline: "20/06/2026",
-    tags: ["Python", "SQL", "Power BI"],
-    field: "Data",
-    type: "Toàn thời gian",
-    experience: "2 - 5 năm",
-    level: "Senior",
-  },
+const JOB_TYPES = [
+  { label: "Tất cả", value: "" },
+  { label: "Toàn thời gian", value: "full_time" },
+  { label: "Bán thời gian", value: "part_time" },
+  { label: "Remote", value: "remote" },
+  { label: "Thực tập", value: "internship" },
+  { label: "Hợp đồng", value: "contract" },
 ];
 
-const FIELDS = ["Tất cả", "IT / Software", "Design", "Data", "Marketing"];
-const TYPES = ["Tất cả", "Toàn thời gian", "Remote", "Bán thời gian"];
 const SALARY_RANGES = [
-  { label: "Tất cả", value: "all" },
-  { label: "Dưới 15 triệu", value: "lt15" },
-  { label: "15 – 25 triệu", value: "15-25" },
-  { label: "Trên 25 triệu", value: "gt25" },
+  { label: "Tất cả", salaryMin: undefined, salaryMax: undefined },
+  { label: "Dưới 15 triệu", salaryMin: undefined, salaryMax: 15000000 },
+  { label: "15 - 25 triệu", salaryMin: 15000000, salaryMax: 25000000 },
+  { label: "Trên 25 triệu", salaryMin: 25000000, salaryMax: undefined },
 ];
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 6;
 
-function matchSalary(salaryMin: number, range: string) {
-  if (range === "all") return true;
-  if (range === "lt15") return salaryMin < 15;
-  if (range === "15-25") return salaryMin >= 15 && salaryMin <= 25;
-  if (range === "gt25") return salaryMin > 25;
-  return true;
-}
+const formatSalary = (job: Job) => {
+  if (!job.salaryMin && !job.salaryMax) return "Thỏa thuận";
+
+  const formatter = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  });
+
+  if (job.salaryMin && job.salaryMax) {
+    return `${formatter.format(Number(job.salaryMin))} - ${formatter.format(Number(job.salaryMax))}`;
+  }
+
+  if (job.salaryMin) return `Từ ${formatter.format(Number(job.salaryMin))}`;
+  return `Đến ${formatter.format(Number(job.salaryMax))}`;
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "Không giới hạn";
+  return new Intl.DateTimeFormat("vi-VN").format(new Date(value));
+};
+
+const getCompany = (job: Job) =>
+  job.recruiter?.recruiterProfile?.companyName || "Nhà tuyển dụng";
+
+const getTags = (job: Job) =>
+  job.skills?.map((item) => item.skill.name).filter(Boolean).slice(0, 4) ?? [];
 
 export default function JobList() {
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState("");
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set());
   const [showFilter, setShowFilter] = useState(false);
-  const [field, setField] = useState("Tất cả");
-  const [type, setType] = useState("Tất cả");
-  const [salary, setSalary] = useState("all");
+  const [jobType, setJobType] = useState("");
+  const [salaryIndex, setSalaryIndex] = useState(0);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const filtered = JOBS.filter((j) => {
-    const matchSearch =
-      j.title.toLowerCase().includes(search.toLowerCase()) ||
-      j.company.toLowerCase().includes(search.toLowerCase()) ||
-      j.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-    const matchField = field === "Tất cả" || j.field === field;
-    const matchType = type === "Tất cả" || j.type === type;
-    const matchSal = matchSalary(j.salaryMin, salary);
-    return matchSearch && matchField && matchType && matchSal;
-  });
+  const hasActiveFilter = jobType !== "" || salaryIndex !== 0;
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE,
-  );
-  const hasActiveFilter =
-    field !== "Tất cả" || type !== "Tất cả" || salary !== "all";
+  const query = useMemo(() => {
+    const salaryRange = SALARY_RANGES[salaryIndex];
+    return {
+      page,
+      limit: ITEMS_PER_PAGE,
+      keyword: search.trim() || undefined,
+      jobType: jobType || undefined,
+      salaryMin: salaryRange.salaryMin,
+      salaryMax: salaryRange.salaryMax,
+    };
+  }, [jobType, page, salaryIndex, search]);
 
-  const toggleSave = (e: React.MouseEvent, id: number) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadJobs = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const response = query.keyword
+          ? await jobService.searchJobs(query)
+          : await jobService.getJobs(query);
+
+        if (!isMounted) return;
+
+        setJobs(response.data ?? []);
+        setTotal(response.meta?.total ?? response.data?.length ?? 0);
+        setTotalPages(response.meta?.totalPages || 1);
+      } catch {
+        if (!isMounted) return;
+        setError("Không thể tải danh sách việc làm. Hãy kiểm tra backend đang chạy.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    loadJobs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [query]);
+
+  const toggleSave = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
+
+    const isSaved = savedJobs.has(id);
     setSavedJobs((prev) => {
       const next = new Set(prev);
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (isSaved) next.delete(id);
+      else next.add(id);
       return next;
     });
+
+    try {
+      if (isSaved) await jobService.unSaveJob(id);
+      else await jobService.saveJob(id);
+    } catch {
+      setSavedJobs((prev) => {
+        const next = new Set(prev);
+        if (isSaved) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    }
   };
 
   const resetFilter = () => {
-    setField("Tất cả");
-    setType("Tất cả");
-    setSalary("all");
+    setJobType("");
+    setSalaryIndex(0);
     setPage(1);
   };
 
-  const handleSearch = (val: string) => {
-    setSearch(val);
-    setPage(1);
-  };
-
-  const handleFilterChange = (setter: (v: string) => void, val: string) => {
-    setter(val);
+  const handleSearch = (value: string) => {
+    setSearch(value);
     setPage(1);
   };
 
@@ -157,16 +158,15 @@ export default function JobList() {
         Danh sách việc làm
       </h1>
       <p className="text-gray-500 text-sm mb-6">
-        {filtered.length} vị trí đang tuyển dụng
+        {total} vị trí đang tuyển dụng
       </p>
 
-      {/* Search + Filter toggle */}
       <div className="flex gap-2 mb-3">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Tìm theo tên công việc, công ty, kỹ năng..."
+            placeholder="Tìm theo tên công việc, công ty..."
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full border border-gray-300 rounded-xl pl-11 pr-4 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white shadow-sm transition-all"
@@ -190,7 +190,6 @@ export default function JobList() {
         </button>
       </div>
 
-      {/* Filter panel */}
       {showFilter && (
         <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
@@ -206,68 +205,50 @@ export default function JobList() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Field */}
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1.5">
-                Lĩnh vực
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {FIELDS.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => handleFilterChange(setField, f)}
-                    className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
-                      field === f
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Type */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-gray-500 block mb-1.5">
                 Loại hình
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {TYPES.map((t) => (
+                {JOB_TYPES.map((item) => (
                   <button
-                    key={t}
-                    onClick={() => handleFilterChange(setType, t)}
+                    key={item.label}
+                    onClick={() => {
+                      setJobType(item.value);
+                      setPage(1);
+                    }}
                     className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
-                      type === t
+                      jobType === item.value
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
                     }`}
                   >
-                    {t}
+                    {item.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Salary */}
             <div>
               <label className="text-xs font-medium text-gray-500 block mb-1.5">
                 Mức lương
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {SALARY_RANGES.map((s) => (
+                {SALARY_RANGES.map((item, index) => (
                   <button
-                    key={s.value}
-                    onClick={() => handleFilterChange(setSalary, s.value)}
+                    key={item.label}
+                    onClick={() => {
+                      setSalaryIndex(index);
+                      setPage(1);
+                    }}
                     className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
-                      salary === s.value
+                      salaryIndex === index
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
                     }`}
                   >
-                    {s.label}
+                    {item.label}
                   </button>
                 ))}
               </div>
@@ -276,79 +257,88 @@ export default function JobList() {
         </div>
       )}
 
-      {/* Job list */}
-      {paginated.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <p className="text-lg font-medium">Không tìm thấy việc làm phù hợp</p>
-          <p className="text-sm mt-1">Thử từ khoá hoặc bộ lọc khác</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {paginated.map((job) => (
-            <div
-              key={job.id}
-              onClick={() => navigate(`/jobs/${job.id}`)}
-              className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div
-                    className={`w-12 h-12 rounded-xl ${job.logoColor} text-white font-bold text-lg flex items-center justify-center shrink-0`}
-                  >
-                    {job.logo}
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-base font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                      {job.title}
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      {job.company}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 mt-2.5">
-                      {job.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-medium"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      <span className="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-full font-medium">
-                        {job.type}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  {/* UC-09: Lưu việc làm yêu thích */}
-                  <button
-                    onClick={(e) => toggleSave(e, job.id)}
-                    title={savedJobs.has(job.id) ? "Bỏ lưu" : "Lưu việc làm"}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      savedJobs.has(job.id)
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-300 hover:text-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Bookmark
-                      size={16}
-                      fill={savedJobs.has(job.id) ? "currentColor" : "none"}
-                    />
-                  </button>
-                  <p className="text-green-600 font-bold text-sm">
-                    {job.salary}
-                  </p>
-                  <p className="text-xs text-gray-400">{job.location}</p>
-                  <p className="text-xs text-gray-400">HSD: {job.deadline}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
         </div>
       )}
 
-      {/* Pagination — chỉ hiện khi > 1 trang */}
+      {isLoading ? (
+        <div className="text-center py-20 text-gray-400">Đang tải việc làm...</div>
+      ) : jobs.length === 0 ? (
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-lg font-medium">Không tìm thấy việc làm phù hợp</p>
+          <p className="text-sm mt-1">Thử từ khóa hoặc bộ lọc khác</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {jobs.map((job) => {
+            const company = getCompany(job);
+            const tags = getTags(job);
+            const logo = company.slice(0, 1).toUpperCase();
+
+            return (
+              <div
+                key={job.id}
+                onClick={() => navigate(`/jobs/${job.id}`)}
+                className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 text-white font-bold text-lg flex items-center justify-center shrink-0">
+                      {logo}
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                        {job.title}
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-0.5">{company}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-2.5">
+                        {tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-medium"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        <span className="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-full font-medium">
+                          {job.jobType}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <button
+                      onClick={(e) => toggleSave(e, job.id)}
+                      title={savedJobs.has(job.id) ? "Bỏ lưu" : "Lưu việc làm"}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        savedJobs.has(job.id)
+                          ? "text-blue-600 bg-blue-50"
+                          : "text-gray-300 hover:text-gray-400 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Bookmark
+                        size={16}
+                        fill={savedJobs.has(job.id) ? "currentColor" : "none"}
+                      />
+                    </button>
+                    <p className="text-green-600 font-bold text-sm">
+                      {formatSalary(job)}
+                    </p>
+                    <p className="text-xs text-gray-400">{job.location}</p>
+                    <p className="text-xs text-gray-400">
+                      HSD: {formatDate(job.expiresAt)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-1 mt-6">
           <button
@@ -358,17 +348,17 @@ export default function JobList() {
           >
             <ChevronLeft size={16} />
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
             <button
-              key={p}
-              onClick={() => setPage(p)}
+              key={pageNumber}
+              onClick={() => setPage(pageNumber)}
               className={`w-9 h-9 rounded-lg text-sm font-semibold transition-colors ${
-                p === page
+                pageNumber === page
                   ? "bg-blue-600 text-white shadow-sm"
                   : "text-gray-600 hover:bg-white hover:shadow-sm hover:border-gray-200 border border-transparent"
               }`}
             >
-              {p}
+              {pageNumber}
             </button>
           ))}
           <button

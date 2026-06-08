@@ -104,8 +104,10 @@ export default function Overview() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="flex flex-start text-2xl font-bold text-black dark:text-white">
+          Tổng quan
+        </h1>
+        <p className="flex flex-start text-black/20 text-sm mt-1">
           Chào mừng trở lại. Cập nhật tiến độ ứng tuyển của bạn hôm nay.
         </p>
       </div>

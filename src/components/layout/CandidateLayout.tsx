@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 
-// ── Nav items (khớp với ảnh) ─────────────────────────────────────────────────
+// ── Nav items — khớp đúng ảnh (5 mục) ───────────────────────────────────────
 const NAV_ITEMS = [
   { to: "/candidate/overview", icon: LayoutDashboard, label: "Tổng quan" },
   {
@@ -22,9 +22,7 @@ const NAV_ITEMS = [
     label: "Đã ứng tuyển",
   },
   { to: "/candidate/my-cvs", icon: FileText, label: "CV của tôi" },
-  { to: "/candidate/cv-builder", icon: FileText, label: "Tạo CV mới" },
-  { to: "/candidate/cv-templates", icon: FileText, label: "Mẫu CV" },
-  { to: "/job-search", icon: Search, label: "Tìm việc làm" },
+  { to: "/candidate/job-search", icon: Search, label: "Tìm việc làm" },
   { to: "/candidate/notifications", icon: Bell, label: "Thông báo", badge: 3 },
 ];
 
@@ -38,8 +36,6 @@ export default function CandidateLayout() {
       className="flex h-screen overflow-hidden bg-gray-50"
       style={{ fontFamily: "'Segoe UI', sans-serif" }}
     >
-      {/* ── SIDEBAR ───────────────────────────────────────────────────────── */}
-
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
@@ -48,17 +44,18 @@ export default function CandidateLayout() {
         />
       )}
 
+      {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 flex flex-col
-          w-52.5 bg-[#1b2537]
+          fixed inset-y-0 left-0 z-40 flex flex-col w-52
+          bg-[#1b2537]
           transition-transform duration-300
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           lg:relative lg:translate-x-0 lg:shrink-0
         `}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-5 py-4.5 border-b border-white/10">
+        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/10">
           <div className="w-6 h-6 bg-blue-500 rounded-[5px] flex items-center justify-center shrink-0">
             <svg
               viewBox="0 0 14 14"
@@ -90,7 +87,7 @@ export default function CandidateLayout() {
               end={to === "/candidate/overview"}
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
-                `relative flex items-center gap-3 px-5 py-2.75 text-[13px] font-medium transition-colors
+                `relative flex items-center gap-3 px-5 py-2.5 text-[13px] font-medium transition-colors
                 ${
                   isActive
                     ? "bg-blue-600 text-white"
@@ -99,7 +96,9 @@ export default function CandidateLayout() {
               }
             >
               <Icon size={15} strokeWidth={1.8} className="shrink-0" />
-              <span className="tracking-wide">{label}</span>
+              <span className="tracking-wide uppercase text-[11px]">
+                {label}
+              </span>
               {badge && (
                 <span className="ml-auto bg-red-500 text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shrink-0">
                   {badge}
@@ -116,20 +115,22 @@ export default function CandidateLayout() {
             className="flex items-center gap-3 px-5 py-2.5 w-full text-white/40 hover:text-white text-[13px] transition-colors"
           >
             <Settings size={15} strokeWidth={1.8} />
-            <span>Cài đặt</span>
+            <span className="uppercase text-[11px] tracking-wide">Cài đặt</span>
           </button>
           <button
             onClick={() => navigate("/login")}
             className="flex items-center gap-3 px-5 py-2.5 w-full text-white/40 hover:text-white text-[13px] transition-colors"
           >
             <LogOut size={15} strokeWidth={1.8} />
-            <span>Đăng xuất</span>
+            <span className="uppercase text-[11px] tracking-wide">
+              Đăng xuất
+            </span>
           </button>
         </div>
       </aside>
 
-      {/* ── MAIN AREA ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden ">
+      {/* ── MAIN AREA ──────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* TOPBAR */}
         <header className="h-14 bg-white border-b border-gray-200 flex items-center px-5 gap-4 shrink-0">
           {/* Hamburger — mobile only */}
@@ -140,9 +141,9 @@ export default function CandidateLayout() {
             {mobileOpen ? <X size={19} /> : <Menu size={19} />}
           </button>
 
-          {/* Search — center of topbar */}
+          {/* Search */}
           <div className="flex-1 flex justify-center">
-            <div className="relative w-full max-w-85">
+            <div className="relative w-full max-w-sm">
               <Search
                 size={13}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
@@ -150,30 +151,24 @@ export default function CandidateLayout() {
               <input
                 type="text"
                 placeholder="Tìm kiếm công việc..."
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 pr-3 py-1.75 text-[13px] text-gray-700 placeholder-gray-400
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 text-[13px] text-gray-700 placeholder-gray-400
                            focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400 transition-all"
               />
             </div>
           </div>
 
-          {/* Right: Bell + User */}
+          {/* Right: User dropdown */}
           <div className="flex items-center gap-3 ml-auto">
-            {/* Bell */}
-            <NavLink
-              to="/candidate/notifications"
-              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-            >
-              <Bell size={18} strokeWidth={1.8} />
-            </NavLink>
-
-            {/* User */}
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center gap-2.5 rounded-lg px-2 py-1 hover:bg-gray-50 transition-colors"
               >
-                <div className="w-7.5 h-7.5 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
-                  N
+                {/* Avatar — dùng ảnh người giống trong hình */}
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                  <div className="w-full h-full bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-[12px] font-bold">
+                    N
+                  </div>
                 </div>
                 <div className="hidden sm:block text-left leading-tight">
                   <p className="text-[12px] font-semibold text-gray-800">
