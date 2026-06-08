@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PublicLayout } from "../src/layouts/PublicLayout";
 import CVTemplatePage from "./pages/candidate/CVTemplatePage";
@@ -33,7 +32,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="jobs" element={<JobList />} />
           <Route path="jobs/:id" element={<JobDetail />} />
-          <Route path="job-search" element={<JobSearch />} />
+
           <Route path="cv-templates" element={<CVTemplatePage />} />
           <Route
             path="resources"
@@ -67,6 +66,7 @@ function App() {
           <Route path="overview" element={<Overview />} />
           <Route path="applied-jobs" element={<AppliedJobs />} />
           <Route path="my-cvs" element={<MyCVs />} />
+          <Route path="job-search" element={<JobSearch />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="cv-templates" element={<CVTemplatePage />} />
           <Route path="cv-builder" element={<CVBuilder />} />

@@ -123,7 +123,7 @@ export default function AppliedJobs() {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-black dark:text-white  ">
             Quản lý ứng tuyển
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
@@ -146,8 +146,12 @@ export default function AppliedJobs() {
                 <Icon size={16} />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-                <p className="text-[11px] text-gray-400 dark:text-gray-500">{label}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {value}
+                </p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                  {label}
+                </p>
               </div>
             </div>
           </Card>
@@ -222,7 +226,9 @@ export default function AppliedJobs() {
                     <p className="font-semibold text-gray-800 dark:text-white">
                       {row.position}
                     </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">{row.skills}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      {row.skills}
+                    </p>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
@@ -231,10 +237,14 @@ export default function AppliedJobs() {
                       >
                         {row.companyLogo}
                       </div>
-                      <span className="text-gray-700 dark:text-slate-300">{row.company}</span>
+                      <span className="text-gray-700 dark:text-slate-300">
+                        {row.company}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-gray-500 dark:text-slate-400">{row.date}</td>
+                  <td className="px-5 py-4 text-gray-500 dark:text-slate-400">
+                    {row.date}
+                  </td>
                   <td className="px-5 py-4">
                     <a
                       href="#"
