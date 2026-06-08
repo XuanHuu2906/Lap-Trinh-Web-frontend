@@ -14,25 +14,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Quản lý trạng thái Chế độ tối (Dark Mode)
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem("theme");
-    return (
-      saved === "dark" ||
-      (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
-  });
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [darkMode]);
-
   // Đóng sidebar di động khi thay đổi đường dẫn (URL)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -96,8 +77,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
           pathname={pathname}
           onOpenMobileSidebar={() => setIsSidebarOpen(true)}
           onLogout={handleLogout}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
         />
 
         {/* Nội dung trang con do Router nạp vào */}

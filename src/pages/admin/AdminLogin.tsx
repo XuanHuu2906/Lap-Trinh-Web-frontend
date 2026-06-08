@@ -8,19 +8,22 @@ import {
   EyeOff,
   AlertCircle,
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { login, logout } = useAuth();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -31,23 +34,30 @@ export const AdminLogin: React.FC = () => {
 
     setIsLoading(true);
 
-    // Giả lập độ trễ kết nối mạng để tạo cảm giác chuyên nghiệp
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await login(email, password);
+      if (res.success && res.data) {
+        const { user } = res.data;
+        
+        // Kiểm tra xem người dùng có phải là admin hay không
+        if (user.role !== "admin") {
+          // Gọi logout để xóa session vừa tạo ra do đăng nhập sai quyền
+          await logout();
+          setError("Tài khoản này không có quyền truy cập quản trị viên.");
+          return;
+        }
 
-      // Kiểm tra tài khoản admin demo
-      if (email === "admin@hirearch.com" && password === "admin123") {
-        localStorage.setItem("isAdminAuthenticated", "true");
-
-        // Điều hướng sau đăng nhập
+        // Điều hướng sau đăng nhập thành công
         const redirectUrl = searchParams.get("redirect") || "/admin/dashboard";
         navigate(redirectUrl);
-      } else {
-        setError(
-          "Địa chỉ email hoặc mật khẩu quản trị viên không hợp lệ. Vui lòng thử lại.",
-        );
       }
-    }, 800);
+    } catch (err: any) {
+      console.error("Lỗi đăng nhập admin:", err);
+      const errMsg = err.response?.data?.message || err.message || "Tài khoản hoặc mật khẩu quản trị viên không hợp lệ.";
+      setError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Đăng nhập nhanh dành cho nhà phát triển/giám khảo tuyển dụng
