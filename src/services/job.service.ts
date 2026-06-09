@@ -3,10 +3,19 @@ import type { Job, JobQuery, JobsApiResponse } from "@/types/job.type";
 
 const cleanParams = (params: object) =>
   Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== undefined && value !== ""),
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== "",
+    ),
   );
 
 export const jobService = {
+  async getFeaturedJobs(limit = 6) {
+    const response = await api.get<JobsApiResponse<Job[]>>("/jobs/featured", {
+      params: { limit },
+    });
+    return response.data;
+  },
+
   async getJobs(params: JobQuery = {}) {
     const response = await api.get<JobsApiResponse<Job[]>>("/jobs", {
       params: cleanParams(params),
