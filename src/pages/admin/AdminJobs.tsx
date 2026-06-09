@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import {
   Search,
@@ -13,14 +14,18 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { type Job, type JobType } from "../../types/job.type";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardTitle, CardDescription } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { getAdminJobs, updateJobStatus, forceDeleteJob } from "../../services/admin.service";
+import {
+  getAdminJobs,
+  updateJobStatus,
+  forceDeleteJob,
+} from "../../services/admin.service";
 
 interface AdminJob extends Job {
   companyName: string;
@@ -59,7 +64,7 @@ export const AdminJobs: React.FC = () => {
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 5,
-    total: 0
+    total: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +88,7 @@ export const AdminJobs: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }, 500);
 
     return () => clearTimeout(timer);
@@ -112,16 +117,22 @@ export const AdminJobs: React.FC = () => {
         // Ánh xạ dữ liệu từ backend trả về dạng AdminJob của frontend
         const mappedJobs: AdminJob[] = response.data.map((job: any) => ({
           ...job,
-          companyName: job.recruiter?.recruiterProfile?.companyName || "Công ty chưa xác định",
-          companyLogo: job.recruiter?.recruiterProfile?.logoUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=80&q=80",
+          companyName:
+            job.recruiter?.recruiterProfile?.companyName ||
+            "Công ty chưa xác định",
+          companyLogo:
+            job.recruiter?.recruiterProfile?.logoUrl ||
+            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=80&q=80",
         }));
 
         // Bộ lọc phụ client-side cho jobType nếu được chọn (vì server chỉ hỗ trợ bộ lọc chính)
         let finalJobs = mappedJobs;
         if (selectedJobType !== "Tất cả") {
-          finalJobs = mappedJobs.filter(job =>
-            (selectedJobType === "Full-time" && job.jobType === "full_time") ||
-            (selectedJobType === "Remote" && job.jobType === "remote")
+          finalJobs = mappedJobs.filter(
+            (job) =>
+              (selectedJobType === "Full-time" &&
+                job.jobType === "full_time") ||
+              (selectedJobType === "Remote" && job.jobType === "remote"),
           );
         }
 
@@ -136,7 +147,11 @@ export const AdminJobs: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err?.response?.data?.message || err.message || "Có lỗi xảy ra khi kết nối tới máy chủ.");
+      setError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Có lỗi xảy ra khi kết nối tới máy chủ.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -145,32 +160,47 @@ export const AdminJobs: React.FC = () => {
   // Tải danh sách công việc mỗi khi các filter/tab/trang thay đổi
   useEffect(() => {
     fetchJobs();
-  }, [pagination.page, pagination.limit, debouncedSearch, activeTab, selectedJobType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pagination.page,
+    pagination.limit,
+    debouncedSearch,
+    activeTab,
+    selectedJobType,
+  ]);
 
   // Điều hướng tabs (Reset về trang 1)
   const handleTabChange = (tab: "pending" | "approved" | "rejected") => {
     setActiveTab(tab);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Điều hướng chọn loại hình công việc (Reset về trang 1)
   const handleJobTypeChange = (type: string) => {
     setSelectedJobType(type);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Hàm xử lý Phê duyệt tin đăng thực tế
   const handleApprove = async (jobId: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn phê duyệt tin tuyển dụng này để hiển thị công khai?")) {
+    if (
+      window.confirm(
+        "Bạn có chắc chắn muốn phê duyệt tin tuyển dụng này để hiển thị công khai?",
+      )
+    ) {
       try {
         const response = await updateJobStatus(jobId, "active");
         if (response.success) {
           // Cập nhật state cục bộ để loại bỏ tin vừa phê duyệt khỏi tab chờ duyệt
-          setJobs(prev => prev.filter(j => j.id !== jobId));
-          setPagination(prev => ({ ...prev, total: prev.total - 1 }));
-          alert("Phê duyệt tin tuyển dụng thành công! Tin đăng hiện đã hiển thị công khai.");
+          setJobs((prev) => prev.filter((j) => j.id !== jobId));
+          setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
+          alert(
+            "Phê duyệt tin tuyển dụng thành công! Tin đăng hiện đã hiển thị công khai.",
+          );
         } else {
-          alert(`Thao tác thất bại: ${response.message || "Lỗi không xác định"}`);
+          alert(
+            `Thao tác thất bại: ${response.message || "Lỗi không xác định"}`,
+          );
         }
       } catch (err: any) {
         console.error(err);
@@ -195,15 +225,23 @@ export const AdminJobs: React.FC = () => {
 
     if (rejectingJobId) {
       try {
-        const response = await updateJobStatus(rejectingJobId, "closed", rejectionReasonInput);
+        const response = await updateJobStatus(
+          rejectingJobId,
+          "closed",
+          rejectionReasonInput,
+        );
         if (response.success) {
-          setJobs(prev => prev.filter(j => j.id !== rejectingJobId));
-          setPagination(prev => ({ ...prev, total: prev.total - 1 }));
+          setJobs((prev) => prev.filter((j) => j.id !== rejectingJobId));
+          setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
           setIsRejectingModalOpen(false);
           setRejectingJobId(null);
-          alert("Đã từ chối tin đăng và gửi lý do phản hồi cho Nhà tuyển dụng.");
+          alert(
+            "Đã từ chối tin đăng và gửi lý do phản hồi cho Nhà tuyển dụng.",
+          );
         } else {
-          alert(`Thao tác thất bại: ${response.message || "Lỗi không xác định"}`);
+          alert(
+            `Thao tác thất bại: ${response.message || "Lỗi không xác định"}`,
+          );
         }
       } catch (err: any) {
         console.error(err);
@@ -222,11 +260,13 @@ export const AdminJobs: React.FC = () => {
       try {
         const response = await forceDeleteJob(jobId);
         if (response.success) {
-          setJobs(prev => prev.filter((job) => job.id !== jobId));
-          setPagination(prev => ({ ...prev, total: prev.total - 1 }));
+          setJobs((prev) => prev.filter((job) => job.id !== jobId));
+          setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
           alert("Đã gỡ bỏ bài tuyển dụng vi phạm thành công.");
         } else {
-          alert(`Thao tác thất bại: ${response.message || "Lỗi không xác định"}`);
+          alert(
+            `Thao tác thất bại: ${response.message || "Lỗi không xác định"}`,
+          );
         }
       } catch (err: any) {
         console.error(err);
@@ -314,30 +354,36 @@ export const AdminJobs: React.FC = () => {
           <div className="flex border-b border-transparent gap-2 w-full sm:w-auto">
             <button
               onClick={() => handleTabChange("pending")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "pending"
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                activeTab === "pending"
                   ? "border-slate-900 text-slate-900 font-extrabold"
                   : "border-transparent text-slate-400 hover:text-slate-650"
-                }`}
+              }`}
             >
-              Chờ phê duyệt {activeTab === "pending" ? `(${pagination.total})` : ""}
+              Chờ phê duyệt{" "}
+              {activeTab === "pending" ? `(${pagination.total})` : ""}
             </button>
             <button
               onClick={() => handleTabChange("approved")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "approved"
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                activeTab === "approved"
                   ? "border-slate-900 text-slate-900 font-extrabold"
                   : "border-transparent text-slate-400 hover:text-slate-650"
-                }`}
+              }`}
             >
-              Đã kích hoạt {activeTab === "approved" ? `(${pagination.total})` : ""}
+              Đã kích hoạt{" "}
+              {activeTab === "approved" ? `(${pagination.total})` : ""}
             </button>
             <button
               onClick={() => handleTabChange("rejected")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "rejected"
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                activeTab === "rejected"
                   ? "border-slate-900 text-slate-900 font-extrabold"
                   : "border-transparent text-slate-400 hover:text-slate-650"
-                }`}
+              }`}
             >
-              Đã từ chối {activeTab === "rejected" ? `(${pagination.total})` : ""}
+              Đã từ chối{" "}
+              {activeTab === "rejected" ? `(${pagination.total})` : ""}
             </button>
           </div>
 
@@ -530,21 +576,40 @@ export const AdminJobs: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 bg-slate-50/20">
             {/* Left Side: Current view status */}
             <div className="text-[11px] text-slate-500 font-bold">
-              Hiển thị <span className="font-extrabold text-slate-800">{Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}</span>
-              {" "}-{" "}
-              <span className="font-extrabold text-slate-800">{Math.min(pagination.page * pagination.limit, pagination.total)}</span>
-              {" "}trên tổng số{" "}
-              <span className="font-extrabold text-slate-800">{pagination.total}</span> tin tuyển dụng
+              Hiển thị{" "}
+              <span className="font-extrabold text-slate-800">
+                {Math.min(
+                  (pagination.page - 1) * pagination.limit + 1,
+                  pagination.total,
+                )}
+              </span>{" "}
+              -{" "}
+              <span className="font-extrabold text-slate-800">
+                {Math.min(pagination.page * pagination.limit, pagination.total)}
+              </span>{" "}
+              trên tổng số{" "}
+              <span className="font-extrabold text-slate-800">
+                {pagination.total}
+              </span>{" "}
+              tin tuyển dụng
             </div>
 
             {/* Right Side: Navigation buttons and select items limit */}
             <div className="flex items-center gap-4">
               {/* Select limit */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider">Hiển thị:</span>
+                <span className="text-[9px] font-black text-slate-450 uppercase tracking-wider">
+                  Hiển thị:
+                </span>
                 <select
                   value={pagination.limit}
-                  onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value, 10), page: 1 }))}
+                  onChange={(e) =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      limit: parseInt(e.target.value, 10),
+                      page: 1,
+                    }))
+                  }
                   className="text-[10px] font-bold text-slate-650 bg-slate-50 border border-slate-200 px-2 py-1 rounded-sm outline-none cursor-pointer hover:bg-slate-100 transition-colors"
                 >
                   <option value={5}>5 dòng</option>
@@ -559,7 +624,12 @@ export const AdminJobs: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPagination(prev => ({ ...prev, page: Math.max(prev.page - 1, 1) }))}
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: Math.max(prev.page - 1, 1),
+                    }))
+                  }
                   disabled={pagination.page === 1}
                   className="h-7 w-7 border border-slate-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
                 >
@@ -571,12 +641,17 @@ export const AdminJobs: React.FC = () => {
                   return (
                     <Button
                       key={pageNum}
-                      variant={pagination.page === pageNum ? "default" : "outline"}
-                      onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
-                      className={`h-7 w-7 text-[10px] font-bold cursor-pointer ${pagination.page === pageNum
+                      variant={
+                        pagination.page === pageNum ? "default" : "outline"
+                      }
+                      onClick={() =>
+                        setPagination((prev) => ({ ...prev, page: pageNum }))
+                      }
+                      className={`h-7 w-7 text-[10px] font-bold cursor-pointer ${
+                        pagination.page === pageNum
                           ? "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-650 shadow-xs"
                           : "text-slate-600 hover:bg-slate-50 border border-slate-200"
-                        }`}
+                      }`}
                     >
                       {pageNum}
                     </Button>
@@ -586,7 +661,12 @@ export const AdminJobs: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.page + 1, totalPages) }))}
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: Math.min(prev.page + 1, totalPages),
+                    }))
+                  }
                   disabled={pagination.page === totalPages}
                   className="h-7 w-7 border border-slate-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
                 >

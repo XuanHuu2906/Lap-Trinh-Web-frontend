@@ -1,26 +1,75 @@
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, MapPin } from "lucide-react";
+import type { Job } from "@/types/job.type";
 
-interface Job {
-  id: number;
-  title: string;
-  company: string;
-  logo: string;
-  logoColor: string;
-  location: string;
-  salary: string;
-  deadline: string;
-  tags: string[];
-  field: string;
-}
 interface FeaturedJobsProps {
   jobs: Job[];
+  isLoading?: boolean;
+  errorMessage?: string | null;
   onViewAll?: () => void;
   onSelectJob?: (job: Job) => void;
 }
 
+const jobTypeLabels: Record<string, string> = {
+  full_time: "Toàn thời gian",
+  part_time: "Bán thời gian",
+  remote: "Làm từ xa",
+  internship: "Thực tập",
+  contract: "Hợp đồng",
+};
+
+const experienceLabels: Record<string, string> = {
+  no_exp: "Không yêu cầu kinh nghiệm",
+  junior: "Junior",
+  mid: "Middle",
+  senior: "Senior",
+  manager: "Quản lý",
+};
+
+function getCompanyName(job: Job) {
+  return job.recruiter?.recruiterProfile?.companyName || "Đang cập nhật";
+}
+
+function getLogoText(job: Job) {
+  return getCompanyName(job).trim().charAt(0).toUpperCase() || "J";
+}
+
+function formatMoney(value?: number | null) {
+  if (!value) return "";
+  return new Intl.NumberFormat("vi-VN").format(value);
+}
+
+function formatSalary(job: Job) {
+  if (job.salaryUnit === "negotiable") return "Thương lượng";
+  if (!job.salaryMin && !job.salaryMax) return "Thương lượng";
+
+  const unit =
+    job.salaryUnit === "year"
+      ? "/năm"
+      : job.salaryUnit === "hour"
+        ? "/giờ"
+        : "/tháng";
+
+  if (job.salaryMin && job.salaryMax) {
+    return `${formatMoney(job.salaryMin)} - ${formatMoney(job.salaryMax)} ${unit}`;
+  }
+
+  if (job.salaryMin) return `Từ ${formatMoney(job.salaryMin)} ${unit}`;
+  return `Đến ${formatMoney(job.salaryMax)} ${unit}`;
+}
+
+function getTags(job: Job) {
+  return [
+    jobTypeLabels[job.jobType] || job.jobType,
+    job.experienceLevel
+      ? experienceLabels[job.experienceLevel] || job.experienceLevel
+      : null,
+    job.category?.name,
+  ].filter((tag): tag is string => Boolean(tag));
+}
+
 function TagBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-block text-xs font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+    <span className="inline-flex min-h-6 items-center rounded-full bg-gray-100 px-2.5 text-xs font-medium text-gray-700">
       {children}
     </span>
   );
@@ -33,45 +82,64 @@ function JobCard({
   job: Job;
   onSelect?: (job: Job) => void;
 }) {
+  const tags = getTags(job);
+
   return (
-    <div
+    <article
       onClick={() => onSelect?.(job)}
-      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 cursor-pointer transition-all group"
+      className="group cursor-pointer rounded-lg border border-gray-200 bg-white p-5 transition-all hover:border-blue-300 hover:shadow-md"
     >
-      {/* Card header */}
-      <div className="flex items-start justify-between mb-3">
-        <div
-          className={`${job.logoColor} w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0`}
-        >
-          {job.logo}
+      <div className="mb-4 flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+          {getLogoText(job)}
         </div>
-        <button
-          onClick={(e) => e.stopPropagation()}
-          className="text-gray-300 hover:text-blue-500 transition-colors"
-          aria-label="Lưu việc làm"
-        ></button>
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-gray-900 transition-colors group-hover:text-blue-700">
+            {job.title}
+          </h3>
+          <p className="mt-1 truncate text-xs text-gray-500">
+            {getCompanyName(job)}
+          </p>
+        </div>
       </div>
 
-      {/* Title & company */}
-      <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1 group-hover:text-blue-700 transition-colors">
-        {job.title}
-      </h3>
-      <p className="text-xs text-gray-500 mb-3">{job.company}</p>
-
-      {/* Tags */}
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {job.tags.slice(0, 2).map((tag) => (
+      <div className="mb-4 flex min-h-6 flex-wrap gap-1.5">
+        {tags.slice(0, 2).map((tag) => (
           <TagBadge key={tag}>{tag}</TagBadge>
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-gray-500">
-        <span className="flex items-center gap-1">
-          <MapPin />
-          {job.location}
+      <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3 text-xs text-gray-500">
+        <span className="flex min-w-0 items-center gap-1">
+          <MapPin className="h-4 w-4 shrink-0" />
+          <span className="truncate">
+            {job.location || "Không rõ địa điểm"}
+          </span>
         </span>
-        <span className="font-semibold text-green-600">{job.salary}</span>
+        <span className="shrink-0 font-semibold text-green-600">
+          {formatSalary(job)}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function FeaturedJobSkeleton() {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <div className="mb-4 flex items-start gap-3">
+        <div className="h-11 w-11 rounded-lg bg-gray-200" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-3/4 rounded bg-gray-200" />
+          <div className="h-3 w-1/2 rounded bg-gray-100" />
+        </div>
+      </div>
+      <div className="mb-4 flex gap-2">
+        <div className="h-6 w-24 rounded-full bg-gray-100" />
+        <div className="h-6 w-20 rounded-full bg-gray-100" />
+      </div>
+      <div className="border-t border-gray-100 pt-3">
+        <div className="h-4 w-full rounded bg-gray-100" />
       </div>
     </div>
   );
@@ -79,46 +147,74 @@ function JobCard({
 
 export default function FeaturedJobs({
   jobs,
+  isLoading = false,
+  errorMessage,
   onViewAll,
   onSelectJob,
 }: FeaturedJobsProps) {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 ">
-      <div className="flex items-center justify-between mb-8">
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Việc làm nổi bật</h2>
-          <p className="text-gray-500 text-sm mt-1">Cơ hội tốt nhất hôm nay</p>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Việc làm nổi bật
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Cơ hội tốt nhất hôm nay
+          </p>
         </div>
         <button
+          type="button"
           onClick={onViewAll}
-          className="text-sm text-blue-700 font-semibold group flex items-center gap-1 group hover:transform hover:scale-105 transition-all p-2 rounded-2xl"
+          className="flex items-center gap-1 rounded-lg p-2 text-sm font-semibold text-blue-700 transition-all hover:scale-105 hover:bg-blue-50"
         >
           Xem tất cả
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Job grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {jobs.map((job) => (
-          <JobCard key={job.id} job={job} onSelect={onSelectJob} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <FeaturedJobSkeleton key={index} />
+          ))}
+        </div>
+      ) : errorMessage ? (
+        <div className="flex min-h-40 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 text-center">
+          <BriefcaseBusiness className="mb-3 h-8 w-8 text-gray-400" />
+          <p className="text-sm font-medium text-gray-700">{errorMessage}</p>
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="flex min-h-40 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 text-center">
+          <BriefcaseBusiness className="mb-3 h-8 w-8 text-gray-400" />
+          <p className="text-sm font-medium text-gray-700">
+            Chưa có việc làm nổi bật.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {jobs.map((job) => (
+            <JobCard key={job.id} job={job} onSelect={onSelectJob} />
+          ))}
+        </div>
+      )}
 
-      {/* CTA Banner */}
-      <div className="mt-12 bg-linear-to-r from-blue-400 to-indigo-600 rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-white">
+      <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl bg-linear-to-r from-blue-500 to-indigo-600 p-8 text-white sm:flex-row">
         <div>
-          <p className="font-bold text-lg mb-1">Không tìm thấy việc phù hợp?</p>
-          <p className="text-blue-200 text-sm">
+          <p className="mb-1 text-lg font-bold">
+            Không tìm thấy việc phù hợp?
+          </p>
+          <p className="text-sm text-blue-100">
             Tạo thông báo tìm việc để nhận tin ngay khi có việc mới.
           </p>
         </div>
-        <button className="bg-white text-blue-700 hover:bg-blue-50 font-semibold text-sm px-6 py-3 rounded-xl transition-colors whitespace-nowrap shrink-0">
+        <button
+          type="button"
+          className="shrink-0 whitespace-nowrap rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50"
+        >
           Tạo thông báo việc làm
         </button>
       </div>
     </section>
   );
 }
-
-export type { Job };

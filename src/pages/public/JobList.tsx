@@ -7,7 +7,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { jobService } from "@/services/job.service";
 import type { Job } from "@/types/job.type";
 
@@ -59,8 +59,12 @@ const getTags = (job: Job) =>
 
 export default function JobList() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const keywordFromUrl = searchParams.get("keyword") || "";
+  const locationFromUrl = searchParams.get("location") || "";
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(keywordFromUrl);
+  const [location, setLocation] = useState(locationFromUrl);
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set());
   const [showFilter, setShowFilter] = useState(false);
   const [jobType, setJobType] = useState("");
@@ -79,11 +83,18 @@ export default function JobList() {
       page,
       limit: ITEMS_PER_PAGE,
       keyword: search.trim() || undefined,
+      location: location.trim() || undefined,
       jobType: jobType || undefined,
       salaryMin: salaryRange.salaryMin,
       salaryMax: salaryRange.salaryMax,
     };
-  }, [jobType, page, salaryIndex, search]);
+  }, [jobType, location, page, salaryIndex, search]);
+
+  useEffect(() => {
+    setSearch(keywordFromUrl);
+    setLocation(locationFromUrl);
+    setPage(1);
+  }, [keywordFromUrl, locationFromUrl]);
 
   useEffect(() => {
     let isMounted = true;
