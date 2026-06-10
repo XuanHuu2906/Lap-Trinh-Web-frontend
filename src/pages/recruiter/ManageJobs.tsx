@@ -108,7 +108,9 @@ export function ManageJobsPage() {
       )}
 
       <div className="bg-white border border-slate-200 p-5 mb-6">
-        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Bộ lọc tìm kiếm</p>
+        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+          Bộ lọc tìm kiếm
+        </p>
         <div className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-50">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tìm kiếm tin</label>

@@ -128,7 +128,11 @@ export function SettingsPage() {
                 <div className="flex items-start gap-5 p-4 border border-slate-200 bg-slate-50">
                   <div className="w-16 h-16 bg-blue-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                     {logoPreview ? (
-                      <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                      <img
+                        src={logoPreview}
+                        alt="Logo"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <span className="text-slate-400 text-[11px] font-bold">LOGO</span>
                     )}
@@ -143,7 +147,13 @@ export function SettingsPage() {
                     >
                       Thay đổi Logo
                     </button>
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogo} />
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogo}
+                    />
                   </div>
                 </div>
 
@@ -196,14 +206,18 @@ export function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Mô tả doanh nghiệp</label>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                    Mô tả doanh nghiệp
+                  </label>
                   <textarea
                     value={description}
                     onChange={(e) => e.target.value.length <= MAX_DESC && setDescription(e.target.value)}
                     rows={5}
                     className="w-full border border-slate-200 px-4 py-3 text-[13px] outline-none focus:border-slate-400 text-slate-700 resize-y"
                   />
-                  <p className="text-right text-[12px] text-slate-400 mt-1">{description.length} / {MAX_DESC} ký tự</p>
+                  <p className="text-right text-[12px] text-slate-400 mt-1">
+                    {description.length} / {MAX_DESC} ký tự
+                  </p>
                 </div>
               </div>
 

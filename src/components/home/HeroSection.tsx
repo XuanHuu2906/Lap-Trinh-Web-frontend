@@ -1,3 +1,4 @@
+import { MapPin, Search } from "lucide-react";
 import { useState } from "react";
 
 interface HeroSectionProps {
@@ -11,6 +12,13 @@ const POPULAR_SEARCHES = [
   "Product Manager",
 ];
 
+const STATS = [
+  { num: "10,000+", label: "Việc làm" },
+  { num: "5,000+", label: "Doanh nghiệp" },
+  { num: "500K+", label: "Ứng viên" },
+  { num: "98%", label: "Hài lòng" },
+];
+
 export default function HeroSection({ onSearch }: HeroSectionProps) {
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
@@ -19,133 +27,83 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
     onSearch?.(keyword, location);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleSearch();
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
-    <section className="bg-linear-to-br from-blue-700 via-blue-800 to-indigo-900 text-white py-20 px-4">
-      <div className="max-w-3xl mx-auto text-center">
-        {/* Badge */}
-        <span className="inline-block bg-blue-600/50 border border-blue-400/40 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full mb-5 tracking-wide">
-          🚀 Hơn 10,000+ việc làm đang chờ bạn
+    <section className="bg-linear-to-br from-blue-700 to-red-200 px-4 py-20 text-white">
+      <div className="mx-auto max-w-5xl text-center">
+        <span className="mb-5 inline-block rounded-full border border-blue-400/40 bg-blue-600/50 px-3 py-1 text-xs font-semibold tracking-wide text-blue-100">
+          Hơn 10,000+ việc làm đang chờ bạn
         </span>
 
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">
+        <h1 className="mb-4 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
           Tìm việc làm phù hợp <br className="hidden sm:block" />
           với bạn
         </h1>
-        <p className="text-blue-200 text-base sm:text-lg mb-10 max-w-xl mx-auto">
-          Kết nối bạn với các cơ hội nghề nghiệp hàng đầu từ các doanh nghiệp uy
-          tín.
+        <p className="mx-auto mb-8 max-w-2xl py-2 text-sm leading-6 text-gray-100">
+          Kết nối bạn với các cơ hội nghề nghiệp hàng đầu từ các doanh nghiệp
+          uy tín.
         </p>
 
-        {/* Search Box */}
-        <div className="bg-white rounded-2xl shadow-2xl p-3 flex flex-col sm:flex-row gap-2 max-w-2xl mx-auto">
-          {/* Keyword input */}
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5">
-            <svg
-              className="w-4 h-4 text-gray-400 shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-              />
-            </svg>
+        <div className="mx-auto flex max-w-3xl flex-col gap-2 rounded-2xl bg-white p-3 sm:flex-row">
+          <div className="flex flex-1 items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5">
+            <Search className="h-4 w-4 text-gray-400" />
             <input
               value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
+              onChange={(event) => setKeyword(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Chức danh, từ khóa hoặc công ty"
-              className="bg-transparent text-sm text-gray-700 outline-none w-full placeholder-gray-400"
+              className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder-gray-400"
             />
           </div>
 
-          {/* Location input */}
-          <div className="sm:w-48 flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5">
-            <svg
-              className="w-4 h-4 text-gray-400 shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-              />
-            </svg>
+          <div className="flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 sm:w-48">
+            <MapPin className="h-4 w-4 text-gray-400" />
             <input
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(event) => setLocation(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Tất cả địa điểm"
-              className="bg-transparent text-sm text-gray-700 outline-none w-full placeholder-gray-400"
+              className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder-gray-400"
             />
           </div>
 
-          {/* Submit button */}
           <button
+            type="button"
             onClick={handleSearch}
-            className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-all flex items-center gap-2 justify-center"
+            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-              />
-            </svg>
-            TÌM KIẾM
+            <Search className="h-4 w-4" />
+            Tìm kiếm
           </button>
         </div>
 
-        {/* Popular searches */}
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          <span className="text-blue-300 text-xs">Tìm kiếm phổ biến:</span>
+          <span className="text-xs text-blue-100">Tìm kiếm phổ biến:</span>
           {POPULAR_SEARCHES.map((term) => (
             <button
               key={term}
+              type="button"
               onClick={() => {
                 setKeyword(term);
                 onSearch?.(term, location);
               }}
-              className="text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3 py-1 rounded-full transition-colors"
+              className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs text-white transition-colors hover:bg-white/20"
             >
               {term}
             </button>
           ))}
         </div>
 
-        {/* Stats row */}
-        <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
-          {[
-            { num: "10,000+", label: "Việc làm" },
-            { num: "5,000+", label: "Doanh nghiệp" },
-            { num: "500K+", label: "Ứng viên" },
-            { num: "98%", label: "Hài lòng" },
-          ].map((stat) => (
+        <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+          {STATS.map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="text-xl font-bold text-white">{stat.num}</p>
-              <p className="text-xs text-blue-300">{stat.label}</p>
+              <p className="text-xs text-blue-100">{stat.label}</p>
             </div>
           ))}
         </div>

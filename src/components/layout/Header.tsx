@@ -6,10 +6,9 @@ export default function Header() {
   const navigate = useNavigate();
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium transition-colors hover:text-blue-700 ${
-      isActive
-        ? "text-blue-700 border-b-2 border-blue-700 pb-0.5"
-        : "text-gray-600"
+    `text-sm font-medium transition-colors hover:text-blue-700 ${isActive
+      ? "text-blue-700 border-b-2 border-blue-700 pb-0.5"
+      : "text-gray-600"
     }`;
 
   return (
@@ -26,16 +25,16 @@ export default function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className=" flex items-center gap-6">
           <NavLink to="/jobs" className={linkClass}>
             Tìm việc
           </NavLink>
-          <button className="text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+          <NavLink to="/register-enterprise" className={linkClass}>
             Đăng việc
-          </button>
-          <button className="text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-            Tài nguyên
-          </button>
+          </NavLink>
+          <NavLink to="/cv-templates" className={linkClass}>
+            Tạo CV
+          </NavLink>
         </nav>
 
         {/* Actions */}

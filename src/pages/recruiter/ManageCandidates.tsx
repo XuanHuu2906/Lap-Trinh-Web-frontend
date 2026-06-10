@@ -164,6 +164,19 @@ export function ManageCandidatesPage() {
     }
   };
 
+  // Filtering candidates based on UI controls
+  const filteredCandidates = candidateList.filter((c) => {
+    const matchesSearch =
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase()) ||
+      c.position.toLowerCase().includes(search.toLowerCase());
+    const matchesPosition = positionFilter
+      ? c.position === positionFilter
+      : true;
+    const matchesStatus = statusFilter ? c.status === statusFilter : true;
+    return matchesSearch && matchesPosition && matchesStatus;
+  });
+
   return (
     <div className="p-8">
       <div className="mb-6">
@@ -319,6 +332,258 @@ export function ManageCandidatesPage() {
           )}
         </div>
       </div>
+
+      {/* ── HIGH FIDELITY CANDIDATE MODAL FOR UC-15 & UC-16 ── */}
+      {modalOpen && selectedCandidate && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-lg w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] border border-slate-100 dark:border-slate-800 animate-scale-up">
+            {/* Left side: Candidate Portfolio Information */}
+            <div className="w-full md:w-5/12 bg-slate-50 dark:bg-slate-950 p-6 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between overflow-y-auto">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase">
+                    Hồ sơ ứng viên
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-sm ${selectedCandidate.statusStyle}`}
+                  >
+                    {selectedCandidate.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-lg font-black shadow-md"
+                    style={{ backgroundColor: selectedCandidate.color }}
+                  >
+                    {selectedCandidate.initials}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">
+                      {selectedCandidate.name}
+                    </h2>
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold mt-1 uppercase tracking-wider">
+                      {selectedCandidate.position}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 border-t border-slate-250 dark:border-slate-800 pt-5">
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-350">
+                    <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="text-xs font-semibold">
+                      {selectedCandidate.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-350">
+                    <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="text-xs font-semibold">
+                      {selectedCandidate.phone}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-350">
+                    <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="text-xs font-semibold">
+                      Nộp ngày: {selectedCandidate.date}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Simulated Interactive Resume Viewer */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-md mt-6 shadow-3xs">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-indigo-50 dark:bg-slate-800 text-indigo-600 rounded-lg flex items-center justify-center">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        CV_Nguyen_Van_A.pdf
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Bản chính thức • 2.4 MB
+                      </p>
+                    </div>
+                  </div>
+                  <div className="h-24 bg-slate-50 dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-sm flex items-center justify-center text-slate-400 text-xs hover:text-indigo-600 hover:border-indigo-400 transition-colors cursor-pointer">
+                    Click để mở xem trực tiếp CV trong tab mới
+                  </div>
+                </div>
+              </div>
+
+              {/* Status footer inside left pane */}
+              <div className="mt-8 pt-4 border-t border-slate-250 dark:border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-slate-400" />
+                <span>ID Hồ sơ: HR-CAND-{selectedCandidate.id}092</span>
+              </div>
+            </div>
+
+            {/* Right side: UC-15 Response Feedback Form & UC-16 Star Score Evaluation */}
+            <div className="w-full md:w-7/12 p-6 flex flex-col justify-between overflow-y-auto">
+              {/* Header Action */}
+              <div className="flex items-center justify-between border-b border-slate-150 pb-3 mb-5">
+                <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-wide uppercase">
+                  Xử lý & Chấm Điểm Hồ Sơ
+                </h3>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6 flex-1 pr-1">
+                {/* 1. ĐÁNH GIÁ ỨNG VIÊN (SCORE STARS + INTERNAL NOTES) */}
+                <div className="bg-indigo-50/20 dark:bg-slate-950/20 border border-indigo-100 dark:border-slate-800 p-5 rounded-md">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Chấm Điểm & Nhận Xét Nội Bộ
+                    </h4>
+                  </div>
+
+                  {/* Star selection */}
+                  <div className="mb-4">
+                    <span className="text-[11px] font-extrabold text-slate-500 uppercase block mb-1.5">
+                      Chấm điểm sao cho ứng viên
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setTempScore(star)}
+                          className="focus:outline-none transition-transform hover:scale-115 cursor-pointer"
+                        >
+                          <Star
+                            className={`w-6 h-6 ${
+                              star <= tempScore
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-slate-200 dark:text-slate-750"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      {tempScore > 0 && (
+                        <span className="text-xs text-amber-500 font-bold ml-2">
+                          ({tempScore} / 5 Sao)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Notes content */}
+                  <div>
+                    <span className="text-[11px] font-extrabold text-slate-500 uppercase block mb-1.5">
+                      Ghi chú / Nhận xét nội bộ (Bộ phận Tuyển dụng)
+                    </span>
+                    <textarea
+                      value={tempNotes}
+                      onChange={(e) => setTempNotes(e.target.value)}
+                      placeholder="Điền ghi chú kỹ năng, kinh nghiệm phỏng vấn, thái độ của ứng viên..."
+                      rows={3}
+                      className="w-full text-xs p-3 border border-slate-200 dark:border-slate-800 outline-none focus:border-indigo-500 rounded-sm bg-white dark:bg-slate-950 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Action Save evaluation */}
+                  <div className="flex justify-end mt-3">
+                    <button
+                      onClick={handleSaveEvaluation}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] px-4 py-2 rounded-sm transition-all shadow-3xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Lưu đánh giá nội bộ
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. PHẢN HỒI ỨNG VIÊN (OFFICIAL FEEDBACK FORM & STATUS UPDATE) */}
+                <div className="bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 p-5 rounded-md">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MessageSquare className="w-4 h-4 text-slate-600 shrink-0" />
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Phản hồi chính thức cho Ứng viên
+                    </h4>
+                  </div>
+
+                  {/* Select status */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <span className="text-[11px] font-extrabold text-slate-500 uppercase block mb-1.5">
+                        Cập nhật trạng thái tuyển dụng
+                      </span>
+                      <select
+                        value={tempStatus}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setTempStatus(val);
+                          loadTemplateFeedback(val);
+                        }}
+                        className="w-full h-9 px-3 border border-slate-200 dark:border-slate-800 text-xs outline-none bg-white dark:bg-slate-950 dark:text-white rounded-sm cursor-pointer"
+                      >
+                        <option value="Mới">Mới (Nhận hồ sơ)</option>
+                        <option value="Đang phỏng vấn">Hẹn phỏng vấn</option>
+                        <option value="Đạt">Chấp nhận (Đạt tuyển dụng)</option>
+                        <option value="Không phù hợp">
+                          Từ chối (Không phù hợp)
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* Auto-load templates indicators */}
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={() => loadTemplateFeedback(tempStatus)}
+                        className="h-9 px-3.5 border border-dashed border-indigo-300 hover:border-indigo-500 text-indigo-600 hover:text-indigo-700 text-[11px] font-bold transition-all rounded-sm bg-white dark:bg-slate-900 flex items-center justify-center gap-1.5 cursor-pointer w-full"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-500" /> Tải
+                        mẫu thư tự động
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Feedback Message */}
+                  <div>
+                    <span className="text-[11px] font-extrabold text-slate-500 uppercase block mb-1.5">
+                      Nội dung phản hồi (Sẽ gửi qua email/hệ thống cho ứng viên)
+                    </span>
+                    <textarea
+                      value={tempFeedbackMsg}
+                      onChange={(e) => setTempFeedbackMsg(e.target.value)}
+                      placeholder="Nhập thư mời phỏng vấn, thư cảm ơn hoặc thông báo tuyển dụng chính thức..."
+                      rows={5}
+                      className="w-full text-xs p-3 border border-slate-200 dark:border-slate-800 outline-none focus:border-indigo-500 rounded-sm bg-white dark:bg-slate-950 dark:text-white font-mono"
+                    />
+                  </div>
+
+                  {/* Send Action */}
+                  <div className="flex justify-end mt-4">
+                    <button
+                      onClick={handleSendFeedback}
+                      className="bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-bold text-[11px] px-4 py-2 rounded-sm transition-all shadow-3xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" /> Gửi phản hồi & Cập nhật
+                      trạng thái
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions Footer */}
+              <div className="mt-6 pt-4 border-t border-slate-150 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-sm transition-all cursor-pointer"
+                >
+                  Đóng Modal xử lý
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

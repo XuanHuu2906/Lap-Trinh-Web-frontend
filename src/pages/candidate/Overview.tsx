@@ -7,6 +7,8 @@ import {
   MapPin,
   DollarSign,
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const stats = [
   {
@@ -16,16 +18,17 @@ const stats = [
     icon: FileText,
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
-    link: "/candidate/my-cvs",
+    link: "/candidate/MyCVs",
   },
   {
     label: "Công việc đã ứng tuyển",
     value: "12",
     note: "+2 trong tuần này",
     icon: BriefcaseBusiness,
+    action: "Xem Ứng viên đã nộp",
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
-    link: "/candidate/applied-jobs",
+    link: "/candidate/AppliedJobs",
   },
   {
     label: "Phản hồi mới",
@@ -34,7 +37,7 @@ const stats = [
     icon: Bell,
     iconBg: "bg-red-100",
     iconColor: "text-red-500",
-    link: "/candidate/notifications",
+    link: "/candidate/Notifications",
   },
 ];
 
@@ -101,8 +104,10 @@ export default function Overview() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="flex flex-start text-2xl font-bold text-black dark:text-white">
+          Tổng quan
+        </h1>
+        <p className="flex flex-start text-black/20 text-sm mt-1">
           Chào mừng trở lại. Cập nhật tiến độ ứng tuyển của bạn hôm nay.
         </p>
       </div>
@@ -112,33 +117,37 @@ export default function Overview() {
         {stats.map((s) => {
           const Icon = s.icon;
           return (
-            <div
+            <Card
               key={s.label}
-              className="bg-white rounded-xl border border-gray-100 p-5 flex items-start justify-between shadow-sm"
+              className="bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 p-5 flex items-start justify-between shadow-sm transition-colors duration-150"
             >
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                   {s.label}
                 </p>
-                <p className="text-4xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-4xl font-bold text-gray-900 dark:text-white">
+                  {s.value}
+                </p>
                 {s.note && (
-                  <p className="text-xs text-gray-400 mt-1">{s.note}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    {s.note}
+                  </p>
                 )}
                 {s.action && (
                   <a
                     href={s.link}
-                    className="inline-flex items-center gap-1 mt-2 text-xs text-blue-600 font-semibold hover:underline"
+                    className="inline-flex items-center gap-1 mt-2 text-xs text-blue-600 dark:text-indigo-400 font-semibold hover:underline"
                   >
                     {s.action} <ArrowRight size={11} />
                   </a>
                 )}
               </div>
               <div
-                className={`${s.iconBg} ${s.iconColor} w-10 h-10 rounded-lg flex items-center justify-center`}
+                className={`${s.iconBg} dark:bg-slate-800/80 ${s.iconColor} w-10 h-10 rounded-lg flex items-center justify-center`}
               >
                 <Icon size={20} />
               </div>
-            </div>
+            </Card>
           );
         })}
       </div>
@@ -146,14 +155,14 @@ export default function Overview() {
       {/* Bottom grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent activity */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800 text-sm">
+        <Card className="lg:col-span-2 bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-150">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800">
+            <h2 className="font-semibold text-gray-800 dark:text-white text-sm">
               Hoạt động ứng tuyển gần đây
             </h2>
             <a
               href="/candidate/applied-jobs"
-              className="text-blue-600 text-xs font-semibold hover:underline flex items-center gap-1"
+              className="text-blue-600 dark:text-indigo-400 text-xs font-semibold hover:underline flex items-center gap-1"
             >
               Xem tất cả <ArrowRight size={11} />
             </a>
@@ -162,7 +171,7 @@ export default function Overview() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-gray-400 text-xs uppercase tracking-wide">
+                <tr className="bg-gray-50 dark:bg-slate-950 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wide">
                   <th className="px-5 py-3 text-left font-medium">
                     Vị trí ứng tuyển
                   </th>
@@ -174,26 +183,31 @@ export default function Overview() {
                   <th className="px-5 py-3 text-left font-medium">Hành động</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
                 {recentActivity.map((row) => (
                   <tr
                     key={row.position}
-                    className="hover:bg-gray-50/60 transition-colors"
+                    className="hover:bg-gray-50/60 dark:hover:bg-slate-850/40 transition-colors"
                   >
-                    <td className="px-5 py-3.5 font-medium text-gray-800">
+                    <td className="px-5 py-3.5 font-medium text-gray-800 dark:text-slate-100">
                       {row.position}
                     </td>
-                    <td className="px-5 py-3.5 text-gray-500">{row.company}</td>
-                    <td className="px-5 py-3.5 text-gray-500">{row.date}</td>
-                    <td className="px-5 py-3.5">
-                      <span
-                        className={`${row.statusColor} text-[11px] font-semibold px-2 py-1 rounded-full`}
-                      >
-                        {row.status}
-                      </span>
+                    <td className="px-5 py-3.5 text-gray-500 dark:text-slate-400">
+                      {row.company}
+                    </td>
+                    <td className="px-5 py-3.5 text-gray-500 dark:text-slate-400">
+                      {row.date}
                     </td>
                     <td className="px-5 py-3.5">
-                      <button className="text-xs text-blue-600 font-semibold hover:underline">
+                      <Badge
+                        variant="secondary"
+                        className={`${row.statusColor} text-[11px] font-semibold px-2 py-0.5 rounded-full dark:bg-opacity-20 lowercase first-letter:uppercase`}
+                      >
+                        {row.status}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <button className="text-xs text-blue-600 dark:text-indigo-400 font-semibold hover:underline cursor-pointer">
                         Chi tiết
                       </button>
                     </td>
@@ -202,24 +216,24 @@ export default function Overview() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
 
         {/* Suggested jobs */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800 text-sm">
+        <Card className="bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-150">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800">
+            <h2 className="font-semibold text-gray-800 dark:text-white text-sm">
               Việc làm phù hợp
             </h2>
-            <button className="text-gray-400 hover:text-blue-500 transition-colors">
+            <button className="text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-indigo-400 transition-colors cursor-pointer">
               <RefreshCw size={14} />
             </button>
           </div>
 
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-50 dark:divide-slate-800">
             {suggestedJobs.map((job) => (
               <div
                 key={job.title}
-                className="px-5 py-4 hover:bg-gray-50/60 transition-colors cursor-pointer"
+                className="px-5 py-4 hover:bg-gray-50/60 dark:hover:bg-slate-850/40 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -228,15 +242,17 @@ export default function Overview() {
                     {job.logo}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm truncate">
+                    <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">
                       {job.title}
                     </p>
-                    <p className="text-gray-500 text-xs">{job.company}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">
+                      {job.company}
+                    </p>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                      <span className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
                         <MapPin size={10} /> {job.location}
                       </span>
-                      <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                      <span className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
                         <DollarSign size={10} /> {job.salary}
                       </span>
                     </div>
@@ -246,15 +262,15 @@ export default function Overview() {
             ))}
           </div>
 
-          <div className="px-5 py-3 border-t border-gray-100">
+          <div className="px-5 py-3 border-t border-gray-100 dark:border-slate-800">
             <a
-              href="/jobs"
-              className="text-blue-600 text-xs font-semibold hover:underline flex items-center justify-center gap-1"
+              href="/candidate/find-jobs"
+              className="text-blue-600 dark:text-indigo-400 text-xs font-semibold hover:underline flex items-center justify-center gap-1"
             >
               Xem thêm đề xuất <ArrowRight size={11} />
             </a>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

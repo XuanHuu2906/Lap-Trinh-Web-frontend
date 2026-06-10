@@ -1,196 +1,233 @@
-const FEATURES = [
-  {
-    icon: "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z",
-    title: "Nhà tuyển dụng xác thực",
-    desc: "100% doanh nghiệp trên nền tảng đều được xác minh kỹ lưỡng, đảm bảo mọi thông tin việc làm an toàn và chuyên nghiệp.",
-    color: "bg-blue-50 text-blue-600",
-    highlight: "100% xác minh",
-  },
-  {
-    icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z",
-    title: "Quy trình nhanh chóng",
-    desc: "Kết nối trực tiếp với HR, giảm thiểu khâu trung gian, tiết kiệm thời gian cho cả ứng viên lẫn nhà tuyển dụng.",
-    color: "bg-amber-50 text-amber-600",
-    highlight: "Kết nối trực tiếp",
-  },
-  {
-    icon: "M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941",
-    title: "Insights chuyên sâu",
-    desc: "Cung cấp thông tin thị trường lao động và xu hướng ngành nghề liên tục cập nhật theo thời gian thực.",
-    color: "bg-green-50 text-green-600",
-    highlight: "Dữ liệu thời gian thực",
-  },
-  {
-    icon: "M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z",
-    title: "Hồ sơ thông minh",
-    desc: "Hệ thống AI tự động phân tích CV và đề xuất vị trí phù hợp nhất với năng lực và định hướng của bạn.",
-    color: "bg-purple-50 text-purple-600",
-    highlight: "Gợi ý bằng AI",
-  },
-];
+import { useEffect, useState } from "react";
+import {
+  BarChart3,
+  Clock3,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  UserCircle,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  homeService,
+  type HomeFeature,
+  type SiteMetric,
+  type Testimonial,
+} from "@/services/home.service";
 
-const TESTIMONIALS = [
-  {
-    name: "Nguyễn Minh Trí",
-    role: "Senior Developer tại TechCorp",
-    avatar: "MT",
-    text: "Tôi tìm được công việc mơ ước chỉ sau 2 tuần đăng ký. Quy trình nhanh chóng và nhà tuyển dụng rất chuyên nghiệp.",
-  },
-  {
-    name: "Trần Thị Lan",
-    role: "Marketing Manager tại Retail Inc",
-    avatar: "TL",
-    text: "HireArch giúp tôi kết nối với hơn 5 nhà tuyển dụng chất lượng cùng lúc. Rất tiết kiệm thời gian!",
-  },
-];
+const iconMap: Record<string, LucideIcon> = {
+  shield: ShieldCheck,
+  clock: Clock3,
+  chart: BarChart3,
+  user: UserCircle,
+};
 
-export default function WhyChooseUs() {
+const colorMap: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-600",
+  amber: "bg-amber-50 text-amber-600",
+  green: "bg-green-50 text-green-600",
+  purple: "bg-purple-50 text-purple-600",
+};
+
+function FeatureCard({ feature }: { feature: HomeFeature }) {
+  const Icon = iconMap[feature.icon] || ShieldCheck;
+  const iconClassName = colorMap[feature.color || ""] || colorMap.blue;
+
   return (
-    <section className="bg-gray-50 py-16 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-12">
-          <span className="inline-block bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3 tracking-wide">
-            Vì sao chọn chúng tôi
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            Tại sao chọn HireArch?
-          </h2>
-          <p className="text-gray-500 text-sm max-w-xl mx-auto">
-            Nền tảng tuyển dụng dành riêng cho doanh nghiệp — được xây dựng để
-            kết nối đúng người với đúng cơ hội.
+    <article className="rounded-lg border border-gray-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md">
+      <div
+        className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${iconClassName}`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+      <span className="mb-3 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+        {feature.highlight}
+      </span>
+      <h3 className="mb-2 text-sm font-semibold text-gray-900">
+        {feature.title}
+      </h3>
+      <p className="text-xs leading-6 text-gray-500">{feature.description}</p>
+    </article>
+  );
+}
+
+function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white p-5 transition-shadow hover:shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+          {testimonial.avatar || testimonial.name.slice(0, 2).toUpperCase()}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-gray-900">
+              {testimonial.name}
+            </p>
+            <div className="flex gap-0.5">
+              {Array.from({ length: testimonial.rating }).map((_, index) => (
+                <Star
+                  key={index}
+                  className="h-3 w-3 fill-amber-400 text-amber-400"
+                />
+              ))}
+            </div>
+          </div>
+          <p className="mb-2 text-xs text-gray-500">{testimonial.role}</p>
+          <p className="text-xs leading-6 text-gray-600">
+            {testimonial.content}
           </p>
         </div>
+      </div>
+    </article>
+  );
+}
 
-        {/* Feature cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {FEATURES.map((feature) => (
+function WhyChooseUsSkeleton() {
+  return (
+    <section className="bg-gray-50 px-4 py-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <div className="mx-auto mb-3 h-6 w-40 rounded-full bg-gray-200" />
+          <div className="mx-auto mb-3 h-8 w-72 rounded bg-gray-200" />
+          <div className="mx-auto h-4 w-full max-w-xl rounded bg-gray-100" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
             <div
-              key={feature.title}
-              className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-blue-200 transition-all group"
+              key={index}
+              className="h-48 rounded-lg border border-gray-200 bg-white p-6"
             >
-              <div
-                className={`w-11 h-11 ${feature.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d={feature.icon}
-                  />
-                </svg>
-              </div>
-              <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">
-                {feature.highlight}
-              </span>
-              <h3 className="font-semibold text-gray-900 text-sm mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                {feature.desc}
-              </p>
+              <div className="mb-4 h-11 w-11 rounded-xl bg-gray-200" />
+              <div className="mb-3 h-5 w-24 rounded bg-gray-100" />
+              <div className="mb-2 h-4 w-36 rounded bg-gray-200" />
+              <div className="h-12 rounded bg-gray-100" />
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* Split layout: left big feature + right testimonials */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Left: highlighted feature block */}
-          <div className="bg-linear-to-br from-blue-700 to-indigo-800 rounded-2xl p-8 text-white relative overflow-hidden">
-            {/* Decorative circle */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />
-            <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-white/5 rounded-full" />
-            <div className="relative">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-5">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+export default function WhyChooseUs() {
+  const [features, setFeatures] = useState<HomeFeature[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [metrics, setMetrics] = useState<SiteMetric[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHomeContent = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const response = await homeService.getHomeContent();
+
+        if (isMounted) {
+          setFeatures(response.data.features);
+          setTestimonials(response.data.testimonials);
+          setMetrics(response.data.metrics);
+        }
+      } catch {
+        if (isMounted) {
+          setErrorMessage("Không thể tải nội dung giới thiệu.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadHomeContent();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isLoading) {
+    return <WhyChooseUsSkeleton />;
+  }
+
+  if (errorMessage) {
+    return (
+      <section className="bg-gray-50 px-4 py-16">
+        <div className="mx-auto max-w-7xl rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
+          {errorMessage}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="bg-gray-50 px-4 py-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <span className="mb-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
+            Vì sao chọn chúng tôi
+          </span>
+          <h2 className="mb-3 text-2xl font-bold text-gray-900 sm:text-3xl">
+            Tìm việc dễ hơn với HireArch
+          </h2>
+          <p className="text-sm leading-6 text-gray-500">
+            Nền tảng giúp ứng viên tiếp cận cơ hội phù hợp và giúp nhà tuyển
+            dụng kết nối đúng người nhanh hơn.
+          </p>
+        </div>
+
+        <div className="mb-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => (
+            <FeatureCard key={feature.id} feature={feature} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-2">
+          <div className="rounded-2xl bg-linear-to-br from-blue-700 to-indigo-800 p-8 text-white">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <h3 className="mb-3 text-xl font-bold">
+              Gợi ý cơ hội phù hợp hơn
+            </h3>
+            <p className="mb-7 text-sm leading-6 text-blue-100">
+              HireArch giúp ứng viên xem nhanh những thông tin quan trọng như
+              kỹ năng, mức lương và địa điểm để chọn công việc phù hợp với hồ
+              sơ của mình.
+            </p>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              {metrics.map((metric) => (
+                <div
+                  key={metric.id}
+                  className="border-l border-white/20 first:border-l-0"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-3">
-                Hồ sơ thông minh với AI
-              </h3>
-              <p className="text-blue-200 text-sm leading-relaxed mb-6">
-                Hệ thống AI của HireArch tự động phân tích CV, so sánh với hàng
-                nghìn vị trí đang tuyển và đề xuất những cơ hội phù hợp nhất với
-                bạn — tiết kiệm hàng giờ tìm kiếm thủ công.
-              </p>
-              <div className="flex gap-4 text-sm">
-                <div>
-                  <p className="font-bold text-xl">3x</p>
-                  <p className="text-blue-300 text-xs">Nhanh hơn</p>
+                  <p className="text-xl font-bold">{metric.value}</p>
+                  <p className="text-xs text-blue-200">{metric.label}</p>
                 </div>
-                <div className="border-l border-white/20 pl-4">
-                  <p className="font-bold text-xl">92%</p>
-                  <p className="text-blue-300 text-xs">Tỷ lệ phù hợp</p>
-                </div>
-                <div className="border-l border-white/20 pl-4">
-                  <p className="font-bold text-xl">24/7</p>
-                  <p className="text-blue-300 text-xs">Hỗ trợ</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Right: Testimonials */}
-          <div className="space-y-4">
-            <p className="font-semibold text-gray-900 mb-4">
+          <div>
+            <h3 className="mb-4 text-base font-semibold text-gray-900">
               Ứng viên nói gì về chúng tôi
-            </p>
-            {TESTIMONIALS.map((t) => (
-              <div
-                key={t.name}
-                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-shadow"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
-                    {t.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-gray-900 text-sm">
-                        {t.name}
-                      </p>
-                      {/* Stars */}
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <svg
-                            key={i}
-                            className="w-3 h-3 text-amber-400"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-2">{t.role}</p>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      {t.text}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            <button className="w-full text-center text-sm text-blue-700 font-medium hover:underline mt-2">
-              Xem thêm đánh giá →
+            </h3>
+            <div className="space-y-4">
+              {testimonials.map((testimonial) => (
+                <TestimonialCard
+                  key={testimonial.id}
+                  testimonial={testimonial}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="mt-4 w-full text-center text-sm font-semibold text-blue-700 hover:underline"
+            >
+              Xem thêm đánh giá
             </button>
           </div>
         </div>

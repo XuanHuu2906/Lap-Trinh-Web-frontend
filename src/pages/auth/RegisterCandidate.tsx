@@ -1,122 +1,330 @@
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import Footer from "../../components/layout/Footer";
 
 export function CandidateRegisterPage() {
+  const navigate = useNavigate();
+  const { registerCandidate } = useAuth();
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMsg(null);
+
+    if (!agreeTerms) {
+      setError("Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await registerCandidate({ fullName, email, password, confirmPassword });
+      if (res.success) {
+        setSuccessMsg(res.message || "Đăng ký ứng viên thành công! Vui lòng kiểm tra email để xác nhận tài khoản.");
+        
+        // Làm sạch các trường dữ liệu
+        setFullName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setAgreeTerms(false);
+
+        // Chuyển hướng sau 3 giây sang trang login
+        setTimeout(() => {
+          navigate("/login");
+        }, 4000);
+      }
+    } catch (err: any) {
+      console.error("Lỗi đăng ký ứng viên:", err);
+      const errMsg = err.response?.data?.message || err.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
+      setError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <section className="overflow-hidden bg-white grid grid-cols-2 min-h-screen">
-      {/* Left Panel */}
-      <div className="bg-gradient-to-b from-slate-900 to-[#10264f] text-white p-10 flex flex-col justify-between">
-        <div>
-          <h2 className="text-2xl font-black tracking-tight">HIREARCH</h2>
-          <p className="text-xs tracking-[3px] mt-1 text-white/60">
-            Enterprise Portal
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-5xl font-bold leading-tight max-w-sm text-left">
-            Mở khóa tiềm năng. Xây dựng sự nghiệp.
-          </h3>
-          <p className="mt-6 text-white/60 text-base leading-7 max-w-xs text-left">
-            Tham gia mạng lưới nhân tài độc quyền của chúng tôi để kết nối với các cơ hội nghề nghiệp cấp cao từ các tổ chức hàng đầu.
-          </p>
-          <div className="mt-8 flex items-center gap-6">
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 1C8.676 1 6 3.676 6 7c0 2.09.894 3.977 2.328 5.285C5.033 13.846 3 17.2 3 21h2c0-3.86 2.915-7 7-7s7 3.14 7 7h2c0-3.8-2.033-7.154-5.328-8.715C17.106 10.977 18 9.09 18 7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4s-1.724 4-4 4-4-1.724-4-4 1.724-4 4-4z"/>
-              </svg>
-              Bảo mật tuyệt đối
-            </div>
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 2a8 8 0 110 16A8 8 0 0112 4zm0 3a1 1 0 00-1 1v5a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L13 13.586V8a1 1 0 00-1-1z"/>
-              </svg>
-              Kết nối trực tiếp
-            </div>
+    <div className="min-h-screen bg-[#f8f8f8] flex flex-col justify-between text-slate-800">
+      {/* Vùng không gian ở giữa để căn thẻ đăng ký */}
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
+        {/* Thẻ đăng ký (Card) màu trắng nổi bật ở giữa */}
+        <div className="w-full max-w-125 bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-slate-900 leading-none tracking-tight">
+              Đăng ký ứng viên
+            </h2>
+            <p className="text-xs text-slate-500 mt-2 font-medium">
+              Vui lòng cung cấp thông tin để tạo hồ sơ cá nhân của bạn.
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* Right Panel */}
-      <div className="flex items-center justify-start px-16 py-14 bg-[#f8f8f8] text-left">
-        <div className="w-full max-w-md">
-          <h2 className="text-4xl font-bold mb-2 text-left" style={{ color: '#0f172a' }}>
-            Đăng ký ứng viên
-          </h2>
-          <p className="text-sm mb-10 text-left" style={{ color: '#475569' }}>
-            Vui lòng cung cấp thông tin để tạo hồ sơ cá nhân.
-          </p>
+          {/* Success Message Block */}
+          {successMsg && (
+            <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
+              <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-white text-[11px] font-black">✓</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-emerald-800 font-bold text-[13px] leading-snug">
+                  Đăng ký thành công!
+                </p>
+                <p className="text-emerald-600 text-[12px] mt-1 leading-relaxed">
+                  {successMsg}
+                </p>
+                <p className="text-emerald-500 text-[11px] mt-2 italic">
+                  Đang chuyển hướng về trang đăng nhập trong giây lát...
+                </p>
+              </div>
+            </div>
+          )}
 
-          <div className="space-y-5">
+          {/* Error Message Block */}
+          {error && (
+            <div className="bg-[#fff1f2] border border-red-100 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-white text-[11px] font-black">!</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-red-600 font-bold text-[12px] leading-snug">
+                  Lỗi đăng ký
+                </p>
+                <p className="text-red-500 text-[11px] mt-1 leading-relaxed">
+                  {error}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Họ và tên */}
             <div>
-              <label className="block text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
                 Họ và tên
               </label>
-              <input
-                type="text"
-                placeholder="VD: Nguyễn Văn A"
-                className="w-full h-12 border border-neutral-300 px-4 text-[14px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700 bg-white transition-all"
-              />
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="VD: Nguyễn Văn A"
+                  className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+                />
+              </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="VD: ungvien@congty.vn"
-                className="w-full h-12 border border-neutral-300 px-4 text-[14px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700 bg-white transition-all"
-              />
-            </div>
-
-            {/* Mật khẩu */}
-            <div>
-              <label className="block text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Mật khẩu
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                Địa chỉ Email
               </label>
               <div className="relative">
-                <input
-                  type="password"
-                  placeholder="Tối thiểu 8 ký tự"
-                  className="w-full h-12 border border-neutral-300 px-4 pr-10 text-[14px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700 bg-white transition-all"
-                />
-                <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 cursor-pointer">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </span>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="VD: ungvien@congty.vn"
+                  className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+                />
               </div>
             </div>
 
-            {/* Xác nhận mật khẩu */}
-            <div>
-              <label className="block text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Xác nhận mật khẩu
-              </label>
-              <input
-                type="password"
-                placeholder="Nhập lại mật khẩu"
-                className="w-full h-12 border border-neutral-300 px-4 text-[14px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700 bg-white transition-all"
-              />
+            {/* Mật khẩu + Xác nhận - 2 cột */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Mật khẩu
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Xác nhận mật khẩu
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Nút đăng ký - căn giữa */}
-            <button className="w-full h-12 bg-[#1a2332] text-white font-bold text-[13px] tracking-[2px] hover:bg-[#111827] transition-colors mt-2 text-center">
-              ĐĂNG KÝ
-            </button>
-          </div>
+            {/* Checkbox điều khoản */}
+            <div className="flex items-start gap-2.5 pt-1">
+              <input
+                type="checkbox"
+                id="candidate-terms"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 border border-slate-200 accent-slate-900 cursor-pointer shrink-0"
+              />
+              <label
+                htmlFor="candidate-terms"
+                className="text-xs text-slate-500 leading-relaxed cursor-pointer selection:bg-slate-100"
+              >
+                Tôi đồng ý với{" "}
+                <span className="text-slate-900 font-bold underline hover:text-black cursor-pointer">
+                  Điều khoản dịch vụ
+                </span>{" "}
+                và{" "}
+                <span className="text-slate-900 font-bold underline hover:text-black cursor-pointer">
+                  Chính sách bảo mật
+                </span>{" "}
+                của HireArch Enterprise.
+              </label>
+            </div>
 
-          {/* Footer - căn giữa */}
-          <div className="mt-8 pt-6 border-t border-slate-200 text-center">
-            <span className="text-[13px] text-slate-400">Đã có tài khoản? </span>
-            <Link to="/login" className="text-[13px] font-bold text-slate-800 uppercase tracking-wider hover:text-black transition-colors">
+            {/* Nút đăng ký */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 bg-slate-900 text-white font-bold text-xs tracking-widest hover:bg-slate-850 transition-all rounded shadow-sm flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:bg-slate-500 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ĐANG XỬ LÝ...
+                </>
+              ) : (
+                <>
+                  ĐĂNG KÝ ỨNG VIÊN
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Đường gạch ngang và dẫn hướng Đăng nhập */}
+          <div className="mt-6 pt-5 border-t border-slate-150 text-center">
+            <span className="text-xs text-slate-400 font-semibold">
+              Đã có tài khoản?{" "}
+            </span>
+            <Link
+              to="/login"
+              className="text-xs font-bold text-slate-900 uppercase tracking-wider hover:underline ml-1"
+            >
               Đăng nhập
             </Link>
           </div>
         </div>
+      </main>
+      {/* Hướng dẫn tạo trang doanh nghiệp dưới ô đăng ký */}
+      <div className="text-center text-[13px] font-medium text-slate-500 mb-10">
+        <span>Bạn đang muốn tạo tài khoản doanh nghiệp? </span>
+        <Link
+          to="/register-enterprise"
+          className="text-[#6366f1] hover:text-[#4f46e5] font-semibold hover:underline transition-all"
+        >
+          Đăng ký tài khoản doanh nghiệp
+        </Link>
       </div>
-    </section>
+
+      {/* Footer chung dưới đáy trang */}
+      <Footer />
+    </div>
   );
 }
