@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  CANDIDATE_PROFILE_CHANGED_EVENT,
   candidateService,
   getCachedCandidateProfile,
   type CandidateProfile,
@@ -69,6 +70,37 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
 
     return () => {
       isMounted = false;
+    };
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== "candidate") return;
+
+    const handleCandidateProfileChanged = (event: Event) => {
+      const { detail } = event as CustomEvent<Partial<CandidateProfile>>;
+
+      setCandidateProfile((current) => {
+        if (current) return { ...current, ...detail };
+
+        void candidateService
+          .getProfile(true)
+          .then((response) => setCandidateProfile(response.data))
+          .catch(() => setCandidateProfile(null));
+
+        return current;
+      });
+    };
+
+    window.addEventListener(
+      CANDIDATE_PROFILE_CHANGED_EVENT,
+      handleCandidateProfileChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        CANDIDATE_PROFILE_CHANGED_EVENT,
+        handleCandidateProfileChanged,
+      );
     };
   }, [role]);
 
