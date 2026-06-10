@@ -4,6 +4,7 @@ import CandidateLayout from "../components/layout/CandidateLayout";
 import { RecruiterSidebar } from "../components/Sidebar/RecruiterSidebar";
 import { AdminSidebar } from "../components/Sidebar/AdminSidebar";
 import { Topbar } from "../components/Topbar/Topbar";
+import { useToast } from "../components/common/toast";
 
 interface DashboardLayoutProps {
   role: "candidate" | "recruiter" | "admin";
@@ -12,6 +13,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Đóng sidebar di động khi thay đổi đường dẫn (URL)
@@ -24,7 +26,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
   const handleLogout = () => {
     if (role === "admin") {
       localStorage.removeItem("isAdminAuthenticated");
-      alert("Đăng xuất Admin thành công!");
+      toast({
+        title: "Đăng xuất Admin thành công",
+        variant: "success",
+      });
       navigate("/admin/login");
     } else {
       alert("Đăng xuất tài khoản thành công!");

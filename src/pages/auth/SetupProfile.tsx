@@ -10,7 +10,7 @@ export function SetupProfilePage() {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"candidate" | "recruiter" | "">("");
   const [companyName, setCompanyName] = useState("");
-  
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,9 +53,9 @@ export function SetupProfilePage() {
       if (res.success) {
         // Điều hướng trực tiếp dựa vào vai trò sau khi hoàn tất thành công
         if (role === "candidate") {
-          navigate("/candidate/overview");
+          navigate("/candidate");
         } else if (role === "recruiter") {
-          navigate("/recruiter/overview");
+          navigate("/recruiter");
         }
       }
     } catch (err: any) {
@@ -148,11 +148,10 @@ export function SetupProfilePage() {
                 {/* CARD CANDIDATE */}
                 <div
                   onClick={() => !isSubmitting && setRole("candidate")}
-                  className={`border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-between h-44 transition-all duration-300 transform ${
-                    role === "candidate"
+                  className={`border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-between h-44 transition-all duration-300 transform ${role === "candidate"
                       ? "border-slate-950 bg-slate-50/50 scale-[1.02] shadow-md"
                       : "border-slate-200 hover:border-slate-400 hover:scale-[1.01]"
-                  } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 bg-indigo-50 flex items-center justify-center rounded-lg text-indigo-600">
@@ -160,9 +159,8 @@ export function SetupProfilePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       </svg>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      role === "candidate" ? "border-slate-950 bg-slate-950" : "border-slate-300"
-                    }`}>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${role === "candidate" ? "border-slate-950 bg-slate-950" : "border-slate-300"
+                      }`}>
                       {role === "candidate" && <div className="w-2 h-2 rounded-full bg-white"></div>}
                     </div>
                   </div>
@@ -177,11 +175,10 @@ export function SetupProfilePage() {
                 {/* CARD RECRUITER */}
                 <div
                   onClick={() => !isSubmitting && setRole("recruiter")}
-                  className={`border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-between h-44 transition-all duration-300 transform ${
-                    role === "recruiter"
+                  className={`border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-between h-44 transition-all duration-300 transform ${role === "recruiter"
                       ? "border-slate-950 bg-slate-50/50 scale-[1.02] shadow-md"
                       : "border-slate-200 hover:border-slate-400 hover:scale-[1.01]"
-                  } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 bg-emerald-50 flex items-center justify-center rounded-lg text-emerald-600">
@@ -189,9 +186,8 @@ export function SetupProfilePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.053.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
                       </svg>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      role === "recruiter" ? "border-slate-950 bg-slate-950" : "border-slate-300"
-                    }`}>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${role === "recruiter" ? "border-slate-950 bg-slate-950" : "border-slate-300"
+                      }`}>
                       {role === "recruiter" && <div className="w-2 h-2 rounded-full bg-white"></div>}
                     </div>
                   </div>
@@ -207,9 +203,8 @@ export function SetupProfilePage() {
 
             {/* INPUT TEN CONG TY (TRUOT XUONG KHI CHON RECRUITER) */}
             <div
-              className={`transition-all duration-500 overflow-hidden ${
-                role === "recruiter" ? "max-h-32 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2"
-              }`}
+              className={`transition-all duration-500 overflow-hidden ${role === "recruiter" ? "max-h-32 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2"
+                }`}
             >
               <div className="space-y-2 pt-2">
                 <label htmlFor="companyName" className="block text-sm font-bold text-slate-700 uppercase tracking-wider">

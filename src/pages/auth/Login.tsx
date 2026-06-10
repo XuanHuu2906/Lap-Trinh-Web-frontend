@@ -7,14 +7,14 @@ import Footer from "../../components/layout/Footer";
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useAuth();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleSyncing, setIsGoogleSyncing] = useState(false);
-  
+
   // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
   const processingRef = useRef(false);
   // Cờ hủy effect để chống Strict Mode double-invoke (React 18)
@@ -60,11 +60,11 @@ export function LoginPage() {
             const { user } = res.data;
             // Điều hướng người dùng dựa vào vai trò
             if (user.role === "admin") {
-              navigate("/admin/dashboard");
+              navigate("/admin");
             } else if (user.role === "candidate") {
-              navigate("/candidate/overview");
+              navigate("/candidate");
             } else if (user.role === "recruiter") {
-              navigate("/recruiter/overview");
+              navigate("/recruiter");
             } else if (user.role === "pending") {
               navigate("/auth/setup-profile");
             } else {
@@ -102,14 +102,14 @@ export function LoginPage() {
       const res = await login(email, password);
       if (res.success && res.data) {
         const { user } = res.data;
-        
+
         // Điều hướng dựa trên vai trò của người dùng
         if (user.role === "admin") {
-          navigate("/admin/dashboard");
+          navigate("/admin");
         } else if (user.role === "candidate") {
-          navigate("/candidate/overview");
+          navigate("/candidate");
         } else if (user.role === "recruiter") {
-          navigate("/recruiter/overview");
+          navigate("/recruiter");
         } else if (user.role === "pending") {
           navigate("/auth/setup-profile");
         } else {
@@ -186,7 +186,7 @@ export function LoginPage() {
       {/* CENTERED LOGIN CARD CONTAINER */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-2">
         <div className="w-full max-w-100 bg-white border border-slate-200/80 rounded-lg shadow-sm p-6 relative">
-          
+
           {/* Lớp phủ màn hình đồng bộ tài khoản Google chuyên nghiệp */}
           {isGoogleSyncing && (
             <div className="absolute inset-0 bg-white/95 rounded-lg flex flex-col items-center justify-center z-50 transition-all duration-300">

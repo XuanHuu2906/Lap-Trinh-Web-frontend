@@ -10,6 +10,10 @@ import {
   LogOut,
   Search,
   Settings,
+  AlertTriangle,
+  Briefcase,
+  FileText,
+  Users,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -18,6 +22,15 @@ interface TopbarProps {
   pathname: string;
   onOpenMobileSidebar: () => void;
   onLogout: () => void;
+}
+
+interface TopbarNotification {
+  title: string;
+  text: string;
+  time: string;
+  unread: boolean;
+  to?: string;
+  type?: "job" | "user" | "template";
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -44,6 +57,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/jobs": "Quản lý tuyển dụng",
   "/admin/templates": "Quản lý mẫu thiết kế CV",
   "/admin/system": "Quản lý tài khoản",
+  "/admin/activity-logs": "Nhật ký hệ thống",
+  "/admin/notifications": "Thông báo quản trị",
 };
 
 const BREADCRUMBS: Record<string, string> = {
@@ -76,6 +91,73 @@ const USERS_MOCK = {
   },
 };
 
+const NOTIFICATION_LINKS = {
+  candidate: "/candidate/notifications",
+  recruiter: "/recruiter/notifications",
+  admin: "/admin/notifications",
+};
+
+const ADMIN_TOPBAR_NOTIFICATIONS: TopbarNotification[] = [
+  {
+    title: "Tin tuyển dụng cần duyệt",
+    text: "Có 5 tin tuyển dụng mới đang chờ kiểm duyệt.",
+    time: "10 phút trước",
+    to: "/admin/jobs",
+    unread: true,
+    type: "job",
+  },
+  {
+    title: "Báo cáo tài khoản",
+    text: "Một tài khoản nhà tuyển dụng bị nhiều ứng viên báo cáo.",
+    time: "42 phút trước",
+    to: "/admin/system",
+    unread: true,
+    type: "user",
+  },
+  {
+    title: "Mẫu CV cần kiểm tra",
+    text: "Template CV mới cần kiểm tra file cấu hình JSON.",
+    time: "2 giờ trước",
+    to: "/admin/templates",
+    unread: false,
+    type: "template",
+  },
+];
+
+const DEFAULT_TOPBAR_NOTIFICATIONS: TopbarNotification[] = [
+  {
+    title: "Cập nhật phỏng vấn",
+    text: "Cập nhật trạng thái phỏng vấn cho vị trí Senior Frontend Engineer",
+    time: "5 phút trước",
+    unread: true,
+  },
+  {
+    title: "Lịch phỏng vấn",
+    text: "Lịch hẹn phỏng vấn trực tuyến lúc 14:00 ngày mai",
+    time: "1 giờ trước",
+    unread: true,
+  },
+  {
+    title: "Cập nhật tin tuyển dụng",
+    text: "Tin tuyển dụng bạn lưu trữ đã được cập nhật mức lương mới",
+    time: "3 giờ trước",
+    unread: true,
+  },
+];
+
+const getAdminNotificationIcon = (type: string) => {
+  switch (type) {
+    case "job":
+      return Briefcase;
+    case "user":
+      return Users;
+    case "template":
+      return FileText;
+    default:
+      return AlertTriangle;
+  }
+};
+
 export const Topbar: React.FC<TopbarProps> = ({
   role,
   pathname,
@@ -87,6 +169,10 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const user = USERS_MOCK[role];
+  const topbarNotifications =
+    role === "admin" ? ADMIN_TOPBAR_NOTIFICATIONS : DEFAULT_TOPBAR_NOTIFICATIONS;
+  const unreadCount = topbarNotifications.filter((item) => item.unread).length;
+  const notificationLink = NOTIFICATION_LINKS[role];
 
   // Tìm kiếm tiêu đề phù hợp
   const matchedKey = Object.keys(PAGE_TITLES).find(
@@ -154,7 +240,11 @@ export const Topbar: React.FC<TopbarProps> = ({
             className="relative p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Bell className="w-5 h-5 stroke-[1.8]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-indigo-600 text-white rounded-full ring-2 ring-white dark:ring-slate-900 text-[9px] font-black flex items-center justify-center leading-none">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
           {isNotifOpen && (
@@ -166,43 +256,54 @@ export const Topbar: React.FC<TopbarProps> = ({
               <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-lg rounded-xl py-1.5 z-50 animate-fade-in">
                 <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <p className="text-[13px] font-bold text-slate-800 dark:text-white">
-                    Thông báo mới
+                    {role === "admin" ? "Thông báo cần xử lý" : "Thông báo mới"}
                   </p>
                   <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded-full">
-                    3 chưa đọc
+                    {unreadCount} chưa đọc
                   </span>
                 </div>
                 <div className="max-h-72 overflow-y-auto">
-                  {[
-                    {
-                      text: "Cập nhật trạng thái phỏng vấn cho vị trí Senior Frontend Engineer",
-                      time: "5 phút trước",
-                    },
-                    {
-                      text: "Lịch hẹn phỏng vấn trực tuyến lúc 14:00 ngày mai",
-                      time: "1 giờ trước",
-                    },
-                    {
-                      text: "Tin tuyển dụng bạn lưu trữ đã được cập nhật mức lương mới",
-                      time: "3 giờ trước",
-                    },
-                  ].map((n, i) => (
-                    <div
+                  {topbarNotifications.map((n, i) => {
+                    const Icon =
+                      role === "admin" ? getAdminNotificationIcon(n.type || "") : Bell;
+
+                    return (
+                    <Link
                       key={i}
-                      className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                      to={n.to || notificationLink}
+                      onClick={() => setIsNotifOpen(false)}
+                      className={`block px-4 py-3 border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors ${
+                        n.unread ? "bg-indigo-50/40 dark:bg-indigo-950/10" : ""
+                      }`}
                     >
-                      <p className="text-[12px] text-slate-700 dark:text-slate-350 leading-snug">
-                        {n.text}
-                      </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-550 mt-1">
-                        {n.time}
-                      </p>
-                    </div>
-                  ))}
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-[12px] font-bold text-slate-800 dark:text-slate-200 leading-snug truncate">
+                              {n.title}
+                            </p>
+                            {n.unread && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[12px] text-slate-600 dark:text-slate-350 leading-snug mt-1">
+                            {n.text}
+                          </p>
+                          <p className="text-[11px] text-slate-400 dark:text-slate-550 mt-1">
+                            {n.time}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                    );
+                  })}
                 </div>
                 <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 text-center">
                   <Link
-                    to={role === "candidate" ? "/candidate/notifications" : "#"}
+                    to={notificationLink}
                     onClick={() => setIsNotifOpen(false)}
                     className="text-[12px] text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
                   >

@@ -11,12 +11,13 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import Footer from "@/components/layout/Footer";
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login, logout } = useAuth();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +39,7 @@ export const AdminLogin: React.FC = () => {
       const res = await login(email, password);
       if (res.success && res.data) {
         const { user } = res.data;
-        
+
         // Kiểm tra xem người dùng có phải là admin hay không
         if (user.role !== "admin") {
           // Gọi logout để xóa session vừa tạo ra do đăng nhập sai quyền
@@ -58,13 +59,6 @@ export const AdminLogin: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Đăng nhập nhanh dành cho nhà phát triển/giám khảo tuyển dụng
-  const handleQuickLogin = () => {
-    setEmail("admin@hirearch.com");
-    setPassword("admin123");
-    setError(null);
   };
 
   return (
@@ -169,26 +163,6 @@ export const AdminLogin: React.FC = () => {
                 </button>
               </div>
             </div>
-
-            {/* Quick Login Helper Box */}
-            <div className="bg-slate-50 border border-slate-200/70 p-3 rounded-sm flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase leading-none">
-                  Môi trường thử nghiệm
-                </span>
-                <span className="text-[11px] font-semibold text-slate-600 block mt-1">
-                  Tài khoản: admin@hirearch.com / admin123
-                </span>
-              </div>
-              <Button
-                type="button"
-                onClick={handleQuickLogin}
-                className="px-3 h-8 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] tracking-wider rounded-sm transition-all uppercase cursor-pointer"
-              >
-                Nhập nhanh
-              </Button>
-            </div>
-
             {/* Submit Button */}
             <Button
               type="submit"
@@ -221,11 +195,6 @@ export const AdminLogin: React.FC = () => {
             ← Quay về cổng tuyển dụng ngoài
           </Button>
         </div>
-      </div>
-
-      {/* 3. UNDER FOOTER */}
-      <div className="mt-8 text-center text-[11px] text-slate-400">
-        <p>© 2026 HireArch. Cổng quản trị bảo mật tối cao.</p>
       </div>
     </section>
   );

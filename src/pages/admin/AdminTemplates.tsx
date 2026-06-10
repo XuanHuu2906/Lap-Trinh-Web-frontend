@@ -22,6 +22,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
+import { useToast } from "../../components/common/toast";
 
 interface CVTemplate {
   id: number;
@@ -29,6 +30,8 @@ interface CVTemplate {
   category: "Đon giản" | "Đơn giản" | "Hiện đại" | "Chuyên nghiệp";
   description: string;
   thumbnailUrl?: string;
+  previewUrl?: string;
+  layoutConfig?: string;
   isActive: boolean;
   features?: string[];
   createdAt: string;
@@ -103,7 +106,224 @@ const INITIAL_TEMPLATES_MOCK: CVTemplate[] = [
   },
 ];
 
+interface TemplateMockupProps {
+  id: number;
+  name: string;
+}
+
+const TemplateMockup: React.FC<TemplateMockupProps> = ({ id, name }) => {
+  switch (id) {
+    case 1: // executive-standard
+      return (
+        <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-400 select-none">
+          <div>
+            {/* Header */}
+            <div className="border-b border-slate-100 pb-2 mb-3">
+              <div className="font-extrabold text-slate-850 text-[10px] leading-none mb-1 font-sans">
+                CV
+              </div>
+              <div className="w-12 h-1 bg-slate-350 rounded-sm mb-1"></div>
+              <div className="w-20 h-1 bg-slate-200 rounded-sm"></div>
+            </div>
+            {/* Section 1 */}
+            <div className="mb-3">
+              <div className="w-8 h-1 bg-slate-400 rounded-sm mb-1.5 font-bold"></div>
+              <div className="space-y-1">
+                <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                <div className="w-5/6 h-0.5 bg-slate-100 rounded-sm"></div>
+                <div className="w-4/5 h-0.5 bg-slate-100 rounded-sm"></div>
+              </div>
+            </div>
+            {/* Section 2 */}
+            <div className="mb-3">
+              <div className="w-12 h-1 bg-slate-400 rounded-sm mb-1.5 font-bold"></div>
+              <div className="space-y-1">
+                <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                <div className="w-11/12 h-0.5 bg-slate-100 rounded-sm"></div>
+              </div>
+            </div>
+          </div>
+          {/* Footer mockup */}
+          <div className="flex justify-between items-center text-[3px] border-t border-slate-50 pt-2 text-slate-300">
+            <span>ATS Friendly</span>
+            <span>1 Page</span>
+          </div>
+        </div>
+      );
+    case 2: // corporate-split
+      return (
+        <div className="w-full h-full bg-white p-4 flex text-[4px] leading-1.5 text-slate-400 select-none">
+          {/* Left Sidebar */}
+          <div className="w-[32%] border-r border-slate-100 pr-1.5 mr-1.5 flex flex-col justify-between">
+            <div>
+              <div className="w-6 h-6 rounded-full bg-slate-200 mb-2 mx-auto"></div>
+              <div className="w-10 h-0.5 bg-slate-400 rounded-sm mb-2 mx-auto"></div>
+              <div className="space-y-1 mb-2">
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                  <div className="w-6 h-0.5 bg-slate-150"></div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                  <div className="w-8 h-0.5 bg-slate-150"></div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                  <div className="w-5 h-0.5 bg-slate-150"></div>
+                </div>
+              </div>
+            </div>
+            <div className="text-[3px] text-slate-300 tracking-wider">
+              SAM BASE WORK
+            </div>
+          </div>
+          {/* Right Main Body */}
+          <div className="w-[68%] flex flex-col justify-between">
+            <div>
+              <div className="border-b border-slate-100 pb-1.5 mb-2">
+                <div className="w-16 h-1 bg-slate-500 rounded-sm mb-1"></div>
+                <div className="w-24 h-0.5 bg-slate-200 rounded-sm"></div>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <div className="w-10 h-1 bg-slate-400 rounded-sm mb-1"></div>
+                  <div className="space-y-1">
+                    <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                    <div className="w-11/12 h-0.5 bg-slate-100 rounded-sm"></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="w-12 h-1 bg-slate-400 rounded-sm mb-1"></div>
+                  <div className="space-y-1">
+                    <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                    <div className="w-5/6 h-0.5 bg-slate-100 rounded-sm"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    case 3: // tech-minimal
+      return (
+        <div className="w-full h-full bg-[#1F242D] p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-300 select-none">
+          <div>
+            {/* Header */}
+            <div className="border-b border-slate-700 pb-2 mb-3">
+              <div className="font-extrabold text-[#D5A153] text-[12px] leading-none mb-1 font-serif">
+                CV
+              </div>
+              <div className="w-12 h-1 bg-slate-400 rounded-sm mb-1"></div>
+              <div className="w-20 h-0.5 bg-slate-500 rounded-sm"></div>
+            </div>
+            {/* Section 1 */}
+            <div className="mb-3">
+              <div className="w-12 h-1 text-[#D5A153] rounded-sm mb-1.5 font-bold font-mono">
+                EXPERIENCE
+              </div>
+              <div className="space-y-1">
+                <div className="w-full h-0.5 bg-slate-600 rounded-sm"></div>
+                <div className="w-5/6 h-0.5 bg-slate-600 rounded-sm"></div>
+                <div className="w-4/5 h-0.5 bg-slate-600 rounded-sm"></div>
+              </div>
+            </div>
+            {/* Yellow Button Highlight */}
+            <div className="my-2 py-0.5 bg-[#D5A153] text-[#1F242D] text-[3px] text-center rounded-[1px] font-bold tracking-wider">
+              PORTFOLIO
+            </div>
+            {/* Section 2 */}
+            <div>
+              <div className="w-10 h-1 text-[#D5A153] rounded-sm mb-1.5 font-bold font-mono">
+                SKILLS
+              </div>
+              <div className="space-y-1">
+                <div className="w-11/12 h-0.5 bg-slate-600 rounded-sm"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    case 4: // consultant-pro
+      return (
+        <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-400 select-none">
+          <div>
+            {/* Header */}
+            <div className="mb-3">
+              <div className="font-serif text-[11px] font-bold text-slate-900 leading-none mb-1">
+                CVM
+              </div>
+              <div className="w-16 h-[1.5px] bg-slate-800 rounded-sm mb-1"></div>
+              <div className="w-24 h-0.5 bg-slate-300 rounded-sm"></div>
+            </div>
+            {/* Split layout simulation */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-1 space-y-1.5 border-r-[0.5px] border-slate-100 pr-1">
+                <div className="w-8 h-1 bg-slate-500 rounded-sm font-bold">
+                  CONTACT
+                </div>
+                <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                <div className="w-11/12 h-0.5 bg-slate-100 rounded-sm"></div>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <div>
+                  <div className="w-12 h-1 bg-slate-500 rounded-sm mb-1 font-bold">
+                    EDUCATION
+                  </div>
+                  <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                  <div className="w-5/6 h-0.5 bg-slate-100 rounded-sm"></div>
+                </div>
+                <div>
+                  <div className="w-14 h-1 bg-slate-500 rounded-sm mb-1 font-bold">
+                    PROJECTS
+                  </div>
+                  <div className="w-11/12 h-0.5 bg-slate-100 rounded-sm"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Footer with dark banner mock */}
+          <div className="bg-[#0F172A] text-white text-[3px] py-0.5 text-center font-bold tracking-widest rounded-sm">
+            SAFE SI WORK
+          </div>
+        </div>
+      );
+    default:
+      return (
+        <div className="w-full h-full bg-white p-4 flex flex-col justify-between text-[4px] leading-1.5 text-slate-400 select-none">
+          <div>
+            {/* Header */}
+            <div className="border-b border-slate-150 pb-2 mb-3">
+              <div className="font-extrabold text-slate-800 text-[10px] leading-none mb-1">
+                CV
+              </div>
+              <div className="w-16 h-1 bg-indigo-500 rounded-sm mb-1"></div>
+              <div className="w-24 h-0.5 bg-slate-200 rounded-sm"></div>
+            </div>
+            {/* Dummy lines */}
+            <div className="space-y-2">
+              <div className="w-12 h-1 bg-slate-350 rounded-sm"></div>
+              <div className="space-y-1">
+                <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                <div className="w-5/6 h-0.5 bg-slate-100 rounded-sm"></div>
+              </div>
+              <div className="w-12 h-1 bg-slate-350 rounded-sm"></div>
+              <div className="space-y-1">
+                <div className="w-full h-0.5 bg-slate-100 rounded-sm"></div>
+                <div className="w-4/5 h-0.5 bg-slate-100 rounded-sm"></div>
+              </div>
+            </div>
+          </div>
+          <div className="text-[5px] text-indigo-600 font-bold text-center uppercase tracking-widest pt-2 border-t border-slate-100">
+            {name}
+          </div>
+        </div>
+      );
+  }
+};
+
 export const AdminTemplates: React.FC = () => {
+  const { toast } = useToast();
+
   const [templates, setTemplates] = useState<CVTemplate[]>(
     INITIAL_TEMPLATES_MOCK,
   );
@@ -123,10 +343,11 @@ export const AdminTemplates: React.FC = () => {
     "Đơn giản" | "Hiện đại" | "Chuyên nghiệp"
   >("Đơn giản");
   const [formDescription, setFormDescription] = useState("");
-  const [formThumbnailName, setFormThumbnailName] = useState("");
+  const [formPreviewName, setFormPreviewName] = useState("");
   const [formConfigName, setFormConfigName] = useState("");
   const [formFeatureInput, setFormFeatureInput] = useState("");
   const [formFeaturesList, setFormFeaturesList] = useState<string[]>([]);
+  const [formIsActive, setFormIsActive] = useState(true);
 
   // Trạng thái cho Trạm xem thử CV thiết kế (Luồng chính bước 5)
   const [previewTemplate, setPreviewTemplate] = useState<CVTemplate | null>(
@@ -140,10 +361,11 @@ export const AdminTemplates: React.FC = () => {
     setFormName("");
     setFormCategory("Đơn giản");
     setFormDescription("");
-    setFormThumbnailName("");
+    setFormPreviewName("");
     setFormConfigName("");
     setFormFeatureInput("");
     setFormFeaturesList([]);
+    setFormIsActive(true);
     setIsFormModalOpen(true);
   };
 
@@ -156,10 +378,11 @@ export const AdminTemplates: React.FC = () => {
       template.category === "Đon giản" ? "Đơn giản" : template.category,
     );
     setFormDescription(template.description);
-    setFormThumbnailName(template.thumbnailUrl || "");
-    setFormConfigName("layout_config_schema.json");
+    setFormPreviewName(template.previewUrl || template.thumbnailUrl || "");
+    setFormConfigName(template.layoutConfig || "layout_config_schema.json");
     setFormFeatureInput("");
     setFormFeaturesList(template.features || []);
+    setFormIsActive(template.isActive);
     setIsFormModalOpen(true);
   };
 
@@ -200,22 +423,28 @@ export const AdminTemplates: React.FC = () => {
     // RÀO CẢN KIỂM DUYỆT (UC-25: Kiểm duyệt tính an toàn của tệp tải lên)
     if (formConfigName) {
       if (!formConfigName.toLowerCase().endsWith(".json")) {
-        alert(
-          "[LỖI KIỂM DUYỆT UC-25] Phát hiện tệp cấu hình không hợp lệ! Hệ thống chỉ chấp nhận định dạng tệp .json để xây dựng sơ đồ trường dữ liệu.",
-        );
+        toast({
+          title: "Tệp cấu hình không hợp lệ",
+          description: "Hệ thống chỉ chấp nhận định dạng .json để xây dựng sơ đồ trường dữ liệu.",
+          variant: "error",
+        });
         return;
       }
     } else {
-      alert(
-        "[LỖI KIỂM DUYỆT UC-25] Vui lòng tải lên tệp cấu hình trường thiết kế dạng .json để hệ thống có dữ liệu biên dịch CV Builder.",
-      );
+      toast({
+        title: "Thiếu tệp cấu hình mẫu CV",
+        description: "Vui lòng tải lên tệp cấu hình trường thiết kế dạng .json.",
+        variant: "warning",
+      });
       return;
     }
 
-    if (formThumbnailName && !/\.(png|jpe?g|webp)$/i.test(formThumbnailName)) {
-      alert(
-        "[LỖI KIỂM DUYỆT UC-25] Phát hiện ảnh thumbnail giả mạo hoặc chứa mã độc đuôi thực thi! Vui lòng chỉ tải lên ảnh định dạng .png, .jpg hoặc .webp.",
-      );
+    if (formPreviewName && !/\.(png|jpe?g|webp)$/i.test(formPreviewName)) {
+      toast({
+        title: "Preview mẫu CV không hợp lệ",
+        description: "Vui lòng chỉ tải lên ảnh định dạng .png, .jpg hoặc .webp.",
+        variant: "error",
+      });
       return;
     }
 
@@ -228,8 +457,10 @@ export const AdminTemplates: React.FC = () => {
         name: formName.trim(),
         category: formCategory,
         description: formDescription.trim(),
-        thumbnailUrl: formThumbnailName || "default_cv_template.png",
-        isActive: true, // Mặc định mở ngay khi đăng ký thành công
+        thumbnailUrl: formPreviewName || "default_cv_template.png",
+        previewUrl: formPreviewName || "default_cv_template.png",
+        layoutConfig: formConfigName,
+        isActive: formIsActive,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         features:
@@ -239,7 +470,11 @@ export const AdminTemplates: React.FC = () => {
       };
 
       setTemplates((prev) => [newTemplateObj, ...prev]);
-      alert("Đã đăng ký thêm mới mẫu CV thành công và đưa vào hoạt động!");
+      toast({
+        title: "Đã tạo mẫu CV mới",
+        description: "Mẫu CV đã được đăng ký và đưa vào danh sách quản trị.",
+        variant: "success",
+      });
     } else {
       // Chỉnh sửa mẫu CV hiện có
       setTemplates((prev) =>
@@ -250,7 +485,10 @@ export const AdminTemplates: React.FC = () => {
               name: formName.trim(),
               category: formCategory,
               description: formDescription.trim(),
-              thumbnailUrl: formThumbnailName,
+              thumbnailUrl: formPreviewName,
+              previewUrl: formPreviewName,
+              layoutConfig: formConfigName,
+              isActive: formIsActive,
               features: formFeaturesList,
               updatedAt: new Date().toISOString(),
             };
@@ -258,7 +496,11 @@ export const AdminTemplates: React.FC = () => {
           return t;
         }),
       );
-      alert("Đã cập nhật các thay đổi của mẫu CV thành công!");
+      toast({
+        title: "Đã cập nhật mẫu CV",
+        description: "Các thay đổi của mẫu CV đã được lưu thành công.",
+        variant: "success",
+      });
     }
 
     setIsFormModalOpen(false);
@@ -268,13 +510,13 @@ export const AdminTemplates: React.FC = () => {
   const handleDeleteTemplate = (id: number, name: string) => {
     // NGOẠI LỆ: Xóa template đang được dùng bởi ứng viên
     if (id === 1 || id === 2) {
-      alert(`[NGOẠI LỆ UC-19] Không thể xóa mẫu CV "${name}"!
-----------------------------------------------------------------------
-Hệ thống phát hiện mẫu thiết kế này đang được liên kết với 34 bản CV đang hoạt động của ứng viên.
-Việc xóa vĩnh viễn sẽ phá vỡ cấu trúc CV của họ.
-
-BIỆN PHÁP THAY THẾ:
-Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. Ứng viên mới sẽ không nhìn thấy mẫu này nữa, nhưng các CV cũ đã tạo vẫn sẽ được giữ nguyên an toàn.`);
+      toast({
+        title: `Không thể xóa mẫu CV "${name}"`,
+        description:
+          'Mẫu này đang được liên kết với 34 bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị cho ứng viên mới.',
+        variant: "warning",
+        duration: 7000,
+      });
       return;
     }
 
@@ -284,7 +526,11 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
       )
     ) {
       setTemplates((prev) => prev.filter((t) => t.id !== id));
-      alert("Đã xóa mẫu CV thành công.");
+      toast({
+        title: "Đã xóa mẫu CV",
+        description: "Mẫu CV đã được xóa khỏi danh sách quản trị.",
+        variant: "success",
+      });
     }
   };
 
@@ -300,14 +546,14 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
   });
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans text-slate-800">
+    <div className="space-y-6 animate-fade-in font-sans text-slate-800 dark:text-slate-100">
       {/* 1. TOP TITLE BAR */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight mt-1.5">
+          <h1 className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight mt-1.5">
             QUẢN LÝ TEMPLATE CV
           </h1>
-          <p className="text-xs text-slate-500 font-semibold mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
             Quản lý kho template CV cung cấp cho ứng viên, hỗ trợ Thêm mới, Sửa,
             Xóa, Xem trước và Ẩn mẫu CV an toàn.
           </p>
@@ -324,7 +570,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
       </div>
 
       {/* 2. CONTROL FILTERS */}
-      <div className="bg-white border border-slate-200/90 rounded-sm p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-3xs">
+      <div className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 rounded-sm p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-3xs">
         {/* Category filters sử dụng Shadcn UI Buttons */}
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {["Tất cả", "Đơn giản", "Hiện đại", "Chuyên nghiệp"].map((cat) => (
@@ -342,7 +588,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
         {/* Search tool - Sử dụng Shadcn Input */}
         <div className="relative w-full sm:w-64">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 z-10">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500 z-10">
             <Search className="w-4 h-4" />
           </span>
           <Input
@@ -361,11 +607,11 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className={`bg-white border ${template.isActive ? "border-slate-200/90" : "border-slate-200 bg-slate-50/50"} rounded-sm shadow-3xs p-5 flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-2xs`}
+              className={`bg-white dark:bg-slate-900/80 border ${template.isActive ? "border-slate-200/90 dark:border-slate-800" : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"} rounded-sm shadow-3xs p-5 flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-2xs`}
             >
               {/* Status Ribbon (For Inactive templates) */}
               {!template.isActive && (
-                <div className="absolute top-2.5 right-2.5 px-2.5 py-0.5 bg-slate-200 text-slate-500 text-[9px] font-black rounded-xs uppercase tracking-wider">
+                <div className="absolute top-2.5 right-2.5 px-2.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-black rounded-xs uppercase tracking-wider">
                   Đang ẩn khỏi ứng viên
                 </div>
               )}
@@ -377,46 +623,43 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     <Badge variant="secondary" className="mb-1.5">
                       {template.category}
                     </Badge>
-                    <h3 className="text-base font-extrabold text-slate-900 leading-none">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-50 leading-none">
                       {template.name}
                     </h3>
                   </div>
                 </div>
 
                 {/* Simulated Thumbnail Preview Placeholder */}
-                <div className="aspect-video w-full bg-slate-50 border border-slate-150/80 rounded-sm mb-4 flex flex-col items-center justify-center p-4 group relative overflow-hidden">
+                <div className="aspect-[1/1.414] w-full max-w-[180px] mx-auto bg-slate-50 dark:bg-slate-950/60 border border-slate-150/80 dark:border-slate-800 rounded-sm mb-4 flex flex-col items-center justify-center group relative overflow-hidden">
                   <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-2 z-10">
                     {/* Xem thử bằng Shadcn Button */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setPreviewTemplate(template)}
-                      className="bg-white hover:bg-slate-100 border-none text-slate-900 text-[11px] font-black rounded-sm h-8 px-4 cursor-pointer shadow-md"
+                      className="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-none text-slate-900 dark:text-slate-50 text-[11px] font-black rounded-sm h-8 px-4 cursor-pointer shadow-md"
                     >
                       <Eye className="w-3.5 h-3.5 mr-1.5 text-indigo-600" />
                       Xem thử thiết kế
                     </Button>
                   </div>
-                  <FileText className="w-8 h-8 text-slate-300 group-hover:scale-105 transition-transform" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
-                    {template.thumbnailUrl || "template_design.png"}
-                  </span>
+                  <TemplateMockup id={template.id} name={template.name} />
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-snug mb-4 line-clamp-2 min-h-[2.5rem]">
                   {template.description}
                 </p>
 
                 {/* Features checklist list */}
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-extrabold text-slate-400 tracking-wider block uppercase mb-1">
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-wider block uppercase mb-1">
                     Đặc điểm nổi bật:
                   </span>
                   {template.features?.map((feat, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center text-xs text-slate-600 font-medium"
+                      className="flex items-center text-xs text-slate-600 dark:text-slate-300 font-medium"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2 shrink-0" />
                       <span>{feat}</span>
@@ -426,12 +669,12 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
               </div>
 
               {/* Footer controls inside Card */}
-              <div className="border-t border-slate-100 pt-4 flex items-center justify-between mt-auto">
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex items-center justify-between mt-auto">
                 {/* Active switch slider (Luồng thay thế) */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleToggleActive(template.id)}
-                    className="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
+                    className="text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                     title={
                       template.isActive
                         ? "Ẩn mẫu CV này khỏi người dùng"
@@ -441,10 +684,10 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     {template.isActive ? (
                       <ToggleRight className="w-9 h-6 text-indigo-600" />
                     ) : (
-                      <ToggleLeft className="w-9 h-6 text-slate-300" />
+                      <ToggleLeft className="w-9 h-6 text-slate-300 dark:text-slate-600" />
                     )}
                   </button>
-                  <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {template.isActive ? "Đang hoạt động" : "Đang ẩn"}
                   </span>
                 </div>
@@ -455,7 +698,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     variant="outline"
                     size="icon"
                     onClick={() => setPreviewTemplate(template)}
-                    className="h-8 w-8 border border-slate-200 text-slate-500 hover:text-slate-900 bg-white"
+                    className="h-8 w-8 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 bg-white dark:bg-slate-950/60"
                     title="Xem trước giao diện template"
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -465,7 +708,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     variant="outline"
                     size="icon"
                     onClick={() => handleOpenEditModal(template)}
-                    className="h-8 w-8 border border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/20 bg-white"
+                    className="h-8 w-8 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/30 bg-white dark:bg-slate-950/60"
                     title="Chỉnh sửa chi tiết"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -477,7 +720,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     onClick={() =>
                       handleDeleteTemplate(template.id, template.name)
                     }
-                    className="h-8 w-8 border border-slate-200 text-slate-400 hover:text-red-650 hover:border-red-200 bg-white"
+                    className="h-8 w-8 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-red-650 dark:hover:text-red-300 hover:border-red-200 dark:hover:border-red-900 bg-white dark:bg-slate-950/60"
                     title="Xóa mẫu"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -488,12 +731,12 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-sm py-16 text-center shadow-3xs">
-          <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm font-bold text-slate-500">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-sm py-16 text-center shadow-3xs">
+          <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
             Không tìm thấy mẫu CV nào khớp bộ lọc
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
             Vui lòng thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc danh mục khác.
           </p>
         </div>
@@ -502,11 +745,11 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
       {/* 4. MODAL: ĐĂNG KÝ HOẶC CHỈNH SỬA MẪU CV (Hỗ trợ upload & cấu hình) */}
       {isFormModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white border border-slate-200 rounded-sm w-full max-w-lg shadow-xl overflow-hidden animate-slide-up text-left">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm w-full max-w-lg shadow-xl overflow-hidden animate-slide-up text-left">
             <div className="h-1 bg-indigo-600 w-full"></div>
 
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-900">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
                 <Layout className="w-5 h-5 text-indigo-600" />
                 <h3 className="text-xs font-black uppercase tracking-wider">
                   {formMode === "add"
@@ -515,7 +758,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                 </h3>
               </div>
               <button
-                className="shrink-0 text-slate-400 hover:text-slate-650 cursor-pointer"
+                className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-200 cursor-pointer"
                 onClick={() => setIsFormModalOpen(false)}
               >
                 <X className="w-4 h-4" />
@@ -526,7 +769,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                 {/* 1. Template Name - Sử dụng Shadcn UI Input */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                     TÊN MẪU THIẾT KẾ
                   </label>
                   <Input
@@ -541,14 +784,14 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
                 {/* 2. Category */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                     DANH MỤC PHÂN LOẠI
                   </label>
                   <select
                     value={formCategory}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onChange={(e) => setFormCategory(e.target.value as any)}
-                    className="w-full border border-slate-200 text-xs font-bold h-10 px-3 outline-none focus:border-slate-850 rounded-sm bg-white cursor-pointer text-slate-850"
+                    className="w-full border border-slate-200 dark:border-slate-700 text-xs font-bold h-10 px-3 outline-none focus:border-slate-850 dark:focus:border-indigo-500 rounded-sm bg-white dark:bg-slate-950/60 cursor-pointer text-slate-850 dark:text-slate-100"
                   >
                     <option value="Đơn giản">Đơn giản (ATS Friendly)</option>
                     <option value="Hiện đại">Hiện đại (Modern Split)</option>
@@ -560,7 +803,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
                 {/* 3. Description */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                     MÔ TẢ CHI TIẾT NGẮN
                   </label>
                   <textarea
@@ -569,72 +812,40 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
                     placeholder="Mô tả tóm tắt phong cách thiết kế, đối tượng ngành nghề phù hợp..."
-                    className="w-full border border-slate-200 text-xs font-semibold p-3 outline-none focus:border-slate-850 rounded-sm bg-white text-slate-850"
+                    className="w-full border border-slate-200 dark:border-slate-700 text-xs font-semibold p-3 outline-none focus:border-slate-850 dark:focus:border-indigo-500 rounded-sm bg-white dark:bg-slate-950/60 text-slate-850 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   ></textarea>
                 </div>
 
-                {/* 4. Upload Preview Design Image (Thumbnail) & Upload JSON Config */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* File Upload 1: Thumbnail */}
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                      ẢNH THIẾT KẾ (THUMBNAIL)
+                {/* 4. JSON Layout Config */}
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
+                    FILE CẤU HÌNH MẪU CV (.JSON)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".json"
+                      id="config-upload"
+                      className="hidden"
+                      onChange={(e) =>
+                        setFormConfigName(e.target.files?.[0]?.name || "")
+                      }
+                    />
+                    <label
+                      htmlFor="config-upload"
+                      className="w-full h-10 border border-slate-200 dark:border-slate-700 rounded-sm px-3 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      <span className="truncate pr-2">
+                        {formConfigName || "Tải file cấu hình .json..."}
+                      </span>
+                      <FileCode className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                     </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id="thumbnail-upload"
-                        className="hidden"
-                        onChange={() =>
-                          setFormThumbnailName(
-                            `${formName.toLowerCase().replace(/ /g, "_")}_preview.png`,
-                          )
-                        }
-                      />
-                      <label
-                        htmlFor="thumbnail-upload"
-                        className="w-full h-10 border border-slate-200 rounded-sm px-3 flex items-center justify-between text-xs font-semibold text-slate-500 bg-white hover:bg-slate-50 cursor-pointer"
-                      >
-                        <span className="truncate pr-2">
-                          {formThumbnailName || "Chọn ảnh xem trước..."}
-                        </span>
-                        <Upload className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* File Upload 2: JSON Layout Config */}
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                      CẤU HÌNH TRƯỜNG (JSON)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept=".json"
-                        id="config-upload"
-                        className="hidden"
-                        onChange={() =>
-                          setFormConfigName("layout_config_schema.json")
-                        }
-                      />
-                      <label
-                        htmlFor="config-upload"
-                        className="w-full h-10 border border-slate-200 rounded-sm px-3 flex items-center justify-between text-xs font-semibold text-slate-500 bg-white hover:bg-slate-50 cursor-pointer"
-                      >
-                        <span className="truncate pr-2">
-                          {formConfigName || "Tải file .json..."}
-                        </span>
-                        <FileCode className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      </label>
-                    </div>
                   </div>
                 </div>
 
                 {/* 5. Features checklist selection - Sử dụng Shadcn UI Input */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                     ĐẶC ĐIỂM THIẾT KẾ NỔI BẬT
                   </label>
                   <div className="flex gap-2">
@@ -657,18 +868,18 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
 
                   {/* Features listing */}
                   {formFeaturesList.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3 bg-slate-50 border border-slate-150 p-2.5 rounded-sm">
+                    <div className="flex flex-wrap gap-1.5 mt-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-150 dark:border-slate-800 p-2.5 rounded-sm">
                       {formFeaturesList.map((feat, index) => (
                         <Badge
                           key={index}
                           variant="outline"
-                          className="bg-white border-slate-200 text-slate-650 inline-flex items-center gap-1 normal-case font-semibold"
+                          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-650 dark:text-slate-300 inline-flex items-center gap-1 normal-case font-semibold"
                         >
                           {feat}
                           <button
                             type="button"
                             onClick={() => handleRemoveFeatureFromForm(index)}
-                            className="text-slate-400 hover:text-slate-700 cursor-pointer ml-1"
+                            className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer ml-1"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -677,16 +888,58 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
                     </div>
                   )}
                 </div>
+
+                {/* 6. Preview Design Image */}
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
+                    PREVIEW MẪU CV
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="preview-upload"
+                      className="hidden"
+                      onChange={(e) =>
+                        setFormPreviewName(e.target.files?.[0]?.name || "")
+                      }
+                    />
+                    <label
+                      htmlFor="preview-upload"
+                      className="w-full h-10 border border-slate-200 dark:border-slate-700 rounded-sm px-3 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      <span className="truncate pr-2">
+                        {formPreviewName || "Chọn ảnh preview mẫu CV..."}
+                      </span>
+                      <Upload className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                    </label>
+                  </div>
+                </div>
+
+                {/* 7. Status */}
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
+                    TRẠNG THÁI
+                  </label>
+                  <select
+                    value={formIsActive ? "active" : "hidden"}
+                    onChange={(e) => setFormIsActive(e.target.value === "active")}
+                    className="w-full border border-slate-200 dark:border-slate-700 text-xs font-bold h-10 px-3 outline-none focus:border-slate-850 dark:focus:border-indigo-500 rounded-sm bg-white dark:bg-slate-950/60 cursor-pointer text-slate-850 dark:text-slate-100"
+                  >
+                    <option value="active">Đang hoạt động</option>
+                    <option value="hidden">Đang ẩn</option>
+                  </select>
+                </div>
               </div>
 
               {/* Action buttons inside form sử dụng Shadcn UI */}
-              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+              <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsFormModalOpen(false)}
-                  className="text-slate-500 hover:text-slate-850 font-bold text-xs h-9 px-4"
+                  className="text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-100 font-bold text-xs h-9 px-4"
                 >
                   Hủy bỏ
                 </Button>
@@ -706,7 +959,7 @@ Vui lòng sử dụng cần gạt "ẨN KHỎI USER" để ẩn mẫu này đi. 
       {/* 5. MODAL: PREVIEW (XEM TRƯỚC GIAO DIỆN TEMPLATE CV) - LUỒNG CHÍNH BƯỚC 5 */}
       {previewTemplate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#090d16]/85 backdrop-blur-xs animate-fade-in">
-          <div className="bg-slate-100 border border-slate-200 rounded-sm w-full max-w-4xl h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-slide-up text-left">
+          <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm w-full max-w-4xl h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-slide-up text-left">
             {/* Header */}
             <div className="px-6 py-4 bg-[#0f172a] text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
