@@ -5,9 +5,9 @@ import {
   Briefcase,
   FileText,
   Users,
-  LogOut,
   ShieldAlert,
   X,
+  Clock,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -38,17 +38,15 @@ const navItems = [
     path: "/admin/system",
     icon: Users,
   },
+  {
+    label: "Nhật ký hệ thống",
+    path: "/admin/activity-logs",
+    icon: Clock,
+  },
 ];
-
-const mockUser = {
-  name: "Admin Administrator",
-  role: "SUPER_ADMIN",
-  initials: "AD",
-};
 
 export const AdminSidebar: React.FC<SidebarProps> = ({
   pathname,
-  onLogout,
   onCloseMobile,
   isMobile = false,
 }) => {
@@ -119,31 +117,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Sidebar Footer User Info */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/40 mt-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-            <span className="text-white text-xs font-bold">
-              {mockUser.initials}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-white text-xs font-semibold truncate leading-none">
-              {mockUser.name}
-            </p>
-            <p className="text-slate-500 text-[11px] mt-1 truncate">
-              {mockUser.role}
-            </p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+
     </>
   );
 

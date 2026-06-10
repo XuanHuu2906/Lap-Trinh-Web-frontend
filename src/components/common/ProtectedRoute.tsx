@@ -7,6 +7,21 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
 }
 
+const getRoleHomePath = (role?: UserRole) => {
+  switch (role) {
+    case 'admin':
+      return '/admin';
+    case 'candidate':
+      return '/candidate';
+    case 'recruiter':
+      return '/recruiter';
+    case 'pending':
+      return '/auth/setup-profile';
+    default:
+      return '/login';
+  }
+};
+
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
@@ -41,20 +56,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
   // 2. Nếu tài khoản đã onboarding mà cố tình truy cập vào trang setup-profile
   if (user && user.role !== 'pending') {
     if (allowedRoles && allowedRoles.includes('pending')) {
-      if (user.role === 'admin') {
-        return <Navigate to="/admin/dashboard" replace />;
-      } else if (user.role === 'candidate') {
-        return <Navigate to="/candidate/overview" replace />;
-      } else if (user.role === 'recruiter') {
-        return <Navigate to="/recruiter/overview" replace />;
-      } else {
-        return <Navigate to="/" replace />;
-      }
+      return <Navigate to={getRoleHomePath(user.role)} replace />;
     }
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    return (
+      <Navigate
+        to={allowedRoles.includes('admin') ? '/admin/login' : getRoleHomePath(user.role)}
+        replace
+      />
+    );
   }
 
   return <Outlet />;

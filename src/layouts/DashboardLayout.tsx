@@ -10,6 +10,7 @@ import { AdminSidebar } from "../components/Sidebar/AdminSidebar";
 import { CandidateSidebar } from "../components/Sidebar/CandidateSidebar";
 import { RecruiterSidebar } from "../components/Sidebar/RecruiterSidebar";
 import { Topbar } from "../components/Topbar/Topbar";
+import { useToast } from "../components/common/toast";
 
 type DashboardRole = "candidate" | "recruiter" | "admin";
 
@@ -37,6 +38,7 @@ const getInitials = (name: string) =>
 export function DashboardLayout({ role }: DashboardLayoutProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { user, logout } = useAuth();
   const cachedCandidateProfile = getCachedCandidateProfile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -106,6 +108,10 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
   const handleLogout = async () => {
     if (role === "admin") {
       localStorage.removeItem("isAdminAuthenticated");
+      toast({
+        title: "Đăng xuất Admin thành công",
+        variant: "success",
+      });
       navigate("/admin/login");
       return;
     }
