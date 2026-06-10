@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
 import {
   Users,
   Search,
@@ -17,12 +18,24 @@ import { useToast } from '../../components/common/toast';
 
 const SkeletonRow: React.FC = () => (
   <tr className="animate-pulse">
-    <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded-xs w-8"></div></td>
-    <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded-xs w-48"></div></td>
-    <td className="px-5 py-4"><div className="h-7 bg-slate-200 rounded-xs w-20"></div></td>
-    <td className="px-5 py-4"><div className="h-6 bg-slate-200 rounded-xs w-16"></div></td>
-    <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded-xs w-24"></div></td>
-    <td className="px-5 py-4 text-center"><div className="h-8 bg-slate-200 rounded-xs w-8 mx-auto"></div></td>
+    <td className="px-5 py-4">
+      <div className="h-4 bg-slate-200 rounded-xs w-8"></div>
+    </td>
+    <td className="px-5 py-4">
+      <div className="h-4 bg-slate-200 rounded-xs w-48"></div>
+    </td>
+    <td className="px-5 py-4">
+      <div className="h-7 bg-slate-200 rounded-xs w-20"></div>
+    </td>
+    <td className="px-5 py-4">
+      <div className="h-6 bg-slate-200 rounded-xs w-16"></div>
+    </td>
+    <td className="px-5 py-4">
+      <div className="h-4 bg-slate-200 rounded-xs w-24"></div>
+    </td>
+    <td className="px-5 py-4 text-center">
+      <div className="h-8 bg-slate-200 rounded-xs w-8 mx-auto"></div>
+    </td>
   </tr>
 );
 
@@ -53,16 +66,16 @@ export const AdminSystem: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // States bộ lọc tìm kiếm
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [userRoleFilter, setUserRoleFilter] = useState<string>('Tất cả');
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState<string>("Tất cả");
 
   // Cơ chế Debounce ô tìm kiếm sau 500ms
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(userSearchTerm);
       // Reset về trang 1 khi từ khóa tìm kiếm thay đổi
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }, 500);
 
     return () => clearTimeout(timer);
@@ -73,7 +86,8 @@ export const AdminSystem: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const roleParam = userRoleFilter === 'Tất cả' ? undefined : userRoleFilter.toLowerCase();
+      const roleParam =
+        userRoleFilter === "Tất cả" ? undefined : userRoleFilter.toLowerCase();
       const searchParam = debouncedSearchTerm.trim() || undefined;
 
       const response = await getUsers({
@@ -91,7 +105,7 @@ export const AdminSystem: React.FC = () => {
           total: response.pagination.total,
         });
       } else {
-        throw new Error('Lấy danh sách tài khoản thất bại.');
+        throw new Error("Lấy danh sách tài khoản thất bại.");
       }
     } catch (err: unknown) {
       console.error(err);
@@ -104,21 +118,30 @@ export const AdminSystem: React.FC = () => {
   // Gọi API mỗi khi thay đổi trang, bộ lọc hoặc giá trị tìm kiếm đã debounce
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, pagination.limit, debouncedSearchTerm, userRoleFilter]);
 
   // Xử lý bộ lọc phân quyền (Reset về trang 1)
   const handleRoleFilterChange = (role: string) => {
     setUserRoleFilter(role);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Xử lý Khóa/Mở khóa tài khoản (Ban/Unban) qua PATCH API
-  const handleToggleUserStatus = async (userId: number, currentStatus: UserStatus, email: string) => {
-    const isBan = currentStatus !== 'banned';
-    const actionText = isBan ? 'Khóa vĩnh viễn' : 'Mở khóa hoạt động';
-    const newStatus: UserStatus = isBan ? 'banned' : 'active';
+  const handleToggleUserStatus = async (
+    userId: number,
+    currentStatus: UserStatus,
+    email: string,
+  ) => {
+    const isBan = currentStatus !== "banned";
+    const actionText = isBan ? "Khóa vĩnh viễn" : "Mở khóa hoạt động";
+    const newStatus: UserStatus = isBan ? "banned" : "active";
 
-    if (window.confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản người dùng "${email}"?`)) {
+    if (
+      window.confirm(
+        `Bạn có chắc chắn muốn ${actionText} tài khoản người dùng "${email}"?`,
+      )
+    ) {
       try {
         const response = await toggleUserStatus(userId, newStatus);
         if (response.success) {
@@ -152,8 +175,16 @@ export const AdminSystem: React.FC = () => {
   };
 
   // Thay đổi quyền hạn (Role) người dùng qua PUT API
-  const handleChangeUserRole = async (userId: number, newRole: UserRole, email: string) => {
-    if (window.confirm(`Bạn có chắc chắn muốn thay đổi vai trò tài khoản "${email}" thành "${newRole.toUpperCase()}"?`)) {
+  const handleChangeUserRole = async (
+    userId: number,
+    newRole: UserRole,
+    email: string,
+  ) => {
+    if (
+      window.confirm(
+        `Bạn có chắc chắn muốn thay đổi vai trò tài khoản "${email}" thành "${newRole.toUpperCase()}"?`,
+      )
+    ) {
       try {
         const response = await updateUser(userId, { role: newRole });
         if (response.success) {
@@ -208,10 +239,8 @@ export const AdminSystem: React.FC = () => {
       {/* 2. MAIN USER MANAGEMENT LIST */}
       <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-sm shadow-2xs overflow-hidden">
         <div className="p-6 space-y-6">
-
           {/* User filters row */}
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
-
             <div className="relative w-full sm:w-72">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 z-10">
                 <Search className="w-4 h-4" />
@@ -238,7 +267,6 @@ export const AdminSystem: React.FC = () => {
                 <option value="Recruiter">Recruiter</option>
               </select>
             </div>
-
           </div>
 
           {/* User Database Table Grid */}
@@ -296,21 +324,25 @@ export const AdminSystem: React.FC = () => {
                       <td className="px-5 py-3.5">
                         <Badge
                           variant={
-                            user.status === 'active'
-                              ? 'success'
-                              : user.status === 'banned'
-                                ? 'destructive'
-                                : 'secondary'
+                            user.status === "active"
+                              ? "success"
+                              : user.status === "banned"
+                                ? "destructive"
+                                : "secondary"
                           }
                         >
-                          {user.status === 'active' ? 'Hoạt động' : user.status === 'banned' ? 'Đã khóa' : 'Chưa kích hoạt'}
+                          {user.status === "active"
+                            ? "Hoạt động"
+                            : user.status === "banned"
+                              ? "Đã khóa"
+                              : "Chưa kích hoạt"}
                         </Badge>
                       </td>
                       <td className="px-5 py-3.5 text-slate-450 dark:text-slate-500 font-semibold">
                         {new Date(user.createdAt).toLocaleDateString('vi-VN')}
                       </td>
                       <td className="px-5 py-3.5 text-center">
-                        {user.role !== 'admin' ? (
+                        {user.role !== "admin" ? (
                           <Button
                             variant="outline"
                             size="icon"
@@ -321,7 +353,11 @@ export const AdminSystem: React.FC = () => {
                               }`}
                             title={user.status === 'banned' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                           >
-                            {user.status === 'banned' ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                            {user.status === "banned" ? (
+                              <Unlock className="w-3.5 h-3.5" />
+                            ) : (
+                              <Lock className="w-3.5 h-3.5" />
+                            )}
                           </Button>
                         ) : (
                           <span className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Hệ thống</span>
@@ -362,11 +398,10 @@ export const AdminSystem: React.FC = () => {
                       key={pageNum}
                       variant={pagination.page === pageNum ? 'default' : 'outline'}
                       onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
-                      className={`h-7 w-7 text-[10px] font-bold cursor-pointer ${
-                        pagination.page === pageNum
-                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-650 shadow-xs'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-                      }`}
+                      className={`h-7 w-7 text-[10px] font-bold cursor-pointer ${pagination.page === pageNum
+                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-650 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                        }`}
                     >
                       {pageNum}
                     </Button>
@@ -385,7 +420,6 @@ export const AdminSystem: React.FC = () => {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>

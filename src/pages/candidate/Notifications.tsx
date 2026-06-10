@@ -1,85 +1,19 @@
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Bell,
   BriefcaseBusiness,
+  CheckCheck,
   Mail,
   Megaphone,
-  Eye,
   ShieldCheck,
-  CheckCheck,
 } from "lucide-react";
+import {
+  getCachedNotifications,
+  notificationService,
+  type NotificationItem,
+} from "@/services/notification.service";
 
-type NotifType = "recruitment" | "system";
 type Tab = "all" | "unread" | "system" | "recruitment";
-
-interface Notification {
-  id: number;
-  icon: React.ElementType;
-  title: string;
-  body: string;
-  type: NotifType;
-  time: string;
-  read: boolean;
-}
-
-const INITIAL_NOTIFS: Notification[] = [
-  {
-    id: 1,
-    icon: BriefcaseBusiness,
-    title: "Cập nhật trạng thái ứng tuyển",
-    body: "Hồ sơ ứng tuyển vị trí 'Senior Frontend Developer' của bạn tại TechCorp đã chuyển sang vòng Phỏng vấn kỹ thuật.",
-    type: "recruitment",
-    time: "10 phút trước",
-    read: false,
-  },
-  {
-    id: 2,
-    icon: Mail,
-    title: "Tin nhắn mới từ Nhà tuyển dụng",
-    body: "Xin chào, chúng tôi muốn sắp xếp một buổi trao đổi ngắn vào chiều mai. Vui lòng xác nhận thời gian phù hợp.",
-    type: "recruitment",
-    time: "2 giờ trước",
-    read: false,
-  },
-  {
-    id: 3,
-    icon: Megaphone,
-    title: "Bảo trì hệ thống định kỳ",
-    body: "Hệ thống sẽ tạm ngưng hoạt động từ 00:00 đến 04:00 Chủ Nhật tuần này để nâng cấp hiệu suất.",
-    type: "system",
-    time: "Hôm qua",
-    read: false,
-  },
-  {
-    id: 4,
-    icon: Eye,
-    title: "Nhà tuyển dụng đã xem hồ sơ",
-    body: "GlobalTech Inc. vừa xem hồ sơ trực tuyến của bạn.",
-    type: "recruitment",
-    time: "2 ngày trước",
-    read: true,
-  },
-  {
-    id: 5,
-    icon: ShieldCheck,
-    title: "Xác thực tài khoản thành công",
-    body: "Cảm ơn bạn đã xác minh địa chỉ email. Tài khoản của bạn hiện đã được kích hoạt đầy đủ tính năng.",
-    type: "system",
-    time: "1 tuần trước",
-    read: true,
-  },
-];
-
-const ICON_BG: Record<NotifType, string> = {
-  recruitment: "bg-blue-100 text-blue-600",
-  system: "bg-gray-100 text-gray-500",
-};
-
-const TYPE_BADGE: Record<NotifType, { label: string; cls: string }> = {
-  recruitment: { label: "TUYỂN DỤNG", cls: "bg-blue-100 text-blue-600" },
-  system: { label: "HỆ THỐNG", cls: "bg-gray-100 text-gray-500" },
-};
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "all", label: "Tất cả" },
@@ -88,125 +22,223 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "recruitment", label: "Tuyển dụng" },
 ];
 
+const getIcon = (type: string) => {
+  if (type.includes("applicant") || type.includes("application")) {
+    return BriefcaseBusiness;
+  }
+  if (type.includes("feedback")) return Mail;
+  if (type.includes("system")) return ShieldCheck;
+  return Megaphone;
+};
+
+const isRecruitmentType = (type: string) =>
+  type.includes("applicant") ||
+  type.includes("application") ||
+  type.includes("feedback") ||
+  type.includes("job");
+
+const formatTime = (value: string) =>
+  new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+
 export default function Notifications() {
-  const [notifs, setNotifs] = useState<Notification[]>(INITIAL_NOTIFS);
+  const notificationParams = { page: 1, limit: 50 };
+  const cachedNotifications = getCachedNotifications(notificationParams);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(
+    cachedNotifications?.data ?? [],
+  );
   const [activeTab, setActiveTab] = useState<Tab>("all");
+  const [isLoading, setIsLoading] = useState(!cachedNotifications);
+  const [error, setError] = useState<string | null>(null);
 
-  const unreadCount = notifs.filter((n) => !n.read).length;
+  useEffect(() => {
+    let isMounted = true;
 
-  const markAllRead = () =>
-    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+    const loadNotifications = async () => {
+      try {
+        if (!getCachedNotifications(notificationParams)) {
+          setIsLoading(true);
+        }
+        setError(null);
 
-  const markRead = (id: number) =>
-    setNotifs((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        const response =
+          await notificationService.getNotifications(notificationParams);
+
+        if (isMounted) {
+          setNotifications(response.data);
+        }
+      } catch {
+        if (isMounted) {
+          setError("Không thể tải thông báo.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const unreadCount = notifications.filter((item) => !item.isRead).length;
+
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((item) => {
+      if (activeTab === "all") return true;
+      if (activeTab === "unread") return !item.isRead;
+      if (activeTab === "system") return !isRecruitmentType(item.type);
+      return isRecruitmentType(item.type);
+    });
+  }, [activeTab, notifications]);
+
+  const markRead = async (id: number) => {
+    setNotifications((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, isRead: true } : item,
+      ),
     );
 
-  const filtered = notifs.filter((n) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "unread") return !n.read;
-    return n.type === activeTab;
-  });
+    try {
+      await notificationService.markAsRead(id);
+    } catch {
+      setError("Không thể đánh dấu thông báo đã đọc.");
+    }
+  };
+
+  const markAllRead = async () => {
+    setNotifications((current) =>
+      current.map((item) => ({ ...item, isRead: true })),
+    );
+
+    try {
+      await notificationService.markAllAsRead();
+    } catch {
+      setError("Không thể đánh dấu tất cả thông báo đã đọc.");
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
+    <div>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Thông báo</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Cập nhật mới nhất về hồ sơ và quy trình tuyển dụng của bạn.
+          <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
+            Thông báo
+          </h1>
+          <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
+            Cập nhật mới nhất về hồ sơ và quá trình ứng tuyển của bạn.
           </p>
         </div>
-        {unreadCount > 0 && (
+
+        {unreadCount > 0 ? (
           <button
             onClick={markAllRead}
-            className="flex items-center gap-2 text-sm text-blue-600 dark:text-indigo-400 font-semibold hover:underline cursor-pointer"
+            className="flex h-10 items-center gap-2 bg-[#0f1f3d] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1a2f52] dark:bg-indigo-600 dark:hover:bg-indigo-500"
           >
-            <CheckCheck size={15} />
-            Đánh dấu tất cả là đã đọc
+            <CheckCheck className="h-4 w-4" />
+            ĐÁNH DẤU ĐÃ ĐỌC
           </button>
-        )}
+        ) : null}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200 dark:border-slate-800 mb-5">
+      <div className="mb-5 flex gap-1 border-b border-slate-200 dark:border-slate-800">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer
-              ${
-                activeTab === key
-                  ? "border-blue-600 dark:border-indigo-500 text-blue-600 dark:text-indigo-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-slate-200"
-              }`}
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+              activeTab === key
+                ? "border-blue-600 text-blue-600 dark:border-indigo-500 dark:text-indigo-400"
+                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
           >
             {label}
-            {key === "unread" && unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            {key === "unread" && unreadCount > 0 ? (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                 {unreadCount}
               </span>
-            )}
+            ) : null}
           </button>
         ))}
       </div>
 
-      {/* List */}
-      <Card className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden divide-y divide-gray-50 dark:divide-slate-800 transition-colors duration-150 rounded-xl">
-        {filtered.length === 0 && (
-          <div className="py-16 text-center text-gray-400 dark:text-gray-550 text-sm">
-            Không có thông báo nào.
+      <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        {isLoading ? (
+          <div className="px-6 py-10 text-sm text-slate-500 dark:text-slate-400">
+            Đang tải thông báo...
           </div>
-        )}
-        {filtered.map((n) => {
-          const Icon = n.icon;
-          const badge = TYPE_BADGE[n.type];
-          const iconCls = ICON_BG[n.type];
-          return (
-            <div
-              key={n.id}
-              onClick={() => markRead(n.id)}
-              className={`flex gap-4 px-5 py-4 cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-slate-850/40 ${!n.read ? "bg-blue-50/30 dark:bg-indigo-950/20" : ""}`}
-            >
-              {/* Icon circle */}
-              <div
-                className={`${iconCls} dark:bg-slate-800 dark:text-indigo-400 w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
+        ) : error ? (
+          <div className="px-6 py-10 text-sm text-red-500">{error}</div>
+        ) : filteredNotifications.length === 0 ? (
+          <div className="px-6 py-14 text-center">
+            <Bell className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
+            <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Không có thông báo nào.
+            </p>
+          </div>
+        ) : (
+          filteredNotifications.map((item) => {
+            const Icon = getIcon(item.type);
+            const recruitment = isRecruitmentType(item.type);
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => markRead(item.id)}
+                className={`flex w-full gap-4 border-b border-slate-100 px-6 py-5 text-left transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50 ${
+                  !item.isRead ? "bg-blue-50/40 dark:bg-indigo-950/20" : ""
+                }`}
               >
-                <Icon size={18} />
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm leading-snug mb-0.5 ${!n.read ? "font-semibold text-gray-900 dark:text-white" : "font-medium text-gray-800 dark:text-slate-100"}`}
+                <div
+                  className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                    recruitment
+                      ? "bg-blue-50 text-blue-600 dark:bg-indigo-950/40 dark:text-indigo-300"
+                      : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
                 >
-                  {n.title}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
-                  {n.body}
-                </p>
-                <Badge
-                  variant="secondary"
-                  className={`${badge.cls} dark:bg-slate-800 dark:text-indigo-400 text-[10px] font-bold px-2 py-0.5 rounded-full border-none lowercase first-letter:uppercase`}
-                >
-                  {badge.label}
-                </Badge>
-              </div>
+                  <Icon className="h-5 w-5" />
+                </div>
 
-              {/* Time + unread dot */}
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <p className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                  {n.time}
-                </p>
-                {!n.read && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </Card>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p
+                      className={`text-sm leading-snug ${
+                        item.isRead
+                          ? "font-semibold text-slate-700 dark:text-slate-200"
+                          : "font-bold text-slate-950 dark:text-white"
+                      }`}
+                    >
+                      {item.title}
+                    </p>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                      {recruitment ? "Tuyển dụng" : "Hệ thống"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    {item.message}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <span className="whitespace-nowrap text-[11px] text-slate-400">
+                    {formatTime(item.createdAt)}
+                  </span>
+                  {!item.isRead ? (
+                    <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                  ) : null}
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

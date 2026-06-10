@@ -23,7 +23,9 @@ export function EnterpriseRegisterPage() {
     setSuccessMsg(null);
 
     if (!agreeTerms) {
-      setError("Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục.");
+      setError(
+        "Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục.",
+      );
       return;
     }
 
@@ -41,12 +43,15 @@ export function EnterpriseRegisterPage() {
         fullName: companyName,
         email,
         password,
-        confirmPassword
+        confirmPassword,
       });
 
       if (res.success) {
-        setSuccessMsg(res.message || "Đăng ký nhà tuyển dụng thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
-        
+        setSuccessMsg(
+          res.message ||
+            "Đăng ký nhà tuyển dụng thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.",
+        );
+
         // Reset form
         setCompanyName("");
         setEmail("");
@@ -59,9 +64,13 @@ export function EnterpriseRegisterPage() {
           navigate("/login");
         }, 4000);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đăng ký nhà tuyển dụng:", err);
-      const errMsg = err.response?.data?.message || err.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Đăng ký thất bại. Vui lòng thử lại sau.";
       setError(errMsg);
     } finally {
       setIsLoading(false);

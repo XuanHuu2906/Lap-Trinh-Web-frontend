@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
-  Send,
-  Search,
   CheckCheck,
   Smile,
   Phone,
@@ -12,6 +10,9 @@ import {
   FileText,
   Download,
   Loader2,
+  Search,
+  Send,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -99,7 +100,7 @@ export default function Chat() {
         },
         async (payload) => {
           const newMsg = payload.new as { sender_id?: number };
-          
+
           // Tránh duplicate tin nhắn do mình gửi (đã được add qua API REST)
           if (newMsg.sender_id === user?.id) return;
 
@@ -107,13 +108,13 @@ export default function Chat() {
           try {
             const res = await chatService.getMessages(activeConversationId, 1, 100);
             setMessages(res.items);
-            
+
             // Đánh dấu đã đọc các tin nhắn mới
             const unreadNewMsgs = res.items.filter((m) => !m.isRead && m.senderId !== user?.id);
             if (unreadNewMsgs.length > 0) {
               await Promise.all(unreadNewMsgs.map((m) => chatService.markMessageRead(m.id)));
             }
-            
+
             // Reload sidebar để cập nhật lastMessage
             loadConversations();
           } catch (err) {
@@ -227,6 +228,20 @@ export default function Chat() {
                 className="w-full h-9 pl-9 pr-4 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-white outline-none focus:border-indigo-500 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
               />
             </div>
+
+            <button
+              type="button"
+              onClick={() => loadConversations()}
+              disabled={isLoadingConversations}
+              className="mt-3 flex items-center justify-center gap-1.5 w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80 transition-colors"
+              title="Tải lại cuộc trò chuyện"
+            >
+              <RefreshCw
+                size={14}
+                className={isLoadingConversations ? "animate-spin" : ""}
+              />
+              Tải lại cuộc trò chuyện
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
@@ -247,8 +262,8 @@ export default function Chat() {
                 const lastMsgObj = c.messages[0];
                 let lastMsgText = "Chưa có tin nhắn";
                 if (lastMsgObj) {
-                  lastMsgText = lastMsgObj.messageType === "file" 
-                    ? `📎 File: ${lastMsgObj.attachmentName}` 
+                  lastMsgText = lastMsgObj.messageType === "file"
+                    ? `📎 File: ${lastMsgObj.attachmentName}`
                     : lastMsgObj.content || "";
                 }
 
@@ -256,11 +271,10 @@ export default function Chat() {
                   <div
                     key={c.id}
                     onClick={() => setActiveConversationId(c.id)}
-                    className={`p-4 flex gap-3 cursor-pointer transition-all ${
-                      active
+                    className={`p-4 flex gap-3 cursor-pointer transition-all ${active
                         ? "bg-white dark:bg-slate-950 border-l-4 border-indigo-500 font-medium shadow-3xs"
                         : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
-                    }`}
+                      }`}
                   >
                     <div className="relative shrink-0">
                       <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shadow-3xs">
@@ -274,7 +288,7 @@ export default function Chat() {
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                           {c.recruiterProfile.contactName || c.recruiterProfile.companyName}
                         </p>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-550 font-medium whitespace-nowrap">
                           {c.updatedAt ? new Date(c.updatedAt).toLocaleDateString("vi-VN") : ""}
                         </span>
                       </div>
@@ -360,11 +374,10 @@ export default function Chat() {
                       >
                         <div className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}>
                           <div
-                            className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${
-                              isMe
+                            className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${isMe
                                 ? "bg-indigo-600 text-white rounded-br-none"
                                 : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none"
-                            }`}
+                              }`}
                           >
                             {/* File Rendering */}
                             {isFile ? (
@@ -408,9 +421,8 @@ export default function Chat() {
                             )}
 
                             <div
-                              className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${
-                                isMe ? "text-indigo-200" : "text-slate-400 dark:text-slate-500"
-                              }`}
+                              className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${isMe ? "text-indigo-200" : "text-slate-400 dark:text-slate-550"
+                                }`}
                             >
                               <span>{formatMessageTime(msg.sentAt)}</span>
                               {isMe && <CheckCheck className="w-3.5 h-3.5 text-indigo-200" />}

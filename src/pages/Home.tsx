@@ -1,55 +1,74 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HeroSection from "../components/home/HeroSection";
 import FeaturedJobs from "../components/home/FeaturedJobs";
 import WhyChooseUs from "../components/home/WhyChooseUs";
-
-const FEATURED_JOBS = [
-  {
-    id: 1,
-    title: "Senior Product Manager",
-    company: "TechCorp Enterprise",
-    logo: "T",
-    logoColor: "bg-indigo-600",
-    location: "Hà Nội",
-    salary: "$2k – $4k",
-    deadline: "Hết hạn 05/01/2025",
-    tags: ["Toàn thời gian", "Full-time"],
-    field: "IT / Software",
-  },
-  {
-    id: 2,
-    title: "Trưởng Phòng Marketing",
-    company: "Global Retail Inc",
-    logo: "G",
-    logoColor: "bg-pink-500",
-    location: "Hồ Chí Minh",
-    salary: "Thương lượng",
-    deadline: "Hết hạn 31/12/2024",
-    tags: ["Marketing", "Senior"],
-    field: "Marketing",
-  },
-  {
-    id: 3,
-    title: "Financial Analyst",
-    company: "FinCorp Asia",
-    logo: "F",
-    logoColor: "bg-amber-600",
-    location: "Remote",
-    salary: "Lên đến $2,000",
-    deadline: "Hết hạn 20/12/2024",
-    tags: ["Remote", "Finance"],
-    field: "Finance",
-  },
-];
+import { jobService } from "@/services/job.service";
+import type { Job } from "@/types/job.type";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
+  const [isLoadingFeaturedJobs, setIsLoadingFeaturedJobs] = useState(true);
+  const [featuredJobsError, setFeaturedJobsError] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadFeaturedJobs = async () => {
+      try {
+        setIsLoadingFeaturedJobs(true);
+        setFeaturedJobsError(null);
+
+        const response = await jobService.getFeaturedJobs(6);
+
+        if (isMounted) {
+          setFeaturedJobs(response.data);
+        }
+      } catch {
+        if (isMounted) {
+          setFeaturedJobsError("Không thể tải việc làm nổi bật.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingFeaturedJobs(false);
+        }
+      }
+    };
+
+    loadFeaturedJobs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleHeroSearch = (keyword: string, location: string) => {
+    const params = new URLSearchParams();
+    const trimmedKeyword = keyword.trim();
+    const trimmedLocation = location.trim();
+
+    if (trimmedKeyword) {
+      params.set("keyword", trimmedKeyword);
+    }
+
+    if (trimmedLocation) {
+      params.set("location", trimmedLocation);
+    }
+
+    const queryString = params.toString();
+    navigate(queryString ? `/jobs?${queryString}` : "/jobs");
+  };
 
   return (
     <main className="bg-white">
-      <HeroSection onSearch={() => navigate("/jobs")} />
+      <HeroSection onSearch={handleHeroSearch} />
       <FeaturedJobs
-        jobs={FEATURED_JOBS}
+        jobs={featuredJobs}
+        isLoading={isLoadingFeaturedJobs}
+        errorMessage={featuredJobsError}
         onViewAll={() => navigate("/jobs")}
         onSelectJob={(job) => navigate(`/jobs/${job.id}`)}
       />

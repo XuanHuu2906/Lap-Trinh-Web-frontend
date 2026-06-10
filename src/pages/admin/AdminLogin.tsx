@@ -52,9 +52,13 @@ export const AdminLogin: React.FC = () => {
         const redirectUrl = searchParams.get("redirect") || "/admin/dashboard";
         navigate(redirectUrl);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đăng nhập admin:", err);
-      const errMsg = err.response?.data?.message || err.message || "Tài khoản hoặc mật khẩu quản trị viên không hợp lệ.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Tài khoản hoặc mật khẩu quản trị viên không hợp lệ.";
       setError(errMsg);
     } finally {
       setIsLoading(false);

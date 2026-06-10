@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import {
   Search,
@@ -13,7 +14,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { type Job, type JobType } from "../../types/job.type";
 import { Button } from "../../components/ui/button";
@@ -75,7 +76,7 @@ export const AdminJobs: React.FC = () => {
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 5,
-    total: 0
+    total: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +100,7 @@ export const AdminJobs: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }, 500);
 
     return () => clearTimeout(timer);
@@ -128,16 +129,22 @@ export const AdminJobs: React.FC = () => {
         // Ánh xạ dữ liệu từ backend trả về dạng AdminJob của frontend
         const mappedJobs: AdminJob[] = response.data.map((job) => ({
           ...job,
-          companyName: job.recruiter?.recruiterProfile?.companyName || "Công ty chưa xác định",
-          companyLogo: job.recruiter?.recruiterProfile?.logoUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=80&q=80",
+          companyName:
+            job.recruiter?.recruiterProfile?.companyName ||
+            "Công ty chưa xác định",
+          companyLogo:
+            job.recruiter?.recruiterProfile?.logoUrl ||
+            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=80&q=80",
         }));
 
         // Bộ lọc phụ client-side cho jobType nếu được chọn (vì server chỉ hỗ trợ bộ lọc chính)
         let finalJobs = mappedJobs;
         if (selectedJobType !== "Tất cả") {
-          finalJobs = mappedJobs.filter(job =>
-            (selectedJobType === "Full-time" && job.jobType === "full_time") ||
-            (selectedJobType === "Remote" && job.jobType === "remote")
+          finalJobs = mappedJobs.filter(
+            (job) =>
+              (selectedJobType === "Full-time" &&
+                job.jobType === "full_time") ||
+              (selectedJobType === "Remote" && job.jobType === "remote"),
           );
         }
 
@@ -161,23 +168,34 @@ export const AdminJobs: React.FC = () => {
   // Tải danh sách công việc mỗi khi các filter/tab/trang thay đổi
   useEffect(() => {
     fetchJobs();
-  }, [pagination.page, pagination.limit, debouncedSearch, activeTab, selectedJobType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pagination.page,
+    pagination.limit,
+    debouncedSearch,
+    activeTab,
+    selectedJobType,
+  ]);
 
   // Điều hướng tabs (Reset về trang 1)
   const handleTabChange = (tab: "pending" | "approved" | "rejected") => {
     setActiveTab(tab);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Điều hướng chọn loại hình công việc (Reset về trang 1)
   const handleJobTypeChange = (type: string) => {
     setSelectedJobType(type);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Hàm xử lý Phê duyệt tin đăng thực tế
   const handleApprove = async (jobId: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn phê duyệt tin tuyển dụng này để hiển thị công khai?")) {
+    if (
+      window.confirm(
+        "Bạn có chắc chắn muốn phê duyệt tin tuyển dụng này để hiển thị công khai?",
+      )
+    ) {
       try {
         const response = await updateJobStatus(jobId, "active");
         if (response.success) {
@@ -227,10 +245,14 @@ export const AdminJobs: React.FC = () => {
 
     if (rejectingJobId) {
       try {
-        const response = await updateJobStatus(rejectingJobId, "closed", rejectionReasonInput);
+        const response = await updateJobStatus(
+          rejectingJobId,
+          "closed",
+          rejectionReasonInput,
+        );
         if (response.success) {
-          setJobs(prev => prev.filter(j => j.id !== rejectingJobId));
-          setPagination(prev => ({ ...prev, total: prev.total - 1 }));
+          setJobs((prev) => prev.filter((j) => j.id !== rejectingJobId));
+          setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
           setIsRejectingModalOpen(false);
           setRejectingJobId(null);
           toast({
@@ -372,7 +394,8 @@ export const AdminJobs: React.FC = () => {
                 : "border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300"
                 }`}
             >
-              Chờ phê duyệt {activeTab === "pending" ? `(${pagination.total})` : ""}
+              Chờ phê duyệt{" "}
+              {activeTab === "pending" ? `(${pagination.total})` : ""}
             </button>
             <button
               onClick={() => handleTabChange("approved")}
@@ -381,7 +404,8 @@ export const AdminJobs: React.FC = () => {
                 : "border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300"
                 }`}
             >
-              Đã kích hoạt {activeTab === "approved" ? `(${pagination.total})` : ""}
+              Đã kích hoạt{" "}
+              {activeTab === "approved" ? `(${pagination.total})` : ""}
             </button>
             <button
               onClick={() => handleTabChange("rejected")}
@@ -390,7 +414,8 @@ export const AdminJobs: React.FC = () => {
                 : "border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300"
                 }`}
             >
-              Đã từ chối {activeTab === "rejected" ? `(${pagination.total})` : ""}
+              Đã từ chối{" "}
+              {activeTab === "rejected" ? `(${pagination.total})` : ""}
             </button>
           </div>
 
@@ -612,7 +637,12 @@ export const AdminJobs: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPagination(prev => ({ ...prev, page: Math.max(prev.page - 1, 1) }))}
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: Math.max(prev.page - 1, 1),
+                    }))
+                  }
                   disabled={pagination.page === 1}
                   className="h-7 w-7 border border-slate-200 dark:border-slate-700 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
@@ -639,7 +669,12 @@ export const AdminJobs: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.page + 1, totalPages) }))}
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: Math.min(prev.page + 1, totalPages),
+                    }))
+                  }
                   disabled={pagination.page === totalPages}
                   className="h-7 w-7 border border-slate-200 dark:border-slate-700 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800"
                 >

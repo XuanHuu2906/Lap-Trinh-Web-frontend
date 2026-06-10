@@ -88,5 +88,5 @@ export const chatService = {
   async getUnreadCount(): Promise<number> {
     const res = await get<{ success: boolean; data: { count: number } }>('/chat/conversations/unread-count');
     return res.data.count;
-  },
+  }
 };
