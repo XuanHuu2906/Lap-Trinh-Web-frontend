@@ -425,7 +425,8 @@ export const AdminTemplates: React.FC = () => {
       if (!formConfigName.toLowerCase().endsWith(".json")) {
         toast({
           title: "Tệp cấu hình không hợp lệ",
-          description: "Hệ thống chỉ chấp nhận định dạng .json để xây dựng sơ đồ trường dữ liệu.",
+          description:
+            "Hệ thống chỉ chấp nhận định dạng .json để xây dựng sơ đồ trường dữ liệu.",
           variant: "error",
         });
         return;
@@ -433,7 +434,8 @@ export const AdminTemplates: React.FC = () => {
     } else {
       toast({
         title: "Thiếu tệp cấu hình mẫu CV",
-        description: "Vui lòng tải lên tệp cấu hình trường thiết kế dạng .json.",
+        description:
+          "Vui lòng tải lên tệp cấu hình trường thiết kế dạng .json.",
         variant: "warning",
       });
       return;
@@ -442,7 +444,8 @@ export const AdminTemplates: React.FC = () => {
     if (formPreviewName && !/\.(png|jpe?g|webp)$/i.test(formPreviewName)) {
       toast({
         title: "Preview mẫu CV không hợp lệ",
-        description: "Vui lòng chỉ tải lên ảnh định dạng .png, .jpg hoặc .webp.",
+        description:
+          "Vui lòng chỉ tải lên ảnh định dạng .png, .jpg hoặc .webp.",
         variant: "error",
       });
       return;
@@ -513,7 +516,7 @@ export const AdminTemplates: React.FC = () => {
       toast({
         title: `Không thể xóa mẫu CV "${name}"`,
         description:
-          'Mẫu này đang được liên kết với 34 bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị cho ứng viên mới.',
+          "Mẫu này đang được liên kết với 34 bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị cho ứng viên mới.",
         variant: "warning",
         duration: 7000,
       });
@@ -630,7 +633,7 @@ export const AdminTemplates: React.FC = () => {
                 </div>
 
                 {/* Simulated Thumbnail Preview Placeholder */}
-                <div className="aspect-[1/1.414] w-full max-w-[180px] mx-auto bg-slate-50 dark:bg-slate-950/60 border border-slate-150/80 dark:border-slate-800 rounded-sm mb-4 flex flex-col items-center justify-center group relative overflow-hidden">
+                <div className="aspect-[1/1.414] w-full max-w-45 mx-auto bg-slate-50 dark:bg-slate-950/60 border border-slate-150/80 dark:border-slate-800 rounded-sm mb-4 flex flex-col items-center justify-center group relative overflow-hidden">
                   <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-2 z-10">
                     {/* Xem thử bằng Shadcn Button */}
                     <Button
@@ -647,7 +650,7 @@ export const AdminTemplates: React.FC = () => {
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-snug mb-4 line-clamp-2 min-h-[2.5rem]">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-snug mb-4 line-clamp-2 min-h-10">
                   {template.description}
                 </p>
 
@@ -923,7 +926,9 @@ export const AdminTemplates: React.FC = () => {
                   </label>
                   <select
                     value={formIsActive ? "active" : "hidden"}
-                    onChange={(e) => setFormIsActive(e.target.value === "active")}
+                    onChange={(e) =>
+                      setFormIsActive(e.target.value === "active")
+                    }
                     className="w-full border border-slate-200 dark:border-slate-700 text-xs font-bold h-10 px-3 outline-none focus:border-slate-850 dark:focus:border-indigo-500 rounded-sm bg-white dark:bg-slate-950/60 cursor-pointer text-slate-850 dark:text-slate-100"
                   >
                     <option value="active">Đang hoạt động</option>

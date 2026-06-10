@@ -34,7 +34,7 @@ function FeatureCard({ feature }: { feature: HomeFeature }) {
   const iconClassName = colorMap[feature.color || ""] || colorMap.blue;
 
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md">
+    <article className="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/10">
       <div
         className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${iconClassName}`}
       >
@@ -53,7 +53,7 @@ function FeatureCard({ feature }: { feature: HomeFeature }) {
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-5 transition-shadow hover:shadow-sm">
+    <article className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
           {testimonial.avatar || testimonial.name.slice(0, 2).toUpperCase()}
@@ -84,7 +84,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
 function WhyChooseUsSkeleton() {
   return (
-    <section className="bg-gray-50 px-4 py-16">
+    <section className="bg-[#f6f8fb] px-4 py-16">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <div className="mx-auto mb-3 h-6 w-40 rounded-full bg-gray-200" />
@@ -189,7 +189,7 @@ export default function WhyChooseUs() {
 
   if (errorMessage) {
     return (
-      <section className="bg-gray-50 px-4 py-16">
+      <section className="bg-[#f6f8fb] px-4 py-16">
         <div className="mx-auto max-w-7xl rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
           {errorMessage}
         </div>
@@ -198,7 +198,7 @@ export default function WhyChooseUs() {
   }
 
   return (
-    <section className="bg-gray-50 px-4 py-16">
+    <section className="bg-[#f6f8fb] px-4 py-16">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <span className="mb-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
@@ -220,7 +220,7 @@ export default function WhyChooseUs() {
         </div>
 
         <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-2">
-          <div className="rounded-2xl bg-linear-to-br from-blue-700 to-indigo-800 p-8 text-white">
+          <div className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl shadow-slate-900/15">
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
               <Sparkles className="h-6 w-6" />
             </div>

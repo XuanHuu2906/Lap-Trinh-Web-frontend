@@ -154,6 +154,26 @@ const flattenCategories = (categories: CategoryOption[]) =>
     })),
   ]);
 
+function JobCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-4 h-3 w-32 rounded bg-slate-100 dark:bg-slate-800" />
+      <div className="mb-5 flex gap-3">
+        <div className="h-11 w-11 rounded-lg bg-slate-100 dark:bg-slate-800" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
+          <div className="h-3 w-1/2 rounded bg-slate-100 dark:bg-slate-800" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="h-3 w-full rounded bg-slate-100 dark:bg-slate-800" />
+        <div className="h-3 w-2/3 rounded bg-slate-100 dark:bg-slate-800" />
+      </div>
+      <div className="mt-5 h-10 rounded-lg bg-slate-100 dark:bg-slate-800" />
+    </div>
+  );
+}
+
 export default function JobSearch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -219,9 +239,7 @@ export default function JobSearch() {
         return;
       }
 
-      if (!jobs.length || forceRefresh) {
-        setIsLoading(true);
-      }
+      setIsLoading(true);
 
       const selectedSalary = SALARY_OPTIONS.find(
         (item) => item.value === filters.salary,
@@ -322,12 +340,6 @@ export default function JobSearch() {
     loadSavedJobs();
   }, [isAuthenticated, isCandidatePage, user?.role]);
 
-  useEffect(() => {
-    if (isAuthenticated && user?.role === "candidate") {
-      setErrorMessage(null);
-    }
-  }, [isAuthenticated, user?.role]);
-
   const handleApplyFilters = () => {
     if (page === 1) {
       loadJobs(1);
@@ -345,7 +357,7 @@ export default function JobSearch() {
     setExperienceLevel(resetFilters.experienceLevel);
     setJobType(resetFilters.jobType);
     if (page === 1) {
-      loadJobs(1, resetFilters);
+      loadJobs(1, resetFilters, true);
     } else {
       setPage(1);
     }
@@ -410,24 +422,26 @@ export default function JobSearch() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-7xl text-slate-800 dark:text-slate-100">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">
             HireArch / Cổng ứng viên
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-white">Tìm việc làm</h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <h1 className="mt-2 text-3xl font-bold text-slate-950 dark:text-white">
+            Tìm việc làm
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Tìm kiếm cơ hội đang hoạt động từ dữ liệu tuyển dụng thật.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">Sắp xếp:</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">Sắp xếp:</span>
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value)}
-            className="h-10 border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-blue-500"
+            className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
           >
             {SORT_OPTIONS.map((item) => (
               <option key={item.value} value={item.value}>
@@ -438,24 +452,24 @@ export default function JobSearch() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="mb-5 border border-red-900/40 bg-red-950/30 px-4 py-3 text-sm text-red-300">
+      {errorMessage ? (
+        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {errorMessage}
         </div>
-      )}
+      ) : null}
 
       <div className="flex items-start gap-5">
         <aside
-          className={`w-64 shrink-0 border border-slate-800 bg-slate-900 p-5 ${
+          className={`w-64 shrink-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${
             mobileFilterOpen ? "block" : "hidden"
           } lg:block`}
         >
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-semibold text-white">Bộ lọc chi tiết</h2>
+            <h2 className="font-semibold text-slate-950 dark:text-white">Bộ lọc chi tiết</h2>
             <button
               type="button"
               onClick={handleResetFilters}
-              className="text-xs font-semibold text-blue-400 hover:text-blue-300"
+              className="text-xs font-semibold text-blue-700 hover:text-blue-600"
             >
               Xóa tất cả
             </button>
@@ -463,11 +477,11 @@ export default function JobSearch() {
 
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">
+              <label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Từ khóa
               </label>
-              <div className="flex items-center border border-slate-700 bg-slate-950 px-3">
-                <Search className="mr-2 h-4 w-4 text-slate-500" />
+              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-800 dark:bg-slate-950">
+                <Search className="mr-2 h-4 w-4 text-slate-400" />
                 <input
                   value={keyword}
                   onChange={(event) => setKeyword(event.target.value)}
@@ -475,19 +489,19 @@ export default function JobSearch() {
                     if (event.key === "Enter") handleApplyFilters();
                   }}
                   placeholder="Tên việc, công ty..."
-                  className="h-10 w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
+                  className="h-11 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-600"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">
+              <label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Ngành nghề
               </label>
               <select
                 value={categoryId}
                 onChange={(event) => setCategoryId(event.target.value)}
-                className="h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-blue-500"
+                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
               >
                 <option value="">Tất cả ngành nghề</option>
                 {categoryOptions.map((item) => (
@@ -499,14 +513,14 @@ export default function JobSearch() {
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-semibold text-slate-400">
+              <label className="mb-2 block text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Mức lương
               </label>
               <div className="space-y-2">
                 {SALARY_OPTIONS.map((item) => (
                   <label
                     key={item.value}
-                    className="flex cursor-pointer items-center gap-2 text-sm text-slate-300"
+                    className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
                   >
                     <input
                       type="radio"
@@ -523,13 +537,13 @@ export default function JobSearch() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">
+              <label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Kinh nghiệm
               </label>
               <select
                 value={experienceLevel}
                 onChange={(event) => setExperienceLevel(event.target.value)}
-                className="h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-blue-500"
+                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
               >
                 {EXPERIENCE_OPTIONS.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -540,13 +554,13 @@ export default function JobSearch() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">
+              <label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Loại việc
               </label>
               <select
                 value={jobType}
                 onChange={(event) => setJobType(event.target.value)}
-                className="h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-blue-500"
+                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
               >
                 {JOB_TYPE_OPTIONS.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -559,7 +573,7 @@ export default function JobSearch() {
             <button
               type="button"
               onClick={handleApplyFilters}
-              className="w-full bg-blue-600 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
+              className="w-full rounded-lg bg-blue-700 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
             >
               Áp dụng bộ lọc
             </button>
@@ -572,30 +586,31 @@ export default function JobSearch() {
               <button
                 type="button"
                 onClick={() => setMobileFilterOpen((current) => !current)}
-                className="inline-flex items-center gap-2 border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 lg:hidden"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 lg:hidden"
               >
                 <SlidersHorizontal size={15} />
                 Bộ lọc
               </button>
-              <p className="text-sm text-slate-400">
-                <span className="font-bold text-white">{total}</span> việc làm
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                <span className="font-bold text-slate-950 dark:text-white">{total}</span> việc làm
                 phù hợp
               </p>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="flex min-h-80 items-center justify-center gap-2 border border-slate-800 bg-slate-900 text-slate-400">
-              <Loader2 className="animate-spin" size={20} />
-              Đang tải việc làm...
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <JobCardSkeleton key={index} />
+              ))}
             </div>
           ) : jobs.length === 0 ? (
-            <div className="flex min-h-80 flex-col items-center justify-center border border-slate-800 bg-slate-900 text-center">
-              <BriefcaseBusiness className="mb-4 text-slate-700" size={46} />
-              <p className="font-semibold text-white">
+            <div className="flex min-h-80 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <BriefcaseBusiness className="mb-4 text-slate-300 dark:text-slate-700" size={46} />
+              <p className="font-semibold text-slate-950 dark:text-white">
                 Không có việc làm phù hợp.
               </p>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Thử xóa bớt bộ lọc hoặc đổi từ khóa tìm kiếm.
               </p>
             </div>
@@ -604,10 +619,10 @@ export default function JobSearch() {
               {jobs.map((job) => (
                 <article
                   key={job.id}
-                  className="flex flex-col border border-slate-800 bg-slate-900 p-5 transition hover:border-blue-500/70"
+                  className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/70"
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">
-                    <p className="line-clamp-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <p className="line-clamp-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       {companyName(job)}
                     </p>
                     <button
@@ -616,8 +631,8 @@ export default function JobSearch() {
                       disabled={isSavingId === job.id}
                       className={`transition ${
                         savedJobs.has(job.id)
-                          ? "text-blue-400"
-                          : "text-slate-600 hover:text-slate-300"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-slate-300 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-300"
                       }`}
                       title="Lưu việc làm"
                     >
@@ -633,20 +648,20 @@ export default function JobSearch() {
                   </div>
 
                   <div className="mb-4 flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-blue-600 text-sm font-bold text-white">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
                       {logoText(job)}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-white">
+                      <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-slate-950 dark:text-white">
                         {job.title}
                       </h3>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {job.category?.name || "Chưa phân loại"}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mb-5 flex-1 space-y-2 text-xs text-slate-400">
+                  <div className="mb-5 flex-1 space-y-2 text-xs text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-2">
                       <MapPin size={13} />
                       <span>{job.location || "Không rõ địa điểm"}</span>
@@ -655,7 +670,7 @@ export default function JobSearch() {
                       <DollarSign size={13} />
                       <span>{formatSalary(job)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-500">
+                    <div className="flex items-center gap-2">
                       <Clock size={13} />
                       <span>{formatPostedAt(job.createdAt)}</span>
                     </div>
@@ -670,7 +685,7 @@ export default function JobSearch() {
                           : `/jobs/${job.id}`,
                       )
                     }
-                    className="w-full bg-blue-600 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-500"
+                    className="w-full rounded-lg bg-blue-700 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-800"
                   >
                     Xem chi tiết
                   </button>
@@ -679,18 +694,18 @@ export default function JobSearch() {
             </div>
           )}
 
-          {totalPages > 1 && (
+          {totalPages > 1 ? (
             <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page === 1}
-                className="border border-slate-800 bg-slate-900 p-2 text-slate-400 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white"
               >
                 <ChevronLeft size={16} />
               </button>
 
-              <span className="px-3 text-sm font-semibold text-slate-400">
+              <span className="px-3 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 Trang {page} / {totalPages}
               </span>
 
@@ -700,12 +715,12 @@ export default function JobSearch() {
                   setPage((current) => Math.min(totalPages, current + 1))
                 }
                 disabled={page === totalPages}
-                className="border border-slate-800 bg-slate-900 p-2 text-slate-400 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white"
               >
                 <ChevronRight size={16} />
               </button>
             </div>
-          )}
+          ) : null}
         </main>
       </div>
     </div>

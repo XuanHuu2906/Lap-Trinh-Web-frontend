@@ -44,6 +44,8 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const cachedCandidateProfile = getCachedCandidateProfile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCandidateSidebarCollapsed, setIsCandidateSidebarCollapsed] =
+    useState(false);
   const [candidateProfile, setCandidateProfile] =
     useState<CandidateProfile | null>(cachedCandidateProfile?.data ?? null);
 
@@ -165,9 +167,10 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
       return (
         <CandidateSidebar
           {...props}
-          displayName={dashboardUser.name}
-          initials={dashboardUser.initials}
-          avatarUrl={dashboardUser.avatarUrl}
+          isCollapsed={isCandidateSidebarCollapsed}
+          onToggleCollapse={() =>
+            setIsCandidateSidebarCollapsed((current) => !current)
+          }
         />
       );
     }
@@ -193,7 +196,13 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
         </div>
       ) : null}
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-65">
+      <div
+        className={`flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 ${
+          role === "candidate" && isCandidateSidebarCollapsed
+            ? "lg:pl-20"
+            : "lg:pl-65"
+        }`}
+      >
         <Topbar
           role={role}
           pathname={pathname}

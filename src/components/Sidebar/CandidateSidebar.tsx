@@ -1,25 +1,22 @@
 import { Link } from "react-router-dom";
 import {
-  Bell,
   Bookmark,
   BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   Layers,
   LayoutDashboard,
-  LogOut,
   Search,
-  Settings,
   X,
 } from "lucide-react";
 
 type CandidateSidebarProps = {
   pathname: string;
-  displayName: string;
-  initials: string;
-  avatarUrl?: string | null;
-  onLogout: () => void;
   onCloseMobile?: () => void;
   isMobile?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
 const navItems = [
@@ -50,27 +47,16 @@ const navItems = [
     aliases: ["/candidate/find-jobs"],
     icon: Search,
   },
-  {
-    label: "Thông báo",
-    path: "/candidate/notifications",
-    icon: Bell,
-  },
-  {
-    label: "Hồ sơ cá nhân",
-    path: "/candidate/settings",
-    icon: Settings,
-  },
 ];
 
 export function CandidateSidebar({
   pathname,
-  displayName,
-  initials,
-  avatarUrl,
-  onLogout,
   onCloseMobile,
   isMobile = false,
+  isCollapsed = false,
+  onToggleCollapse,
 }: CandidateSidebarProps) {
+  const collapsed = isCollapsed && !isMobile;
   const isActive = (path: string, aliases: string[] = []) =>
     pathname === path ||
     pathname.startsWith(`${path}/`) ||
@@ -78,38 +64,54 @@ export function CandidateSidebar({
 
   const content = (
     <>
-      <div className="flex h-16 items-center justify-between border-b border-slate-800 bg-slate-950 px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
+      <div
+        className={`flex h-16 items-center border-b border-slate-800 bg-slate-950 px-4 ${
+          collapsed ? "justify-center" : "justify-between"
+        }`}
+      >
+        <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600">
             <Layers className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-base font-extrabold leading-none tracking-wider text-white">
-              HIREARCH
-            </h1>
-            <span className="mt-1 block text-[9px] font-bold uppercase tracking-[2px] text-indigo-400">
-              Cổng ứng viên
-            </span>
-          </div>
+          {!collapsed ? (
+            <div>
+              <h1 className="text-base font-extrabold leading-none tracking-wider text-white">
+                HIREARCH
+              </h1>
+              <span className="mt-1 block text-[9px] font-bold uppercase tracking-[2px] text-blue-400">
+                Cổng ứng viên
+              </span>
+            </div>
+          ) : null}
         </div>
 
         {isMobile && onCloseMobile ? (
           <button
+            type="button"
             onClick={onCloseMobile}
             className="text-slate-400 hover:text-white lg:hidden"
+            aria-label="Đóng menu"
           >
             <X className="h-5 w-5" />
+          </button>
+        ) : !isMobile ? (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            title={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+            aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
           </button>
         ) : null}
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mb-3 px-3">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Hồ sơ ứng viên
-          </span>
-        </div>
-
+      <nav className={`flex-1 overflow-y-auto py-6 ${collapsed ? "px-3" : "px-4"}`}>
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -120,56 +122,31 @@ export function CandidateSidebar({
                 key={item.path}
                 to={item.path}
                 onClick={onCloseMobile}
-                className={`group flex items-center gap-4 rounded-lg px-4 py-3 transition-all duration-150 ${
+                title={collapsed ? item.label : undefined}
+                className={`group flex items-center rounded-lg py-3 transition-all duration-150 ${
+                  collapsed ? "justify-center px-0" : "gap-4 px-4"
+                } ${
                   active
-                    ? "border-l-4 border-indigo-500 bg-indigo-600/10 pl-3 font-bold text-indigo-400"
+                    ? `${collapsed ? "" : "border-l-4 pl-3"} border-blue-500 bg-blue-600/10 font-bold text-blue-300`
                     : "text-slate-400 hover:bg-slate-800/60 hover:text-white"
                 }`}
               >
                 <Icon
                   className={`h-5 w-5 shrink-0 transition-colors duration-150 ${
                     active
-                      ? "text-indigo-400"
+                      ? "text-blue-300"
                       : "text-slate-400 group-hover:text-slate-200"
                   }`}
                 />
-                <span className="text-sm font-semibold">{item.label}</span>
+                {!collapsed ? (
+                  <span className="text-sm font-semibold">{item.label}</span>
+                ) : null}
               </Link>
             );
           })}
         </div>
       </nav>
 
-      <div className="mt-auto border-t border-slate-800 bg-slate-950/40 p-4">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-600 shadow-sm">
-            <span className="text-xs font-bold text-white">{initials}</span>
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                }}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : null}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold leading-none text-white">
-              {displayName}
-            </p>
-            <p className="mt-1 truncate text-[11px] text-slate-500">Ứng viên</p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-red-400"
-            title="Đăng xuất"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
     </>
   );
 
@@ -182,7 +159,11 @@ export function CandidateSidebar({
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-30 hidden h-full w-65 shrink-0 flex-col border-r border-slate-800 bg-slate-900 text-slate-300 lg:flex">
+    <aside
+      className={`fixed left-0 top-0 z-30 hidden h-full shrink-0 flex-col border-r border-slate-800 bg-slate-900 text-slate-300 transition-[width] duration-200 lg:flex ${
+        collapsed ? "w-20" : "w-65"
+      }`}
+    >
       {content}
     </aside>
   );

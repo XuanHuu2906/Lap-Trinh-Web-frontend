@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { WORK_LOCATION_OPTIONS } from "../../constants/locations";
 import { createJob, type ExperienceLevel, type JobType } from "../../services/recruiter.service";
 
 const jobTypeOptions: Array<{ label: string; value: JobType }> = [
@@ -138,12 +139,18 @@ export function PostJobPage() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Địa điểm</label>
-                <input
+                <select
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Vd: Hà Nội, TP.HCM hoặc Remote"
-                  className="w-full h-11 border border-slate-200 px-4 text-[14px] outline-none focus:border-slate-400 text-slate-700"
-                />
+                  className="w-full h-11 border border-slate-200 px-4 text-[14px] outline-none focus:border-slate-400 text-slate-700 bg-white cursor-pointer"
+                >
+                  <option value="">Chọn địa điểm...</option>
+                  {WORK_LOCATION_OPTIONS.map((item) => (
+                    <option key={item.label} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
