@@ -150,18 +150,20 @@ export default function CandidateSettings() {
       <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
         <section className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-col items-center">
-            <div className="mb-4 h-24 w-24 overflow-hidden rounded-full bg-blue-600">
+            <div className="relative mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-blue-600">
+              <span className="text-xl font-bold text-white">
+                {fullName.trim().charAt(0).toUpperCase() || "U"}
+              </span>
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={fullName}
-                  className="h-full w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xl font-bold text-white">
-                  {fullName.trim().charAt(0).toUpperCase() || "U"}
-                </div>
-              )}
+              ) : null}
             </div>
 
             <label className="inline-flex cursor-pointer items-center gap-2 border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">

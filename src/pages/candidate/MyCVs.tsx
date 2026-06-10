@@ -20,6 +20,7 @@ import {
   getCachedMyCVs,
   getUploadUrl,
 } from "@/services/cv.service";
+import { decodeMojibake } from "@/utils/encoding";
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("vi-VN", {
@@ -32,18 +33,6 @@ const getCVSubtitle = (cv: CandidateCV) => {
   if (cv.cvType === "uploaded") return "Tài liệu PDF tải lên";
   if (cv.template?.name) return `Tạo từ mẫu ${cv.template.name}`;
   return "CV tạo bằng hệ thống";
-};
-
-const decodeMojibake = (value: string) => {
-  if (!/[ÃÄÂ]/.test(value)) return value;
-
-  try {
-    const bytes = Uint8Array.from([...value].map((char) => char.charCodeAt(0)));
-    const decoded = new TextDecoder("utf-8").decode(bytes);
-    return decoded.includes("�") ? value : decoded;
-  } catch {
-    return value;
-  }
 };
 
 const getCVTitle = (cv: CandidateCV) => decodeMojibake(cv.title);

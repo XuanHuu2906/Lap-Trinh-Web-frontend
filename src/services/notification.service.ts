@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { decodeMojibakeInText } from "@/utils/encoding";
 
 export type NotificationItem = {
   id: number;
@@ -34,6 +35,19 @@ let unreadCountCache: UnreadCountResponse | null = null;
 
 const cacheKey = (params: object) => JSON.stringify(params);
 
+const normalizeNotification = (notification: NotificationItem): NotificationItem => ({
+  ...notification,
+  title: decodeMojibakeInText(notification.title),
+  message: decodeMojibakeInText(notification.message),
+});
+
+const normalizeNotificationListResponse = (
+  response: NotificationListResponse,
+): NotificationListResponse => ({
+  ...response,
+  data: response.data.map(normalizeNotification),
+});
+
 export const getCachedNotifications = (params: object = {}) =>
   notificationsCache.get(cacheKey(params)) ?? null;
 
@@ -55,8 +69,9 @@ export const notificationService = {
     const response = await api.get<NotificationListResponse>("/notifications", {
       params,
     });
-    notificationsCache.set(key, response.data);
-    return response.data;
+    const normalizedResponse = normalizeNotificationListResponse(response.data);
+    notificationsCache.set(key, normalizedResponse);
+    return normalizedResponse;
   },
 
   async getUnreadCount(forceRefresh = false) {

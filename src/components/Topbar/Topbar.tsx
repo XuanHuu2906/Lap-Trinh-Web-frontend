@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Bell,
@@ -12,6 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { notificationService } from "../../services/notification.service";
 
 type DashboardRole = "candidate" | "recruiter" | "admin";
 
@@ -22,6 +23,14 @@ type TopbarUser = {
   email: string;
   profilePath: string;
   avatarUrl?: string | null;
+};
+
+type TopbarNotification = {
+  id: string;
+  title: string;
+  message: string;
+  timeLabel: string;
+  isRead: boolean;
 };
 
 interface TopbarProps {
@@ -60,6 +69,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/jobs": "Quản lý tuyển dụng",
   "/admin/templates": "Quản lý mẫu CV",
   "/admin/system": "Quản lý tài khoản",
+  "/admin/activity-logs": "Nhật ký hệ thống",
+  "/admin/notifications": "Thông báo quản trị",
 };
 
 const BREADCRUMBS: Record<DashboardRole, string> = {
@@ -92,6 +103,67 @@ const fallbackUsers: Record<DashboardRole, TopbarUser> = {
   },
 };
 
+const formatNotificationTime = (value: string) =>
+  new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+
+const ROLE_NOTIFICATION_PREVIEWS: Partial<
+  Record<DashboardRole, TopbarNotification[]>
+> = {
+  admin: [
+    {
+      id: "admin-job-review",
+      title: "Tin tuyển dụng cần duyệt",
+      message: "Có 5 tin tuyển dụng mới đang chờ kiểm duyệt nội dung.",
+      timeLabel: "10 phút trước",
+      isRead: false,
+    },
+    {
+      id: "admin-user-report",
+      title: "Báo cáo tài khoản bất thường",
+      message: "Một tài khoản nhà tuyển dụng bị nhiều ứng viên báo cáo.",
+      timeLabel: "42 phút trước",
+      isRead: false,
+    },
+    {
+      id: "admin-template-review",
+      title: "Mẫu CV mới cần kiểm tra",
+      message: "Template CV vừa được thêm cần kiểm tra file cấu hình JSON.",
+      timeLabel: "2 giờ trước",
+      isRead: true,
+    },
+  ],
+  recruiter: [
+    {
+      id: "recruiter-application",
+      title: "Hồ sơ ứng tuyển mới",
+      message:
+        'Ứng viên Nguyễn Văn Thái vừa nộp hồ sơ ứng tuyển vị trí "Senior Frontend Engineer".',
+      timeLabel: "2 phút trước",
+      isRead: false,
+    },
+    {
+      id: "recruiter-message",
+      title: "Tin nhắn mới từ ứng viên",
+      message:
+        'Trần Thị Mai gửi tin nhắn: "Dạ em nhận được lịch hẹn phỏng vấn rồi ạ..."',
+      timeLabel: "25 phút trước",
+      isRead: false,
+    },
+    {
+      id: "recruiter-evaluation",
+      title: "Hoàn thành đánh giá ứng viên",
+      message: "Bạn đã đánh giá hồ sơ ứng viên Lê Hoàng Hải đạt mức 5 sao.",
+      timeLabel: "2 giờ trước",
+      isRead: true,
+    },
+  ],
+};
+
 export function Topbar({
   role,
   pathname,
@@ -101,12 +173,71 @@ export function Topbar({
 }: TopbarProps) {
   const { theme, toggleTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<TopbarNotification[]>([]);
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
   const currentUser = user || fallbackUsers[role];
   const darkMode = theme === "dark";
+  const notificationsPath =
+    role === "candidate" ? "/candidate/notifications" : `/${role}/notifications`;
   const matchedKey = Object.keys(PAGE_TITLES).find(
     (key) => pathname === key || pathname.startsWith(`${key}/`),
   );
   const pageTitle = matchedKey ? PAGE_TITLES[matchedKey] : "Bảng điều khiển";
+
+  const displayedNotifications =
+    role === "candidate" ? notifications : ROLE_NOTIFICATION_PREVIEWS[role] ?? [];
+  const hasUnreadNotifications = displayedNotifications.some(
+    (item) => !item.isRead,
+  );
+
+  useEffect(() => {
+    if (!isNotificationsOpen) return;
+
+    if (role !== "candidate") {
+      setIsNotificationsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadNotifications = async () => {
+      try {
+        setIsNotificationsLoading(true);
+
+        const response = await notificationService.getNotifications(
+          { page: 1, limit: 5 },
+          true,
+        );
+
+        if (isMounted) {
+          setNotifications(
+            response.data.map((item) => ({
+              id: String(item.id),
+              title: item.title,
+              message: item.message,
+              timeLabel: formatNotificationTime(item.createdAt),
+              isRead: item.isRead,
+            })),
+          );
+        }
+      } catch {
+        if (isMounted) {
+          setNotifications([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsNotificationsLoading(false);
+        }
+      }
+    };
+
+    loadNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isNotificationsOpen, role]);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/80 bg-white px-6 transition-colors duration-150 dark:border-slate-800/80 dark:bg-slate-900 sm:px-8">
@@ -150,31 +281,109 @@ export function Topbar({
           )}
         </button>
 
-        <Link
-          to={role === "candidate" ? "/candidate/notifications" : `/${role}/notifications`}
-          className="relative rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
-        >
-          <Bell className="h-5 w-5 stroke-[1.8]" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-slate-900" />
-        </Link>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setIsProfileOpen(false);
+              setIsNotificationsOpen((open) => !open);
+            }}
+            className="relative rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+            aria-label="Thông báo"
+          >
+            <Bell className="h-5 w-5 stroke-[1.8]" />
+            {hasUnreadNotifications ? (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-slate-900" />
+            ) : null}
+          </button>
+
+          {isNotificationsOpen ? (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsNotificationsOpen(false)}
+              />
+              <div className="absolute right-0 z-50 mt-3 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                  <div>
+                    <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                      Thông báo
+                    </span>
+                  </div>
+                  <Link
+                    to={notificationsPath}
+                    onClick={() => setIsNotificationsOpen(false)}
+                    className="text-xs font-bold text-indigo-600 transition-colors hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  >
+                    Xem tất cả
+                  </Link>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto">
+                  {isNotificationsLoading ? (
+                    <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+                      Đang tải thông báo...
+                    </div>
+                  ) : displayedNotifications.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                      Chưa có thông báo nào.
+                    </div>
+                  ) : (
+                    displayedNotifications.map((item) => (
+                      <div
+                        key={item.id}
+                        className="border-b border-slate-100 px-4 py-3 last:border-0 dark:border-slate-800"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.isRead
+                                ? "bg-slate-300 dark:bg-slate-700"
+                                : "bg-indigo-500"
+                              }`}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="line-clamp-1 text-xs font-bold text-slate-900 dark:text-white">
+                              {item.title}
+                            </p>
+                            <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                              {item.message}
+                            </p>
+                            <span className="mt-1.5 block text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                              {item.timeLabel}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
 
         <span className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
 
         <div className="relative">
           <button
-            onClick={() => setIsProfileOpen((open) => !open)}
+            onClick={() => {
+              setIsNotificationsOpen(false);
+              setIsProfileOpen((open) => !open);
+            }}
             className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm">
+            <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm">
+              <span>{currentUser.initials}</span>
               {currentUser.avatarUrl ? (
                 <img
                   src={currentUser.avatarUrl}
                   alt={currentUser.name}
-                  className="h-full w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
-              ) : (
-                currentUser.initials
-              )}
+              ) : null}
             </div>
             <div className="hidden text-left leading-none md:block">
               <span className="block text-xs font-bold text-slate-800 dark:text-white">

@@ -2,6 +2,7 @@ import { get, put, patch, delete as destroy } from './api-client';
 import { type User } from '../types/user.type';
 import { type Job } from '../types/job.type';
 import { type ApiResponse } from '../types/api.type';
+import { decodeMojibakeInText } from '../utils/encoding';
 
 export interface GetUsersParams {
   page?: number;
@@ -93,10 +94,32 @@ export interface DashboardStats {
   activities: SystemActivity[];
 }
 
-export const getDashboardStats = (): Promise<ApiResponse<DashboardStats>> => {
-  return get<ApiResponse<DashboardStats>>('/users/dashboard/stats');
+const normalizeSystemActivity = (activity: SystemActivity): SystemActivity => ({
+  ...activity,
+  user: decodeMojibakeInText(activity.user),
+  message: decodeMojibakeInText(activity.message),
+  badgeText: decodeMojibakeInText(activity.badgeText),
+});
+
+export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
+  const response = await get<ApiResponse<DashboardStats>>('/users/dashboard/stats');
+  if (!response.success || !response.data) return response;
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      activities: response.data.activities.map(normalizeSystemActivity),
+    },
+  };
 };
 
-export const getSystemActivities = (params?: { limit?: number }): Promise<ApiResponse<SystemActivity[]>> => {
-  return get<ApiResponse<SystemActivity[]>>('/users/dashboard/activities', { params });
+export const getSystemActivities = async (params?: { limit?: number }): Promise<ApiResponse<SystemActivity[]>> => {
+  const response = await get<ApiResponse<SystemActivity[]>>('/users/dashboard/activities', { params });
+  if (!response.success || !response.data) return response;
+
+  return {
+    ...response,
+    data: response.data.map(normalizeSystemActivity),
+  };
 };

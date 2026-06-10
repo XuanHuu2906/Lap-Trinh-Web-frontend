@@ -210,11 +210,6 @@ export function SetupProfilePage() {
                         />
                       </svg>
                     </div>
-<<<<<<< HEAD
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${role === "candidate" ? "border-slate-950 bg-slate-950" : "border-slate-300"
-                      }`}>
-                      {role === "candidate" && <div className="w-2 h-2 rounded-full bg-white"></div>}
-=======
                     <div
                       className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                         role === "candidate"
@@ -225,7 +220,6 @@ export function SetupProfilePage() {
                       {role === "candidate" && (
                         <div className="w-2 h-2 rounded-full bg-white"></div>
                       )}
->>>>>>> b8d2e1534bd0b712d922a10e4fff0829e38c4ea5
                     </div>
                   </div>
                   <div>
@@ -263,11 +257,6 @@ export function SetupProfilePage() {
                         />
                       </svg>
                     </div>
-<<<<<<< HEAD
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${role === "recruiter" ? "border-slate-950 bg-slate-950" : "border-slate-300"
-                      }`}>
-                      {role === "recruiter" && <div className="w-2 h-2 rounded-full bg-white"></div>}
-=======
                     <div
                       className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                         role === "recruiter"
@@ -278,7 +267,6 @@ export function SetupProfilePage() {
                       {role === "recruiter" && (
                         <div className="w-2 h-2 rounded-full bg-white"></div>
                       )}
->>>>>>> b8d2e1534bd0b712d922a10e4fff0829e38c4ea5
                     </div>
                   </div>
                   <div>
@@ -296,16 +284,11 @@ export function SetupProfilePage() {
 
             {/* INPUT TEN CONG TY (TRUOT XUONG KHI CHON RECRUITER) */}
             <div
-<<<<<<< HEAD
-              className={`transition-all duration-500 overflow-hidden ${role === "recruiter" ? "max-h-32 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2"
-                }`}
-=======
               className={`transition-all duration-500 overflow-hidden ${
                 role === "recruiter"
                   ? "max-h-32 opacity-100 translate-y-0"
                   : "max-h-0 opacity-0 -translate-y-2"
               }`}
->>>>>>> b8d2e1534bd0b712d922a10e4fff0829e38c4ea5
             >
               <div className="space-y-2 pt-2">
                 <label
