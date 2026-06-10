@@ -17,13 +17,19 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { useAuth } from "../../contexts/AuthContext";
-import { chatService, type Conversation, type Message } from "../../services/chat.service";
+import {
+  chatService,
+  type Conversation,
+  type Message,
+} from "../../services/chat.service";
 import { supabase } from "../../utils/supabase";
 
 export function RecruiterChatPage() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    number | null
+  >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
@@ -33,7 +39,9 @@ export function RecruiterChatPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const activeConversation = conversations.find((c) => c.id === activeConversationId);
+  const activeConversation = conversations.find(
+    (c) => c.id === activeConversationId,
+  );
 
   // 1. Tải danh sách các cuộc hội thoại
   const loadConversations = useCallback(async (selectFirst = false) => {
@@ -56,25 +64,32 @@ export function RecruiterChatPage() {
   }, [loadConversations]);
 
   // 2. Tải tin nhắn của cuộc hội thoại đang chọn
-  const loadMessages = useCallback(async (conversationId: number) => {
-    try {
-      setIsLoadingMessages(true);
-      const res = await chatService.getMessages(conversationId, 1, 100);
-      setMessages(res.items);
+  const loadMessages = useCallback(
+    async (conversationId: number) => {
+      try {
+        setIsLoadingMessages(true);
+        const res = await chatService.getMessages(conversationId, 1, 100);
+        setMessages(res.items);
 
-      // Đánh dấu đã đọc cho các tin nhắn chưa đọc từ candidate gửi
-      const unreadMsgs = res.items.filter((m) => !m.isRead && m.senderId !== user?.id);
-      if (unreadMsgs.length > 0) {
-        await Promise.all(unreadMsgs.map((m) => chatService.markMessageRead(m.id)));
-        // Cập nhật lại số chưa đọc ở sidebar
-        loadConversations();
+        // Đánh dấu đã đọc cho các tin nhắn chưa đọc từ candidate gửi
+        const unreadMsgs = res.items.filter(
+          (m) => !m.isRead && m.senderId !== user?.id,
+        );
+        if (unreadMsgs.length > 0) {
+          await Promise.all(
+            unreadMsgs.map((m) => chatService.markMessageRead(m.id)),
+          );
+          // Cập nhật lại số chưa đọc ở sidebar
+          loadConversations();
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải tin nhắn:", err);
+      } finally {
+        setIsLoadingMessages(false);
       }
-    } catch (err) {
-      console.error("Lỗi khi tải tin nhắn:", err);
-    } finally {
-      setIsLoadingMessages(false);
-    }
-  }, [loadConversations, user?.id]);
+    },
+    [loadConversations, user?.id],
+  );
 
   useEffect(() => {
     if (activeConversationId) {
@@ -99,27 +114,35 @@ export function RecruiterChatPage() {
         },
         async (payload) => {
           const newMsg = payload.new as { sender_id?: number };
-          
+
           // Tránh duplicate tin nhắn do mình gửi (đã được add qua API REST)
           if (newMsg.sender_id === user?.id) return;
 
           // Re-fetch tin nhắn để tự động cập nhật cả signed URLs cho file đính kèm
           try {
-            const res = await chatService.getMessages(activeConversationId, 1, 100);
+            const res = await chatService.getMessages(
+              activeConversationId,
+              1,
+              100,
+            );
             setMessages(res.items);
-            
+
             // Đánh dấu đã đọc các tin nhắn mới
-            const unreadNewMsgs = res.items.filter((m) => !m.isRead && m.senderId !== user?.id);
+            const unreadNewMsgs = res.items.filter(
+              (m) => !m.isRead && m.senderId !== user?.id,
+            );
             if (unreadNewMsgs.length > 0) {
-              await Promise.all(unreadNewMsgs.map((m) => chatService.markMessageRead(m.id)));
+              await Promise.all(
+                unreadNewMsgs.map((m) => chatService.markMessageRead(m.id)),
+              );
             }
-            
+
             // Reload sidebar để cập nhật lastMessage
             loadConversations();
           } catch (err) {
             console.error("Lỗi cập nhật tin nhắn realtime:", err);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -142,7 +165,10 @@ export function RecruiterChatPage() {
     setInputMessage("");
 
     try {
-      const sentMsg = await chatService.sendMessage(activeConversationId, textToSend);
+      const sentMsg = await chatService.sendMessage(
+        activeConversationId,
+        textToSend,
+      );
       // Append tin nhắn mới gửi thành công
       setMessages((prev) => [...prev, sentMsg]);
       // Cập nhật lại sidebar
@@ -166,12 +192,17 @@ export function RecruiterChatPage() {
 
     try {
       setIsUploading(true);
-      const sentMsg = await chatService.uploadAttachment(activeConversationId, file);
+      const sentMsg = await chatService.uploadAttachment(
+        activeConversationId,
+        file,
+      );
       setMessages((prev) => [...prev, sentMsg]);
       loadConversations();
     } catch (err) {
       console.error("Lỗi khi tải lên tệp đính kèm:", err);
-      alert("Tải lên file thất bại. Vui lòng kiểm tra lại định dạng file cho phép.");
+      alert(
+        "Tải lên file thất bại. Vui lòng kiểm tra lại định dạng file cho phép.",
+      );
     } finally {
       setIsUploading(false);
       // Reset input file
@@ -241,14 +272,17 @@ export function RecruiterChatPage() {
             ) : (
               filteredConversations.map((c) => {
                 const active = c.id === activeConversationId;
-                const initials = c.candidateProfile.fullName.substring(0, 2).toUpperCase();
+                const initials = c.candidateProfile.fullName
+                  .substring(0, 2)
+                  .toUpperCase();
                 const unreadCount = c._count?.messages || 0;
                 const lastMsgObj = c.messages[0];
                 let lastMsgText = "Chưa có tin nhắn";
                 if (lastMsgObj) {
-                  lastMsgText = lastMsgObj.messageType === "file" 
-                    ? `📎 File: ${lastMsgObj.attachmentName}` 
-                    : lastMsgObj.content || "";
+                  lastMsgText =
+                    lastMsgObj.messageType === "file"
+                      ? `📎 File: ${lastMsgObj.attachmentName}`
+                      : lastMsgObj.content || "";
                 }
 
                 return (
@@ -274,7 +308,9 @@ export function RecruiterChatPage() {
                           {c.candidateProfile.fullName}
                         </p>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
-                          {c.updatedAt ? new Date(c.updatedAt).toLocaleDateString("vi-VN") : ""}
+                          {c.updatedAt
+                            ? new Date(c.updatedAt).toLocaleDateString("vi-VN")
+                            : ""}
                         </span>
                       </div>
                       <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold truncate uppercase mt-0.5">
@@ -307,7 +343,9 @@ export function RecruiterChatPage() {
               <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0 shadow-3xs">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shadow-3xs">
-                    {activeConversation.candidateProfile.fullName.substring(0, 2).toUpperCase()}
+                    {activeConversation.candidateProfile.fullName
+                      .substring(0, 2)
+                      .toUpperCase()}
                   </div>
                   <div className="text-left">
                     <div className="flex items-center gap-1.5">
@@ -320,7 +358,10 @@ export function RecruiterChatPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 leading-none">
-                      Ứng tuyển: <strong className="text-indigo-600 dark:text-indigo-400">{activeConversation.jobPosting?.title}</strong>
+                      Ứng tuyển:{" "}
+                      <strong className="text-indigo-600 dark:text-indigo-400">
+                        {activeConversation.jobPosting?.title}
+                      </strong>
                     </p>
                   </div>
                 </div>
@@ -354,7 +395,9 @@ export function RecruiterChatPage() {
                         key={msg.id}
                         className={`flex ${isMe ? "justify-end" : "justify-start"} animate-fade-in`}
                       >
-                        <div className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}>
+                        <div
+                          className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}
+                        >
                           <div
                             className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${
                               isMe
@@ -366,18 +409,25 @@ export function RecruiterChatPage() {
                             {isFile ? (
                               <div className="space-y-2">
                                 {msg.attachmentMime?.startsWith("image/") ? (
-                                  <a href={msg.attachmentUrl} target="_blank" rel="noreferrer">
+                                  <a
+                                    href={msg.attachmentUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
                                     <img
                                       src={msg.attachmentUrl}
                                       alt={msg.attachmentName || "Ảnh"}
-                                      className="max-w-[200px] max-h-[150px] rounded-lg border object-contain cursor-zoom-in bg-slate-50"
+                                      className="max-w-50 max-h-37.5 rounded-lg border object-contain cursor-zoom-in bg-slate-50"
                                     />
                                   </a>
                                 ) : (
                                   <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-200/50">
                                     <FileText className="w-8 h-8 text-indigo-500 shrink-0" />
                                     <div className="min-w-0 flex-1">
-                                      <p className="font-bold truncate text-[11px]" title={msg.attachmentName || ""}>
+                                      <p
+                                        className="font-bold truncate text-[11px]"
+                                        title={msg.attachmentName || ""}
+                                      >
                                         {msg.attachmentName}
                                       </p>
                                       <p className="text-[9px] text-slate-400 font-semibold mt-0.5">
@@ -397,7 +447,9 @@ export function RecruiterChatPage() {
                                     )}
                                   </div>
                                 )}
-                                {msg.content && <p className="mt-1.5">{msg.content}</p>}
+                                {msg.content && (
+                                  <p className="mt-1.5">{msg.content}</p>
+                                )}
                               </div>
                             ) : (
                               <p>{msg.content}</p>
@@ -405,11 +457,15 @@ export function RecruiterChatPage() {
 
                             <div
                               className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${
-                                isMe ? "text-indigo-200" : "text-slate-400 dark:text-slate-500"
+                                isMe
+                                  ? "text-indigo-200"
+                                  : "text-slate-400 dark:text-slate-500"
                               }`}
                             >
                               <span>{formatMessageTime(msg.sentAt)}</span>
-                              {isMe && <CheckCheck className="w-3.5 h-3.5 text-indigo-200" />}
+                              {isMe && (
+                                <CheckCheck className="w-3.5 h-3.5 text-indigo-200" />
+                              )}
                             </div>
                           </div>
                         </div>
@@ -432,7 +488,10 @@ export function RecruiterChatPage() {
 
               {/* Chat Input */}
               <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-                <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+                <form
+                  onSubmit={handleSendMessage}
+                  className="flex items-center gap-3"
+                >
                   <button
                     type="button"
                     className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
@@ -471,7 +530,9 @@ export function RecruiterChatPage() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
               <Circle className="w-12 h-12 text-slate-300 mb-2 stroke-1" />
-              <p className="text-sm font-bold">Hãy chọn một cuộc hội thoại từ danh sách để bắt đầu trò chuyện</p>
+              <p className="text-sm font-bold">
+                Hãy chọn một cuộc hội thoại từ danh sách để bắt đầu trò chuyện
+              </p>
             </div>
           )}
         </div>

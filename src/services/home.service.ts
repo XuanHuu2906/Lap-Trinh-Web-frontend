@@ -27,10 +27,18 @@ export interface SiteMetric {
   order: number;
 }
 
+export interface SystemStats {
+  activeJobs: number;
+  recruiters: number;
+  candidates: number;
+  locations: number;
+}
+
 interface HomeContent {
   features: HomeFeature[];
   testimonials: Testimonial[];
   metrics: SiteMetric[];
+  systemStats: SystemStats;
 }
 
 interface HomeContentResponse {
