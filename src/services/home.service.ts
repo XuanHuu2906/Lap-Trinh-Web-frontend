@@ -38,9 +38,27 @@ interface HomeContentResponse {
   data: HomeContent;
 }
 
+interface TestimonialsResponse {
+  success: boolean;
+  data: Testimonial[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const homeService = {
   async getHomeContent() {
     const response = await api.get<HomeContentResponse>("/home");
+    return response.data;
+  },
+
+  async getTestimonials(params: { page?: number; limit?: number } = {}) {
+    const response = await api.get<TestimonialsResponse>("/home/testimonials", {
+      params,
+    });
     return response.data;
   },
 };

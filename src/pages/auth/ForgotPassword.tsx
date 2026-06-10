@@ -21,6 +21,7 @@ export function ForgotPasswordPage() {
       if (res.success) {
         setIsSubmitted(true);
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi yêu cầu quên mật khẩu:", err);
       const errMsg = err.response?.data?.message || err.message || "Không thể gửi yêu cầu đặt lại mật khẩu. Vui lòng kiểm tra lại địa chỉ email.";

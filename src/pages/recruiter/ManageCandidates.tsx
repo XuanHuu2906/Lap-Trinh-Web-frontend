@@ -9,6 +9,20 @@ import {
   type RecruiterApplication,
   type RecruiterJob,
 } from "../../services/recruiter.service";
+import {
+  AlertCircle,
+  Award,
+  Calendar,
+  Check,
+  FileText,
+  Mail,
+  MessageSquare,
+  Phone,
+  Send,
+  Sparkles,
+  Star,
+  X,
+} from "lucide-react";
 
 const statusLabel: Record<ApplicationStatus, string> = {
   pending: "Mới",
@@ -27,7 +41,8 @@ const statusStyle: Record<ApplicationStatus, string> = {
 };
 
 const nextStatusOptions = (status: ApplicationStatus) => {
-  if (status === "pending") return [{ label: "Chuyển sang đang xem xét", value: "reviewing" as const }];
+  if (status === "pending")
+    return [{ label: "Chuyển sang đang xem xét", value: "reviewing" as const }];
   if (status === "reviewing") {
     return [
       { label: "Duyệt / đạt", value: "accepted" as const },
@@ -43,14 +58,19 @@ const formatDate = (value?: string | null) => {
 };
 
 const getCandidateName = (application: RecruiterApplication) => {
-  return application.candidateProfile?.fullName || application.candidateProfile?.user?.email || "Ứng viên chưa cập nhật tên";
+  return (
+    application.candidateProfile?.fullName ||
+    application.candidateProfile?.user?.email ||
+    "Ứng viên chưa cập nhật tên"
+  );
 };
 
 export function ManageCandidatesPage() {
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | "">("");
   const [applications, setApplications] = useState<RecruiterApplication[]>([]);
-  const [selectedApplication, setSelectedApplication] = useState<RecruiterApplication | null>(null);
+  const [selectedApplication, setSelectedApplication] =
+    useState<RecruiterApplication | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
   const [feedback, setFeedback] = useState("");
@@ -59,6 +79,31 @@ export function ManageCandidatesPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  // Modal states for high-fidelity candidate modal (UC-15 & UC-16)
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedCandidate] = useState<any | null>(null);
+
+  // Temp states used inside the modal
+  const [tempScore, setTempScore] = useState(0);
+  const [tempNotes, setTempNotes] = useState("");
+  const [tempStatus, setTempStatus] = useState("Mới");
+  const [tempFeedbackMsg, setTempFeedbackMsg] = useState("");
+
+  // Minimal stubs for modal actions (these can be expanded later)
+  const loadTemplateFeedback = (status: string) => {
+    // populate tempFeedbackMsg based on status (stub)
+    if (status === "Đạt") setTempFeedbackMsg("Xin chúc mừng, bạn đã được... ");
+    else if (status === "Không phù hợp")
+      setTempFeedbackMsg("Cảm ơn bạn đã ứng tuyển, tuy nhiên...");
+    else setTempFeedbackMsg("");
+  };
+
+  const handleSendFeedback = async () => {
+    // stub: integrate with real API when available
+    setMessage("Gửi phản hồi (mô phỏng) thành công");
+  };
 
   const filteredApplications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -66,7 +111,8 @@ export function ManageCandidatesPage() {
 
     return applications.filter((application) => {
       const name = getCandidateName(application).toLowerCase();
-      const email = application.candidateProfile?.user?.email?.toLowerCase() ?? "";
+      const email =
+        application.candidateProfile?.user?.email?.toLowerCase() ?? "";
       return name.includes(keyword) || email.includes(keyword);
     });
   }, [applications, search]);
@@ -98,7 +144,11 @@ export function ManageCandidatesPage() {
       });
       setApplications(response.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không tải được danh sách ứng viên");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Không tải được danh sách ứng viên",
+      );
     } finally {
       setLoading(false);
     }
@@ -106,12 +156,18 @@ export function ManageCandidatesPage() {
 
   useEffect(() => {
     void loadJobs().catch((err: unknown) => {
-      setError(err instanceof Error ? err.message : "Không tải được danh sách tin tuyển dụng");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Không tải được danh sách tin tuyển dụng",
+      );
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     void loadApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJobId, statusFilter]);
 
   const openApplication = (application: RecruiterApplication) => {
@@ -121,7 +177,9 @@ export function ManageCandidatesPage() {
     setNotes(application.evaluations?.[0]?.notes ?? "");
   };
 
-  const handleChangeStatus = async (nextStatus: "reviewing" | "accepted" | "rejected") => {
+  const handleChangeStatus = async (
+    nextStatus: "reviewing" | "accepted" | "rejected",
+  ) => {
     if (!selectedApplication) return;
     setError("");
     setMessage("");
@@ -132,7 +190,9 @@ export function ManageCandidatesPage() {
       setSelectedApplication(null);
       await loadApplications();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không cập nhật được trạng thái");
+      setError(
+        err instanceof Error ? err.message : "Không cập nhật được trạng thái",
+      );
     }
   };
 
@@ -164,28 +224,23 @@ export function ManageCandidatesPage() {
     }
   };
 
-  // Filtering candidates based on UI controls
-  const filteredCandidates = candidateList.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.position.toLowerCase().includes(search.toLowerCase());
-    const matchesPosition = positionFilter
-      ? c.position === positionFilter
-      : true;
-    const matchesStatus = statusFilter ? c.status === statusFilter : true;
-    return matchesSearch && matchesPosition && matchesStatus;
-  });
+  // Filtering handled via `filteredApplications` above
 
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-[26px] font-bold text-slate-900 leading-tight">Quản lý ứng viên</h1>
-        <p className="text-[14px] text-slate-500 mt-1">Kết nối API applications dành cho recruiter.</p>
+        <h1 className="text-[26px] font-bold text-slate-900 leading-tight">
+          Quản lý ứng viên
+        </h1>
+        <p className="text-[14px] text-slate-500 mt-1">
+          Kết nối API applications dành cho recruiter.
+        </p>
       </div>
 
       {(message || error) && (
-        <div className={`mb-4 border px-4 py-3 text-[13px] ${error ? "border-red-200 bg-red-50 text-red-600" : "border-green-200 bg-green-50 text-green-700"}`}>
+        <div
+          className={`mb-4 border px-4 py-3 text-[13px] ${error ? "border-red-200 bg-red-50 text-red-600" : "border-green-200 bg-green-50 text-green-700"}`}
+        >
           {error || message}
         </div>
       )}
@@ -193,22 +248,34 @@ export function ManageCandidatesPage() {
       <div className="bg-white border border-slate-200 p-5 mb-6">
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tin tuyển dụng</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+              Tin tuyển dụng
+            </label>
             <select
               value={selectedJobId}
-              onChange={(e) => setSelectedJobId(e.target.value ? Number(e.target.value) : "")}
+              onChange={(e) =>
+                setSelectedJobId(e.target.value ? Number(e.target.value) : "")
+              }
               className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none text-slate-600 bg-white"
             >
               <option value="">Chọn tin tuyển dụng</option>
-              {jobs.map((job) => <option key={job.id} value={job.id}>{job.title}</option>)}
+              {jobs.map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.title}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Trạng thái</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+              Trạng thái
+            </label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | "")}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as ApplicationStatus | "")
+              }
               className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none text-slate-600 bg-white"
             >
               <option value="">Tất cả</option>
@@ -220,7 +287,9 @@ export function ManageCandidatesPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tìm ứng viên</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+              Tìm ứng viên
+            </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -236,58 +305,123 @@ export function ManageCandidatesPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                {["Ứng viên", "CV", "Ngày ứng tuyển", "Trạng thái", "Hành động"].map((h) => (
-                  <th key={h} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest px-6 py-3">{h}</th>
+                {[
+                  "Ứng viên",
+                  "CV",
+                  "Ngày ứng tuyển",
+                  "Trạng thái",
+                  "Hành động",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest px-6 py-3"
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} className="px-6 py-8 text-center text-[13px] text-slate-400">Đang tải dữ liệu...</td></tr>}
-              {!loading && filteredApplications.length === 0 && <tr><td colSpan={5} className="px-6 py-8 text-center text-[13px] text-slate-400">Chưa có ứng viên cho tin này.</td></tr>}
-              {!loading && filteredApplications.map((application) => (
-                <tr key={application.id} className="border-b border-slate-50 hover:bg-slate-50">
-                  <td className="px-6 py-5">
-                    <p className="text-[14px] font-bold text-slate-900">{getCandidateName(application)}</p>
-                    <p className="text-[12px] text-slate-400 mt-1">{application.candidateProfile?.user?.email || "Chưa có email"}</p>
-                  </td>
-                  <td className="px-6 py-5 text-[13px] text-slate-500">{application.cv?.title || "Chưa có CV"}</td>
-                  <td className="px-6 py-5 text-[13px] text-slate-500">{formatDate(application.appliedAt)}</td>
-                  <td className="px-6 py-5">
-                    <span className={`inline-block text-[10px] font-bold px-2 py-1 rounded-sm ${statusStyle[application.status]}`}>
-                      {statusLabel[application.status]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <button
-                      onClick={() => openApplication(application)}
-                      className="h-8 px-3 border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
-                    >
-                      Xem / xử lý
-                    </button>
+              {loading && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-[13px] text-slate-400"
+                  >
+                    Đang tải dữ liệu...
                   </td>
                 </tr>
-              ))}
+              )}
+              {!loading && filteredApplications.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-[13px] text-slate-400"
+                  >
+                    Chưa có ứng viên cho tin này.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                filteredApplications.map((application) => (
+                  <tr
+                    key={application.id}
+                    className="border-b border-slate-50 hover:bg-slate-50"
+                  >
+                    <td className="px-6 py-5">
+                      <p className="text-[14px] font-bold text-slate-900">
+                        {getCandidateName(application)}
+                      </p>
+                      <p className="text-[12px] text-slate-400 mt-1">
+                        {application.candidateProfile?.user?.email ||
+                          "Chưa có email"}
+                      </p>
+                    </td>
+                    <td className="px-6 py-5 text-[13px] text-slate-500">
+                      {application.cv?.title || "Chưa có CV"}
+                    </td>
+                    <td className="px-6 py-5 text-[13px] text-slate-500">
+                      {formatDate(application.appliedAt)}
+                    </td>
+                    <td className="px-6 py-5">
+                      <span
+                        className={`inline-block text-[10px] font-bold px-2 py-1 rounded-sm ${statusStyle[application.status]}`}
+                      >
+                        {statusLabel[application.status]}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <button
+                        onClick={() => openApplication(application)}
+                        className="h-8 px-3 border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                      >
+                        Xem / xử lý
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
 
         <div className="bg-white border border-slate-200 p-5 min-h-80">
           {!selectedApplication ? (
-            <div className="text-center text-[13px] text-slate-400 py-16">Chọn một ứng viên để xem chi tiết, phản hồi và đánh giá.</div>
+            <div className="text-center text-[13px] text-slate-400 py-16">
+              Chọn một ứng viên để xem chi tiết, phản hồi và đánh giá.
+            </div>
           ) : (
             <div className="space-y-5">
               <div>
-                <h2 className="text-[18px] font-bold text-slate-900">{getCandidateName(selectedApplication)}</h2>
-                <p className="text-[13px] text-slate-500">{selectedApplication.candidateProfile?.phone || "Chưa có số điện thoại"}</p>
+                <h2 className="text-[18px] font-bold text-slate-900">
+                  {getCandidateName(selectedApplication)}
+                </h2>
+                <p className="text-[13px] text-slate-500">
+                  {selectedApplication.candidateProfile?.phone ||
+                    "Chưa có số điện thoại"}
+                </p>
                 {selectedApplication.cv?.pdfUrl && (
-                  <a className="text-[13px] font-semibold text-blue-600 hover:underline" href={selectedApplication.cv.pdfUrl} target="_blank" rel="noreferrer">Xem CV PDF</a>
+                  <a
+                    className="text-[13px] font-semibold text-blue-600 hover:underline"
+                    href={selectedApplication.cv.pdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Xem CV PDF
+                  </a>
                 )}
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Chuyển trạng thái</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  Chuyển trạng thái
+                </label>
                 <div className="flex gap-2 flex-wrap">
-                  {nextStatusOptions(selectedApplication.status).length === 0 && <span className="text-[13px] text-slate-400">Không còn bước chuyển hợp lệ.</span>}
+                  {nextStatusOptions(selectedApplication.status).length ===
+                    0 && (
+                    <span className="text-[13px] text-slate-400">
+                      Không còn bước chuyển hợp lệ.
+                    </span>
+                  )}
                   {nextStatusOptions(selectedApplication.status).map((item) => (
                     <button
                       key={item.value}
@@ -301,22 +435,37 @@ export function ManageCandidatesPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Phản hồi cho ứng viên</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  Phản hồi cho ứng viên
+                </label>
                 <textarea
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   rows={5}
                   className="w-full border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-slate-400 text-slate-700"
                 />
-                <button onClick={() => void handleSaveFeedback()} className="mt-2 h-8 px-3 border border-slate-300 text-[12px] font-semibold text-slate-700 hover:bg-slate-50">
+                <button
+                  onClick={() => void handleSaveFeedback()}
+                  className="mt-2 h-8 px-3 border border-slate-300 text-[12px] font-semibold text-slate-700 hover:bg-slate-50"
+                >
                   Gửi phản hồi
                 </button>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Đánh giá nội bộ</label>
-                <select value={score} onChange={(e) => setScore(Number(e.target.value))} className="w-full h-9 border border-slate-200 px-3 text-[13px] mb-2">
-                  {[1, 2, 3, 4, 5].map((item) => <option key={item} value={item}>{item} sao</option>)}
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  Đánh giá nội bộ
+                </label>
+                <select
+                  value={score}
+                  onChange={(e) => setScore(Number(e.target.value))}
+                  className="w-full h-9 border border-slate-200 px-3 text-[13px] mb-2"
+                >
+                  {[1, 2, 3, 4, 5].map((item) => (
+                    <option key={item} value={item}>
+                      {item} sao
+                    </option>
+                  ))}
                 </select>
                 <textarea
                   value={notes}
@@ -324,7 +473,10 @@ export function ManageCandidatesPage() {
                   rows={4}
                   className="w-full border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-slate-400 text-slate-700"
                 />
-                <button onClick={() => void handleSaveEvaluation()} className="mt-2 h-8 px-3 border border-slate-300 text-[12px] font-semibold text-slate-700 hover:bg-slate-50">
+                <button
+                  onClick={() => void handleSaveEvaluation()}
+                  className="mt-2 h-8 px-3 border border-slate-300 text-[12px] font-semibold text-slate-700 hover:bg-slate-50"
+                >
                   Lưu đánh giá
                 </button>
               </div>

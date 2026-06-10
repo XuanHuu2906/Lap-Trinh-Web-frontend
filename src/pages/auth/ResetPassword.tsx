@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Lock, ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import {
+  Lock,
+  ArrowLeft,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { post } from "../../services/api-client";
 import Footer from "../../components/layout/Footer";
 
@@ -13,7 +20,7 @@ export function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +30,9 @@ export function ResetPasswordPage() {
     setError(null);
 
     if (!token) {
-      setError("Mã bảo mật đặt lại mật khẩu không hợp lệ hoặc đã thiếu. Vui lòng kiểm tra lại liên kết trong email.");
+      setError(
+        "Mã bảo mật đặt lại mật khẩu không hợp lệ hoặc đã thiếu. Vui lòng kiểm tra lại liên kết trong email.",
+      );
       return;
     }
 
@@ -41,22 +50,29 @@ export function ResetPasswordPage() {
 
     try {
       // Gọi API reset-password thật từ backend
-      const res = await post<{ success: boolean; message: string }>("/auth/reset-password", {
-        token,
-        newPassword,
-      });
+      const res = await post<{ success: boolean; message: string }>(
+        "/auth/reset-password",
+        {
+          token,
+          newPassword,
+        },
+      );
 
       if (res.success) {
         setIsSubmitted(true);
-        
+
         // Tự động chuyển hướng về trang đăng nhập sau 3.5 giây
         setTimeout(() => {
           navigate("/login");
         }, 3500);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đặt lại mật khẩu:", err);
-      const errMsg = err.response?.data?.message || err.message || "Đặt lại mật khẩu thất bại. Mã liên kết có thể đã hết hạn.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Đặt lại mật khẩu thất bại. Mã liên kết có thể đã hết hạn.";
       setError(errMsg);
     } finally {
       setIsLoading(false);
@@ -89,13 +105,14 @@ export function ResetPasswordPage() {
       {/* CENTERED CARD CONTAINER */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         <div className="w-full max-w-105 bg-white border border-slate-200/85 rounded-2xl shadow-sm p-8 relative transition-all duration-200">
-          
           {/* Error Message Block */}
           {error && (
             <div className="bg-red-50 border border-red-200 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-700 font-bold text-xs">Lỗi đặt lại mật khẩu</p>
+                <p className="text-red-700 font-bold text-xs">
+                  Lỗi đặt lại mật khẩu
+                </p>
                 <p className="text-red-600 text-xs mt-1 font-medium leading-relaxed">
                   {error}
                 </p>
@@ -137,7 +154,11 @@ export function ResetPasswordPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -161,10 +182,16 @@ export function ResetPasswordPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -192,7 +219,8 @@ export function ResetPasswordPage() {
                 Mật khẩu đã đặt lại!
               </h2>
               <p className="text-slate-500 text-sm mt-3 leading-relaxed">
-                Mật khẩu của bạn đã được thay đổi thành công. Bạn hiện có thể đăng nhập bằng mật khẩu mới này.
+                Mật khẩu của bạn đã được thay đổi thành công. Bạn hiện có thể
+                đăng nhập bằng mật khẩu mới này.
               </p>
               <p className="text-emerald-600 text-xs mt-4 font-semibold italic">
                 Đang tự động chuyển hướng bạn về trang đăng nhập...

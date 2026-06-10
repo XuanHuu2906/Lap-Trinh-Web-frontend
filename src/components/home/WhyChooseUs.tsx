@@ -114,7 +114,11 @@ export default function WhyChooseUs() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [metrics, setMetrics] = useState<SiteMetric[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMoreTestimonials, setIsLoadingMoreTestimonials] =
+    useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [testimonialPage, setTestimonialPage] = useState(1);
+  const [hasMoreTestimonials, setHasMoreTestimonials] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -124,12 +128,19 @@ export default function WhyChooseUs() {
         setIsLoading(true);
         setErrorMessage(null);
 
-        const response = await homeService.getHomeContent();
+        const [homeResponse, testimonialResponse] = await Promise.all([
+          homeService.getHomeContent(),
+          homeService.getTestimonials({ page: 1, limit: 2 }),
+        ]);
 
         if (isMounted) {
-          setFeatures(response.data.features);
-          setTestimonials(response.data.testimonials);
-          setMetrics(response.data.metrics);
+          setFeatures(homeResponse.data.features);
+          setTestimonials(testimonialResponse.data);
+          setMetrics(homeResponse.data.metrics);
+          setTestimonialPage(testimonialResponse.meta.page);
+          setHasMoreTestimonials(
+            testimonialResponse.meta.page < testimonialResponse.meta.totalPages,
+          );
         }
       } catch {
         if (isMounted) {
@@ -148,6 +159,29 @@ export default function WhyChooseUs() {
       isMounted = false;
     };
   }, []);
+
+  const handleLoadMoreTestimonials = async () => {
+    try {
+      setIsLoadingMoreTestimonials(true);
+
+      const nextPage = testimonialPage + 1;
+      const response = await homeService.getTestimonials({
+        page: nextPage,
+        limit: 2,
+      });
+
+      setTestimonials((currentTestimonials) => [
+        ...currentTestimonials,
+        ...response.data,
+      ]);
+      setTestimonialPage(response.meta.page);
+      setHasMoreTestimonials(response.meta.page < response.meta.totalPages);
+    } catch {
+      setErrorMessage("Không thể tải thêm đánh giá.");
+    } finally {
+      setIsLoadingMoreTestimonials(false);
+    }
+  };
 
   if (isLoading) {
     return <WhyChooseUsSkeleton />;
@@ -223,12 +257,18 @@ export default function WhyChooseUs() {
                 />
               ))}
             </div>
-            <button
-              type="button"
-              className="mt-4 w-full text-center text-sm font-semibold text-blue-700 hover:underline"
-            >
-              Xem thêm đánh giá
-            </button>
+            {hasMoreTestimonials ? (
+              <button
+                type="button"
+                onClick={handleLoadMoreTestimonials}
+                disabled={isLoadingMoreTestimonials}
+                className="mt-4 w-full text-center text-sm font-semibold text-blue-700 hover:underline disabled:cursor-not-allowed disabled:text-gray-400"
+              >
+                {isLoadingMoreTestimonials
+                  ? "Đang tải thêm..."
+                  : "Xem thêm đánh giá"}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,373 +1,429 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Plus,
-  Eye,
-  Pencil,
-  Download,
-  Trash2,
-  Lightbulb,
-  BarChart2,
+  AlertCircle,
   CheckCircle,
-  Upload,
+  Download,
+  Eye,
   FileText,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Star,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  type CandidateCV,
+  cvService,
+  getCachedMyCVs,
+  getUploadUrl,
+} from "@/services/cv.service";
 
-interface CVItem {
-  id: number;
-  name: string;
-  subtitle: string;
-  updatedAt: string;
-  bgClass: string;
-  lineColors: string[];
-  isPdf?: boolean;
-}
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
-const cvList: CVItem[] = [
-  {
-    id: 1,
-    name: "CV Kỹ sư phần mềm",
-    subtitle: "Bản đầy đủ (Tiếng Anh)",
-    updatedAt: "15 Tháng 10, 2023",
-    bgClass: "bg-gradient-to-br from-blue-100 to-blue-50",
-    lineColors: ["bg-gray-700", "bg-gray-400", "bg-gray-300"],
-  },
-  {
-    id: 2,
-    name: "CV Marketing Specialist",
-    subtitle: "Bản tóm tắt (Tiếng Việt)",
-    updatedAt: "02 Tháng 10, 2023",
-    bgClass: "bg-gradient-to-br from-gray-100 to-gray-50",
-    lineColors: ["bg-gray-700", "bg-gray-400", "bg-gray-300"],
-  },
-  {
-    id: 3,
-    name: "CV Senior Designer",
-    subtitle: "Bản danh mục tác phẩm",
-    updatedAt: "28 Tháng 09, 2023",
-    bgClass: "bg-gradient-to-br from-slate-100 to-slate-50",
-    lineColors: ["bg-gray-700", "bg-gray-400", "bg-gray-300"],
-  },
-];
+const getCVSubtitle = (cv: CandidateCV) => {
+  if (cv.cvType === "uploaded") return "Tài liệu PDF tải lên";
+  if (cv.template?.name) return `Tạo từ mẫu ${cv.template.name}`;
+  return "CV tạo bằng hệ thống";
+};
 
-const tips = [
-  {
-    icon: Lightbulb,
-    title: "Mẹo nhỏ cho bạn",
-    desc: "Cập nhật CV thường xuyên giúp hồ sơ của bạn nổi bật hơn trong mắt nhà tuyển dụng.",
-    color: "text-yellow-500 bg-yellow-50",
-  },
-  {
-    icon: BarChart2,
-    title: "Lượt xem hồ sơ",
-    desc: "Có 12 nhà tuyển dụng đã xem hồ sơ 'CV Kỹ sư phần mềm' trong tuần qua.",
-    color: "text-blue-500 bg-blue-50",
-  },
-  {
-    icon: CheckCircle,
-    title: "Hồ sơ hoàn thiện",
-    desc: "Hồ sơ của bạn đạt mức độ hoàn thiện 90%. Thêm dự án để đạt 100%.",
-    color: "text-green-500 bg-green-50",
-    progress: 90,
-  },
-];
+const decodeMojibake = (value: string) => {
+  if (!/[ÃÄÂ]/.test(value)) return value;
 
-function CVThumbnail({
-  bgClass,
-  lineColors,
-  isPdf,
-}: {
-  bgClass: string;
-  lineColors: string[];
-  isPdf?: boolean;
-}) {
-  if (isPdf) {
+  try {
+    const bytes = Uint8Array.from([...value].map((char) => char.charCodeAt(0)));
+    const decoded = new TextDecoder("utf-8").decode(bytes);
+    return decoded.includes("�") ? value : decoded;
+  } catch {
+    return value;
+  }
+};
+
+const getCVTitle = (cv: CandidateCV) => decodeMojibake(cv.title);
+
+const getPreviewText = (cv: CandidateCV) => {
+  if (cv.cvType === "uploaded") return "PDF";
+  return getCVTitle(cv).slice(0, 2).toUpperCase();
+};
+
+function CVPreview({ cv }: { cv: CandidateCV }) {
+  if (cv.cvType === "uploaded") {
     return (
-      <div className="w-full h-full bg-red-50 dark:bg-red-950/20 rounded-sm p-1 flex flex-col items-center justify-center gap-1">
-        <FileText className="w-7 h-7 text-red-600 dark:text-red-400" />
-        <span className="text-[8px] font-extrabold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 px-1 rounded-sm leading-none">
-          PDF
-        </span>
+      <div className="flex h-20 w-14 flex-col items-center justify-center gap-1 rounded border border-red-200 bg-red-50 text-red-500 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+        <FileText size={24} />
+        <span className="text-[9px] font-extrabold">PDF</span>
       </div>
     );
   }
 
   return (
-    <div
-      className={`w-full h-full ${bgClass} rounded-sm p-2 flex flex-col gap-1.5`}
-    >
-      <div className={`h-2 w-3/4 rounded-sm ${lineColors[0]}`} />
-      <div className={`h-1 w-1/2 rounded-sm ${lineColors[1]}`} />
-      <div className="flex-1 flex flex-col gap-1 mt-1">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className={`h-1 rounded-sm ${lineColors[2]}`}
-            style={{ width: `${70 + ((i * 7) % 25)}%` }}
-          />
-        ))}
+    <div className="flex h-20 w-14 flex-col gap-1 rounded border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-100">
+      <div className="h-2 w-10 rounded bg-slate-700" />
+      <div className="h-1 w-7 rounded bg-slate-400" />
+      <div className="mt-1 h-1 w-9 rounded bg-slate-300" />
+      <div className="h-1 w-8 rounded bg-slate-300" />
+      <div className="h-1 w-10 rounded bg-slate-300" />
+      <div className="mt-auto text-center text-[10px] font-bold text-slate-500">
+        {getPreviewText(cv)}
       </div>
-    </div>
-  );
-}
-
-function CircularProgress({ pct }: { pct: number }) {
-  const r = 28;
-  const circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-  return (
-    <div className="relative w-16 h-16 shrink-0">
-      <svg viewBox="0 0 72 72" className="w-full h-full -rotate-90">
-        <circle
-          cx="36"
-          cy="36"
-          r={r}
-          fill="none"
-          stroke="#e5e7eb"
-          strokeWidth="6"
-        />
-        <circle
-          cx="36"
-          cy="36"
-          r={r}
-          fill="none"
-          stroke="#22c55e"
-          strokeWidth="6"
-          strokeDasharray={`${dash} ${circ - dash}`}
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-green-600">
-        {pct}%
-      </span>
     </div>
   );
 }
 
 export default function MyCVs() {
   const navigate = useNavigate();
-  const [cvs, setCvs] = useState<CVItem[]>(cvList);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleDelete = (id: number) => {
-    setCvs((prev) => prev.filter((c) => c.id !== id));
+  const cachedCVs = getCachedMyCVs();
+  const [cvs, setCvs] = useState<CandidateCV[]>(cachedCVs?.data ?? []);
+  const [isLoading, setIsLoading] = useState(!cachedCVs);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [activatingId, setActivatingId] = useState<number | null>(null);
+
+  const loadCVs = async (forceRefresh = false) => {
+    try {
+      if (!getCachedMyCVs() || forceRefresh) setIsLoading(true);
+      setErrorMessage(null);
+
+      const response = await cvService.getMyCVs(forceRefresh);
+      setCvs(response.data);
+    } catch {
+      setErrorMessage("Không thể tải danh sách CV.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUploadPDF = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  useEffect(() => {
+    loadCVs();
+  }, []);
+
+  const handleUploadPDF = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
     if (!file) return;
 
-    // Kiểm tra file PDF
-    if (
-      file.type !== "application/pdf" &&
-      !file.name.toLowerCase().endsWith(".pdf")
-    ) {
-      alert("Vui lòng tải lên tệp tin định dạng PDF hợp lệ.");
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      setErrorMessage("Vui lòng chọn đúng file PDF.");
       return;
     }
 
-    const newCV: CVItem = {
-      id: Date.now(),
-      name: file.name.replace(/\.[^/.]+$/, ""), // loại bỏ đuôi mở rộng .pdf
-      subtitle: "Tài liệu PDF tải lên",
-      updatedAt: new Date().toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-      bgClass: "bg-gradient-to-br from-red-100 to-red-50",
-      lineColors: [],
-      isPdf: true,
-    };
+    try {
+      setIsUploading(true);
+      setErrorMessage(null);
 
-    setCvs((prev) => [newCV, ...prev]);
-    alert(`Đã tải lên hồ sơ PDF thành công: "${newCV.name}"!`);
+      const response = await cvService.uploadPdf(file);
+      setCvs((currentCVs) => [response.data, ...currentCVs]);
+    } catch {
+      setErrorMessage("Không thể upload CV. Vui lòng thử lại.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-    // reset input để cho phép upload lại cùng 1 file nếu cần
-    e.target.value = "";
+  const handleView = (cv: CandidateCV) => {
+    if (cv.cvType === "uploaded") {
+      const url = getUploadUrl(cv.pdfUrl);
+
+      if (!url) {
+        setErrorMessage("CV PDF này chưa có đường dẫn file.");
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    navigate(`/candidate/cv-builder?id=${cv.id}`);
+  };
+
+  const handleEdit = (cv: CandidateCV) => {
+    if (cv.cvType === "uploaded") {
+      setErrorMessage("CV PDF tải lên không thể sửa bằng trình tạo CV.");
+      return;
+    }
+
+    navigate(`/candidate/cv-builder?id=${cv.id}`);
+  };
+
+  const handleDownload = (cv: CandidateCV) => {
+    const url = getUploadUrl(cv.pdfUrl);
+
+    if (!url) {
+      setErrorMessage("CV này chưa có file PDF để tải xuống.");
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDelete = async (id: number) => {
+    const shouldDelete = window.confirm("Bạn chắc chắn muốn xóa CV này?");
+    if (!shouldDelete) return;
+
+    try {
+      setDeletingId(id);
+      setErrorMessage(null);
+
+      await cvService.delete(id);
+      setCvs((currentCVs) => currentCVs.filter((cv) => cv.id !== id));
+    } catch {
+      setErrorMessage("Không thể xóa CV.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleSetActive = async (id: number) => {
+    try {
+      setActivatingId(id);
+      setErrorMessage(null);
+
+      const response = await cvService.setStatus(id, "active");
+      setCvs((currentCVs) =>
+        currentCVs.map((cv) =>
+          cv.id === id
+            ? response.data
+            : { ...cv, status: cv.status === "active" ? "draft" : cv.status },
+        ),
+      );
+    } catch {
+      setErrorMessage("Không thể đặt CV làm hồ sơ chính.");
+    } finally {
+      setActivatingId(null);
+    }
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
             CV của tôi
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Quản lý và tối ưu hóa hồ sơ năng lực chuyên nghiệp của bạn.
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Quản lý CV lấy trực tiếp từ database của tài khoản ứng viên.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Nút Upload PDF (UC-10) */}
-          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-lg px-4 py-2 transition-all border border-gray-250 dark:border-slate-700 shadow-xs cursor-pointer">
-            <Upload size={15} className="text-gray-500 dark:text-gray-400" />
-            Upload CV (PDF)
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              onChange={handleUploadPDF}
-            />
-          </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={handleUploadPDF}
+          />
 
-          {/* Nút Tạo CV mới */}
           <button
-            onClick={() => navigate("/candidate/cv-builder")}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-colors shadow-sm cursor-pointer border-0"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="inline-flex items-center gap-2 border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           >
-            <Plus size={15} />
+            {isUploading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Upload size={16} />
+            )}
+            Upload CV PDF
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/candidate/cv-builder")}
+            className="inline-flex items-center gap-2 bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
+          >
+            <Plus size={16} />
             Tạo CV mới
           </button>
         </div>
       </div>
 
-      {/* CV list table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden mb-6 transition-colors duration-150">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-slate-950 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100 dark:border-slate-800">
-                <th className="px-5 py-3 text-left font-medium">
-                  Bản xem trước
-                </th>
-                <th className="px-5 py-3 text-left font-medium">Tên hồ sơ</th>
-                <th className="px-5 py-3 text-left font-medium">
-                  Cập nhật lần cuối
-                </th>
-                <th className="px-5 py-3 text-left font-medium">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
-              {cvs.map((cv) => (
-                <tr
-                  key={cv.id}
-                  className="hover:bg-gray-50/50 dark:hover:bg-slate-850/40 transition-colors"
-                >
-                  <td className="px-5 py-4 w-24">
-                    <div className="w-14 h-20 rounded border border-gray-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                      <CVThumbnail
-                        bgClass={cv.bgClass}
-                        lineColors={cv.lineColors}
-                        isPdf={cv.isPdf}
-                      />
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-800 dark:text-white">
-                        {cv.name}
-                      </p>
-                      {cv.isPdf && (
-                        <span className="text-[9px] bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                          PDF File
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-550 mt-0.5">
-                      {cv.subtitle}
-                    </p>
-                  </td>
+      {errorMessage && (
+        <div className="mb-5 flex items-center gap-2 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+          <AlertCircle size={16} />
+          {errorMessage}
+        </div>
+      )}
 
-                  <td className="px-5 py-4 text-gray-500 dark:text-gray-400">
-                    {cv.updatedAt}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                        title="Xem"
-                      >
-                        <Eye size={16} />
-                      </button>
+      <section className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <div>
+            <h2 className="font-semibold text-slate-950 dark:text-white">
+              Danh sách CV
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Hiển thị đúng dữ liệu trong bảng CV.
+            </p>
+          </div>
 
-                      <button
-                        onClick={() => {
-                          if (cv.isPdf) {
-                            alert(
-                              "Bạn không thể chỉnh sửa trực tiếp nội dung của tệp tin PDF tĩnh.",
-                            );
-                            return;
-                          }
-                          navigate(`/candidate/cv-builder?id=${cv.id}`);
-                        }}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                          cv.isPdf
-                            ? "text-gray-300 dark:text-gray-700 hover:bg-transparent cursor-not-allowed"
-                            : "hover:bg-yellow-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-yellow-600 dark:hover:text-amber-400"
-                        }`}
-                        title={
-                          cv.isPdf ? "Không hỗ trợ chỉnh sửa PDF tĩnh" : "Sửa"
-                        }
-                        disabled={cv.isPdf}
-                      >
-                        <Pencil size={16} />
-                      </button>
-
-                      <button
-                        className="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-emerald-450 transition-colors cursor-pointer"
-                        title="Tải xuống"
-                      >
-                        <Download size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cv.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
-                        title="Xóa"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <button
+            type="button"
+            onClick={() => loadCVs(true)}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 disabled:opacity-50 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+            Tải lại
+          </button>
         </div>
 
-        {cvs.length === 0 && (
-          <div className="py-16 text-center">
-            <p className="text-gray-400 dark:text-gray-550 text-sm">
-              Bạn chưa tạo CV nào. Hãy tạo CV đầu tiên!
+        {isLoading ? (
+          <div className="flex min-h-56 items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
+            <Loader2 className="animate-spin" size={20} />
+            Đang tải CV...
+          </div>
+        ) : cvs.length === 0 ? (
+          <div className="flex min-h-64 flex-col items-center justify-center border-t border-slate-200 px-4 text-center dark:border-slate-800">
+            <FileText className="mb-4 text-slate-300 dark:text-slate-600" size={44} />
+            <p className="font-semibold text-slate-900 dark:text-white">
+              Bạn chưa có CV nào.
             </p>
+            <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+              Khi bạn tạo CV mới hoặc upload PDF, dữ liệu sẽ được lưu vào
+              database và xuất hiện ở đây.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-190 text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-500">
+                <tr>
+                  <th className="px-5 py-3 font-semibold">Bản xem trước</th>
+                  <th className="px-5 py-3 font-semibold">Tên hồ sơ</th>
+                  <th className="px-5 py-3 font-semibold">Trạng thái</th>
+                  <th className="px-5 py-3 font-semibold">Cập nhật</th>
+                  <th className="px-5 py-3 font-semibold">Thao tác</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {cvs.map((cv) => (
+                  <tr
+                    key={cv.id}
+                    className="transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  >
+                    <td className="px-5 py-4">
+                      <CVPreview cv={cv} />
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-slate-950 dark:text-white">
+                          {getCVTitle(cv)}
+                        </p>
+                        {cv.cvType === "uploaded" && (
+                          <span className="bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase text-red-600 dark:bg-red-950 dark:text-red-300">
+                            PDF
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {getCVSubtitle(cv)}
+                      </p>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      {cv.status === "active" ? (
+                        <span className="inline-flex items-center gap-1 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-950 dark:text-green-300">
+                          <CheckCircle size={13} />
+                          Đang dùng
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSetActive(cv.id)}
+                          disabled={activatingId === cv.id}
+                          className="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-blue-600 disabled:opacity-60 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-blue-300"
+                        >
+                          {activatingId === cv.id ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Star size={13} />
+                          )}
+                          Đặt chính
+                        </button>
+                      )}
+                    </td>
+
+                    <td className="px-5 py-4 text-slate-500 dark:text-slate-400">
+                      {formatDate(cv.updatedAt)}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <button
+                          type="button"
+                          onClick={() => handleView(cv)}
+                          className="p-1.5 transition hover:text-blue-500"
+                          title="Xem"
+                        >
+                          <Eye size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(cv)}
+                          className="p-1.5 transition hover:text-yellow-500 disabled:cursor-not-allowed disabled:opacity-40"
+                          title="Sửa"
+                          disabled={cv.cvType === "uploaded"}
+                        >
+                          <Pencil size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(cv)}
+                          className="p-1.5 transition hover:text-green-500 disabled:cursor-not-allowed disabled:opacity-40"
+                          title="Tải xuống"
+                          disabled={!cv.pdfUrl}
+                        >
+                          <Download size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(cv.id)}
+                          disabled={deletingId === cv.id}
+                          className="p-1.5 transition hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40"
+                          title="Xóa"
+                        >
+                          {deletingId === cv.id ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={16} />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
-        <div className="px-5 py-3 border-t border-gray-100 dark:border-slate-800 text-xs text-gray-450 dark:text-gray-500">
-          Đang hiển thị {cvs.length} trên tổng số {cvList.length} hồ sơ
+        <div className="border-t border-slate-200 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          Đang hiển thị {cvs.length} CV từ database.
         </div>
-      </div>
-
-      {/* Tips */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {tips.map(({ icon: Icon, title, desc, color, progress }) => (
-          <div
-            key={title}
-            className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 transition-colors duration-150"
-          >
-            <div className="flex items-start gap-3">
-              {progress !== undefined ? (
-                <CircularProgress pct={progress} />
-              ) : (
-                <div
-                  className={`${color} dark:bg-slate-800 dark:text-indigo-400 w-10 h-10 rounded-lg flex items-center justify-center shrink-0`}
-                >
-                  <Icon size={18} />
-                </div>
-              )}
-              <div>
-                <p className="font-semibold text-gray-800 dark:text-white text-sm">
-                  {title}
-                </p>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 leading-relaxed">
-                  {desc}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      </section>
     </div>
   );
 }

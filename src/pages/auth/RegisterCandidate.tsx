@@ -12,7 +12,7 @@ export function CandidateRegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
-  
+
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,9 @@ export function CandidateRegisterPage() {
     setSuccessMsg(null);
 
     if (!agreeTerms) {
-      setError("Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục.");
+      setError(
+        "Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục.",
+      );
       return;
     }
 
@@ -35,10 +37,18 @@ export function CandidateRegisterPage() {
     setIsLoading(true);
 
     try {
-      const res = await registerCandidate({ fullName, email, password, confirmPassword });
+      const res = await registerCandidate({
+        fullName,
+        email,
+        password,
+        confirmPassword,
+      });
       if (res.success) {
-        setSuccessMsg(res.message || "Đăng ký ứng viên thành công! Vui lòng kiểm tra email để xác nhận tài khoản.");
-        
+        setSuccessMsg(
+          res.message ||
+            "Đăng ký ứng viên thành công! Vui lòng kiểm tra email để xác nhận tài khoản.",
+        );
+
         // Làm sạch các trường dữ liệu
         setFullName("");
         setEmail("");
@@ -51,9 +61,13 @@ export function CandidateRegisterPage() {
           navigate("/login");
         }, 4000);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đăng ký ứng viên:", err);
-      const errMsg = err.response?.data?.message || err.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Đăng ký thất bại. Vui lòng thử lại sau.";
       setError(errMsg);
     } finally {
       setIsLoading(false);
