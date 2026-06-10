@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminJobs } from "./pages/admin/AdminJobs";
 import { AdminLogin } from "./pages/admin/AdminLogin";
+import { AdminLogs } from "./pages/admin/AdminLogs";
+import { AdminNotifications } from "./pages/admin/AdminNotifications";
 import { AdminSystem } from "./pages/admin/AdminSystem";
 import { AdminTemplates } from "./pages/admin/AdminTemplates";
 import { ForgotPasswordPage } from "./pages/auth/ForgotPassword";
@@ -103,6 +105,8 @@ function App() {
             <Route path="jobs" element={<AdminJobs />} />
             <Route path="templates" element={<AdminTemplates />} />
             <Route path="system" element={<AdminSystem />} />
+            <Route path="activity-logs" element={<AdminLogs />} />
+            <Route path="notifications" element={<AdminNotifications />} />
           </Route>
         </Route>
 

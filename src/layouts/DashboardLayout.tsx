@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   candidateService,
   getCachedCandidateProfile,
@@ -177,8 +178,4 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
       </div>
     </div>
   );
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function useAuth(): { user: any; logout: any } {
-  throw new Error("Function not implemented.");
 }

@@ -24,10 +24,6 @@
       ]
     },
     "ignoreDeprecations": "5.0",
-<<<<<<< HEAD
-=======
-
->>>>>>> b8d2e1534bd0b712d922a10e4fff0829e38c4ea5
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
