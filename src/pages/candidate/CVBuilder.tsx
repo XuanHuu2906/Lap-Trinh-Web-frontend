@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Save,
   Eye,
@@ -8,6 +9,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { type CandidateCV, cvService } from "@/services/cv.service";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface WorkExp {
@@ -310,37 +312,92 @@ function CVPreview({ data }: { data: CVData }) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-const INITIAL: CVData = {
-  name: "Nguyễn Văn An",
-  title: "Chuyên Viên Tuyển Dụng Cao Cấp",
-  email: "nguyenan@example.com",
-  phone: "090 123 4567",
-  address: "Quận 1, TP. Hồ Chí Minh",
-  linkedin: "linkedin.com/in/nguyenvanan",
-  summary:
-    "5 năm kinh nghiệm trong lĩnh vực quản trị nhân sự và tuyển dụng tại các công ty công nghệ đa quốc gia. Sở hữu mạng ứng viên rộng lớn và khả năng đánh giá năng lực xuất sắc.",
-  skills: "Sourcing, Phỏng vấn, ATS, Workday, Bamboo HR, Jira, Confluence",
-  workExp: [
-    {
-      id: 1,
-      title: "Chuyên viên Tuyển dụng IT",
-      company: "Nova Solutions Vietnam",
-      period: "03/2021 – Hiện tại",
-      desc: "Tuyển dụng thành công hơn 150 kỹ sư. Quản lý ngân sách tuyển dụng 50.000 USD/năm.",
-    },
-  ],
-  education: [
-    {
-      id: 1,
-      degree: "Quản trị Kinh doanh",
-      school: "Đại học Kinh tế TP.HCM",
-      year: "2014 – 2018",
-    },
-  ],
+const EMPTY_INITIAL: CVData = {
+  name: "",
+  title: "",
+  email: "",
+  phone: "",
+  address: "",
+  linkedin: "",
+  summary: "",
+  skills: "",
+  workExp: [],
+  education: [],
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const getString = (value: unknown) => (typeof value === "string" ? value : "");
+
+const mapCVToFormData = (cv: CandidateCV): CVData => {
+  const personalInfo = isRecord(cv.personalInfo) ? cv.personalInfo : {};
+  const experience = Array.isArray(cv.experience) ? cv.experience : [];
+  const education = Array.isArray(cv.education) ? cv.education : [];
+  const skills = Array.isArray(cv.skills) ? cv.skills : [];
+
+  return {
+    name: getString(personalInfo.fullName),
+    title: cv.title || "",
+    email: getString(personalInfo.email),
+    phone: getString(personalInfo.phone),
+    address: getString(personalInfo.address),
+    linkedin: getString(personalInfo.linkedin),
+    summary: getString(personalInfo.summary),
+    skills: skills
+      .map((skill) => (isRecord(skill) ? getString(skill.name) : ""))
+      .filter(Boolean)
+      .join(", "),
+    workExp: experience.map((item, index) => {
+      const row = isRecord(item) ? item : {};
+      return {
+        id: Number(row.id) || Date.now() + index,
+        title: getString(row.title),
+        company: getString(row.company),
+        period: getString(row.period),
+        desc: getString(row.desc),
+      };
+    }),
+    education: education.map((item, index) => {
+      const row = isRecord(item) ? item : {};
+      return {
+        id: Number(row.id) || Date.now() + index,
+        degree: getString(row.degree),
+        school: getString(row.school),
+        year: getString(row.year),
+      };
+    }),
+  };
+};
+
+const mapFormDataToPayload = (data: CVData, templateId?: number) => ({
+  title: data.title || data.name || "CV của tôi",
+  templateId,
+  personalInfo: {
+    fullName: data.name,
+    email: data.email,
+    phone: data.phone,
+    address: data.address,
+    linkedin: data.linkedin,
+    summary: data.summary,
+  },
+  experience: data.workExp,
+  education: data.education,
+  skills: data.skills
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean)
+    .map((name) => ({ name })),
+});
+
 export default function CVBuilder() {
-  const [data, setData] = useState<CVData>(INITIAL);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editingId = Number(searchParams.get("id")) || null;
+  const templateId = Number(searchParams.get("templateId")) || undefined;
+
+  const [currentCvId, setCurrentCvId] = useState<number | null>(editingId);
+  const [data, setData] = useState<CVData>(EMPTY_INITIAL);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     personal: true,
     summary: false,
@@ -349,6 +406,31 @@ export default function CVBuilder() {
     skills: false,
   });
   const [saving, setSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(Boolean(editingId));
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!editingId) return;
+
+    const loadCV = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const response = await cvService.getById(editingId);
+        setData(mapCVToFormData(response.data));
+        setCurrentCvId(response.data.id);
+        setLastSavedAt(response.data.updatedAt);
+      } catch {
+        setErrorMessage("Không thể tải CV từ database.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCV();
+  }, [editingId]);
 
   const toggle = (key: string) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -402,9 +484,29 @@ export default function CVBuilder() {
       education: prev.education.filter((e) => e.id !== id),
     }));
 
-  const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => setSaving(false), 1200);
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setErrorMessage(null);
+
+      const payload = mapFormDataToPayload(data, templateId);
+      const response = currentCvId
+        ? await cvService.update(currentCvId, payload)
+        : await cvService.create(payload);
+
+      setCurrentCvId(response.data.id);
+      setLastSavedAt(response.data.updatedAt);
+
+      if (!currentCvId) {
+        navigate(`/candidate/cv-builder?id=${response.data.id}`, {
+          replace: true,
+        });
+      }
+    } catch {
+      setErrorMessage("Không thể lưu CV vào database.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDownload = () => {
@@ -446,6 +548,18 @@ export default function CVBuilder() {
           </button>
         </div>
       </div>
+
+      {(isLoading || errorMessage || lastSavedAt) && (
+        <div className="border-b border-slate-800 bg-slate-950 px-6 py-3 text-sm">
+          {isLoading && <span className="text-slate-400">Đang tải CV từ database...</span>}
+          {errorMessage && <span className="text-red-300">{errorMessage}</span>}
+          {!isLoading && !errorMessage && lastSavedAt && (
+            <span className="text-green-300">
+              Đã lưu vào database lúc {new Date(lastSavedAt).toLocaleString("vi-VN")}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Split body */}
       <div className="flex flex-1 overflow-hidden">

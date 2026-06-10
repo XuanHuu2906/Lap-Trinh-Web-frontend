@@ -3,19 +3,48 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../utils/supabase";
 import Footer from "../../components/layout/Footer";
+import {
+  completePendingApplyJob,
+  getPendingApplyJob,
+} from "@/services/job-application-flow";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useAuth();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleSyncing, setIsGoogleSyncing] = useState(false);
-  
+
   // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
+  const navigateAfterLogin = async (user: { role: string }) => {
+    if (user.role === "candidate" && getPendingApplyJob()) {
+      try {
+        await completePendingApplyJob();
+        navigate("/candidate/applied-jobs");
+        return;
+      } catch {
+        navigate("/candidate/job-search");
+        return;
+      }
+    }
+
+    if (user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else if (user.role === "candidate") {
+      navigate("/candidate/overview");
+    } else if (user.role === "recruiter") {
+      navigate("/recruiter/overview");
+    } else if (user.role === "pending") {
+      navigate("/auth/setup-profile");
+    } else {
+      navigate("/");
+    }
+  };
+
   const processingRef = useRef(false);
   // Cờ hủy effect để chống Strict Mode double-invoke (React 18)
   const cancelledRef = useRef(false);
@@ -31,7 +60,10 @@ export function LoginPage() {
 
     const handleGoogleCallback = async () => {
       try {
-        const { data: { session }, error: sessionError } = await client.auth.getSession();
+        const {
+          data: { session },
+          error: sessionError,
+        } = await client.auth.getSession();
 
         if (sessionError) {
           console.error("Lỗi lấy session từ Supabase:", sessionError);
@@ -58,24 +90,17 @@ export function LoginPage() {
 
           if (res.success && res.data) {
             const { user } = res.data;
-            // Điều hướng người dùng dựa vào vai trò
-            if (user.role === "admin") {
-              navigate("/admin/dashboard");
-            } else if (user.role === "candidate") {
-              navigate("/candidate/overview");
-            } else if (user.role === "recruiter") {
-              navigate("/recruiter/overview");
-            } else if (user.role === "pending") {
-              navigate("/auth/setup-profile");
-            } else {
-              navigate("/");
-            }
+            await navigateAfterLogin(user);
           }
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (cancelledRef.current) return;
         console.error("Đồng bộ tài khoản Google thất bại:", err);
-        const errMsg = err.response?.data?.message || err.message || "Đồng bộ tài khoản Google thất bại. Vui lòng thử lại.";
+        const errMsg =
+          err.response?.data?.message ||
+          err.message ||
+          "Đồng bộ tài khoản Google thất bại. Vui lòng thử lại.";
         setError(errMsg);
         processingRef.current = false; // Reset lại cờ khóa nếu lỗi để người dùng có thể thử lại
         await client.auth.signOut();
@@ -91,6 +116,7 @@ export function LoginPage() {
     return () => {
       cancelledRef.current = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loginWithGoogle, navigate]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -102,23 +128,15 @@ export function LoginPage() {
       const res = await login(email, password);
       if (res.success && res.data) {
         const { user } = res.data;
-        
-        // Điều hướng dựa trên vai trò của người dùng
-        if (user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else if (user.role === "candidate") {
-          navigate("/candidate/overview");
-        } else if (user.role === "recruiter") {
-          navigate("/recruiter/overview");
-        } else if (user.role === "pending") {
-          navigate("/auth/setup-profile");
-        } else {
-          navigate("/");
-        }
+        await navigateAfterLogin(user);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đăng nhập:", err);
-      const errMsg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
       setError(errMsg);
     } finally {
       setIsLoading(false);
@@ -131,15 +149,17 @@ export function LoginPage() {
     const client = supabase;
     // Kiểm tra an toàn xem Supabase đã được cấu hình chưa
     if (!client) {
-      setError("Cấu hình đăng nhập bằng Google chưa hoàn tất. Vui lòng thêm VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY vào tệp .env của bạn.");
+      setError(
+        "Cấu hình đăng nhập bằng Google chưa hoàn tất. Vui lòng thêm VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY vào tệp .env của bạn.",
+      );
       return;
     }
 
     try {
       // Xóa token cũ trước khi redirect Google để tránh AuthProvider restore session cũ
       // sau khi OAuth redirect back về /login (gây conflict với Google callback)
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
 
       const { error: oauthError } = await client.auth.signInWithOAuth({
         provider: "google",
@@ -151,9 +171,12 @@ export function LoginPage() {
         },
       });
       if (oauthError) throw oauthError;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Supabase Google Auth Error:", err);
-      setError("Không thể bắt đầu đăng nhập bằng Google. Vui lòng kiểm tra lại cấu hình Supabase.");
+      setError(
+        "Không thể bắt đầu đăng nhập bằng Google. Vui lòng kiểm tra lại cấu hình Supabase.",
+      );
     }
   };
 
@@ -186,7 +209,6 @@ export function LoginPage() {
       {/* CENTERED LOGIN CARD CONTAINER */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-2">
         <div className="w-full max-w-100 bg-white border border-slate-200/80 rounded-lg shadow-sm p-6 relative">
-          
           {/* Lớp phủ màn hình đồng bộ tài khoản Google chuyên nghiệp */}
           {isGoogleSyncing && (
             <div className="absolute inset-0 bg-white/95 rounded-lg flex flex-col items-center justify-center z-50 transition-all duration-300">

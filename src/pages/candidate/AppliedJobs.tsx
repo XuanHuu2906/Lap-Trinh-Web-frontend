@@ -1,314 +1,287 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Search,
-  ChevronDown,
-  FileText,
   Clock,
-  CalendarDays,
+  FileText,
+  Search,
+  ShieldCheck,
   XCircle,
-  ChevronLeft,
-  ChevronRight,
-  MessageSquare,
 } from "lucide-react";
+import {
+  applicationService,
+  getCachedMyApplications,
+  type CandidateApplication,
+} from "@/services/application.service";
 
-const STATUS_OPTIONS = [
-  "Tất cả trạng thái",
-  "Đang chờ duyệt",
-  "Đã tiếp nhận",
-  "Đang phỏng vấn",
-  "Từ chối",
-  "Đề nghị nhận việc",
+const statusOptions = [
+  { label: "Tất cả trạng thái", value: "" },
+  { label: "Đang chờ", value: "pending" },
+  { label: "Đang xem", value: "reviewing" },
+  { label: "Đã tiếp nhận", value: "accepted" },
+  { label: "Từ chối", value: "rejected" },
 ];
 
-const applications = [
-  {
-    position: "Senior Product Designer",
-    skills: "UX/UI, Figma, Design System",
-    company: "TechCorp VN",
-    companyLogo: "T",
-    companyColor: "bg-blue-600",
-    date: "24/10/2023",
-    cv: "NguyenVanA_CV_v2.pdf",
-    status: "ĐANG CHỜ",
-    statusColor: "bg-gray-100 text-gray-600",
-    hasReply: false,
+const statusMap: Record<string, { label: string; className: string }> = {
+  pending: {
+    label: "Đang chờ",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
-  {
-    position: "Enterprise Architect",
-    skills: "Cloud, System Design",
-    company: "GlobalBank",
-    companyLogo: "G",
-    companyColor: "bg-green-700",
-    date: "20/10/2023",
-    cv: "Architect_Resume.pdf",
-    status: "ĐÃ XEM",
-    statusColor: "bg-blue-100 text-blue-700",
-    hasReply: false,
+  reviewing: {
+    label: "Đang xem",
+    className: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
   },
-  {
-    position: "Frontend Lead Engineer",
-    skills: "React, TypeScript, Performance",
-    company: "StartupX",
-    companyLogo: "S",
-    companyColor: "bg-purple-600",
-    date: "15/10/2023",
-    cv: "LeadFE_Profile.pdf",
-    status: "MỜI PHỎNG VẤN",
-    statusColor: "bg-yellow-100 text-yellow-700",
-    hasReply: true,
+  accepted: {
+    label: "Đã tiếp nhận",
+    className: "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300",
   },
-  {
-    position: "Data Scientist",
-    skills: "Python, Machine Learning",
-    company: "AI Solutions",
-    companyLogo: "A",
-    companyColor: "bg-orange-500",
-    date: "05/10/2023",
-    cv: "Data_CV.pdf",
-    status: "TỪ CHỐI",
-    statusColor: "bg-red-100 text-red-600",
-    hasReply: true,
+  rejected: {
+    label: "Từ chối",
+    className: "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300",
   },
-];
+  cancelled: {
+    label: "Đã hủy",
+    className: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  },
+};
 
-const counters = [
-  {
-    label: "Tổng số đã nộp",
-    value: 12,
-    icon: FileText,
-    color: "text-blue-600 bg-blue-50",
-  },
-  {
-    label: "Đang chờ duyệt",
-    value: 4,
-    icon: Clock,
-    color: "text-yellow-600 bg-yellow-50",
-  },
-  {
-    label: "Lịch phỏng vấn",
-    value: 2,
-    icon: CalendarDays,
-    color: "text-green-600 bg-green-50",
-  },
-  {
-    label: "Chưa phù hợp",
-    value: 6,
-    icon: XCircle,
-    color: "text-red-500 bg-red-50",
-  },
-];
+const formatDate = (value?: string) => {
+  if (!value) return "Không rõ";
+  return new Intl.DateTimeFormat("vi-VN").format(new Date(value));
+};
+
+const companyName = (item: CandidateApplication) =>
+  item.jobPosting?.recruiter?.recruiterProfile?.companyName ||
+  "Không rõ công ty";
 
 export default function AppliedJobs() {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("Tất cả trạng thái");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const totalPages = 3;
+  const [status, setStatus] = useState("");
+  const initialParams = { page: 1, limit: 50, status: undefined };
+  const cachedApplications = getCachedMyApplications(initialParams);
+  const [applications, setApplications] = useState<CandidateApplication[]>(
+    cachedApplications?.data ?? [],
+  );
+  const [isLoading, setIsLoading] = useState(!cachedApplications);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = applications.filter((a) => {
-    const matchSearch =
-      search === "" ||
-      a.position.toLowerCase().includes(search.toLowerCase()) ||
-      a.company.toLowerCase().includes(search.toLowerCase());
-    const matchStatus =
-      status === "Tất cả trạng thái" ||
-      a.status.includes(status.toUpperCase().slice(0, 5));
-    return matchSearch && matchStatus;
-  });
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadApplications = async () => {
+      const params = {
+        page: 1,
+        limit: 50,
+        status: status || undefined,
+      };
+
+      try {
+        if (!getCachedMyApplications(params)) {
+          setIsLoading(true);
+        }
+        setError(null);
+
+        const response = await applicationService.getMyApplications(params);
+
+        if (isMounted) {
+          setApplications(response.data);
+        }
+      } catch {
+        if (isMounted) {
+          setError("Không thể tải danh sách ứng tuyển.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadApplications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
+
+  const filteredApplications = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return applications;
+
+    return applications.filter((item) => {
+      const title = item.jobPosting?.title?.toLowerCase() || "";
+      const company = companyName(item).toLowerCase();
+      return title.includes(keyword) || company.includes(keyword);
+    });
+  }, [applications, search]);
+
+  const counters = [
+    {
+      label: "Tổng số đã nộp",
+      value: applications.length,
+      icon: FileText,
+      color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300",
+    },
+    {
+      label: "Đang chờ",
+      value: applications.filter((item) => item.status === "pending").length,
+      icon: Clock,
+      color: "text-yellow-600 bg-yellow-50 dark:bg-yellow-950/40 dark:text-yellow-300",
+    },
+    {
+      label: "Đã tiếp nhận",
+      value: applications.filter((item) => item.status === "accepted").length,
+      icon: ShieldCheck,
+      color: "text-green-600 bg-green-50 dark:bg-green-950/40 dark:text-green-300",
+    },
+    {
+      label: "Từ chối",
+      value: applications.filter((item) => item.status === "rejected").length,
+      icon: XCircle,
+      color: "text-red-500 bg-red-50 dark:bg-red-950/40 dark:text-red-300",
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-black dark:text-white  ">
-            Quản lý ứng tuyển
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Theo dõi trạng thái và phản hồi từ các vị trí bạn đã nộp hồ sơ.
-          </p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
+          Quản lý ứng tuyển
+        </h1>
+        <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
+          Theo dõi trạng thái và phản hồi từ các vị trí bạn đã nộp hồ sơ.
+        </p>
       </div>
 
-      {/* Counters */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="mb-6 grid gap-4 md:grid-cols-4">
         {counters.map(({ label, value, icon: Icon, color }) => (
-          <Card
+          <div
             key={label}
-            className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 shadow-sm transition-colors duration-150"
+            className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="flex items-center gap-3">
-              <div
-                className={`${color} dark:bg-slate-800 dark:text-indigo-400 w-9 h-9 rounded-lg flex items-center justify-center`}
-              >
-                <Icon size={16} />
+              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${color}`}>
+                <Icon className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-black text-slate-900 dark:text-white">
                   {value}
                 </p>
-                <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                  {label}
-                </p>
+                <p className="text-[11px] text-slate-400">{label}</p>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
-      {/* Table card */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-150">
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 p-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <div className="relative flex-1 min-w-48">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10"
-            />
-            <Input
+      <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4 dark:border-slate-800">
+          <div className="relative min-w-64 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Tìm kiếm vị trí, công ty..."
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="h-10 w-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
             />
           </div>
 
-          <div className="relative">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 border border-gray-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              Lọc theo: {status} <ChevronDown size={14} />
-            </button>
-            {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg shadow-lg z-20 w-52 py-1">
-                {STATUS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => {
-                      setStatus(opt);
-                      setDropdownOpen(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-slate-800 ${status === opt ? "text-blue-600 dark:text-indigo-400 font-semibold" : "text-gray-700 dark:text-slate-300"}`}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            className="h-10 border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 dark:bg-slate-950 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100 dark:border-slate-800">
-                <th className="px-5 py-3 text-left font-medium">
-                  Vị trí ứng tuyển
-                </th>
-                <th className="px-5 py-3 text-left font-medium">Công ty</th>
-                <th className="px-5 py-3 text-left font-medium">Ngày nộp</th>
-                <th className="px-5 py-3 text-left font-medium">CV đã gửi</th>
-                <th className="px-5 py-3 text-left font-medium">Trạng thái</th>
-                <th className="px-5 py-3 text-left font-medium">Thao tác</th>
+              <tr className="border-b border-slate-100 dark:border-slate-800">
+                {[
+                  "Vị trí ứng tuyển",
+                  "Công ty",
+                  "Ngày nộp",
+                  "CV đã gửi",
+                  "Trạng thái",
+                  "Thao tác",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500"
+                  >
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
-              {filtered.map((row) => (
-                <tr
-                  key={row.position}
-                  className="hover:bg-gray-50/60 dark:hover:bg-slate-850/40 transition-colors"
-                >
-                  <td className="px-5 py-4">
-                    <p className="font-semibold text-gray-800 dark:text-white">
-                      {row.position}
-                    </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                      {row.skills}
-                    </p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`${row.companyColor} w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-bold`}
-                      >
-                        {row.companyLogo}
-                      </div>
-                      <span className="text-gray-700 dark:text-slate-300">
-                        {row.company}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-gray-500 dark:text-slate-400">
-                    {row.date}
-                  </td>
-                  <td className="px-5 py-4">
-                    <a
-                      href="#"
-                      className="flex items-center gap-1 text-blue-600 dark:text-indigo-400 hover:underline text-xs"
-                    >
-                      <FileText size={12} /> {row.cv}
-                    </a>
-                  </td>
-                  <td className="px-5 py-4">
-                    <Badge
-                      variant="secondary"
-                      className={`${row.statusColor} text-[11px] font-semibold px-2.5 py-0.5 rounded-full dark:bg-opacity-20 lowercase first-letter:uppercase border-none`}
-                    >
-                      {row.status}
-                    </Badge>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <button className="text-xs text-blue-600 dark:text-indigo-400 font-semibold hover:underline">
-                        Chi tiết
-                      </button>
-                      {row.hasReply && (
-                        <button className="flex items-center gap-1 text-xs text-orange-500 dark:text-orange-400 font-semibold hover:underline">
-                          <MessageSquare size={11} /> Phản hồi
-                        </button>
-                      )}
-                    </div>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-sm text-slate-500">
+                    Đang tải danh sách ứng tuyển...
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-sm text-red-500">
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredApplications.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-sm text-slate-500">
+                    Chưa có đơn ứng tuyển phù hợp.
+                  </td>
+                </tr>
+              ) : (
+                filteredApplications.map((item) => {
+                  const statusInfo = statusMap[item.status] || statusMap.pending;
+                  return (
+                    <tr
+                      key={item.id}
+                      className="border-b border-slate-50 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <td className="px-6 py-4">
+                        <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                          {item.jobPosting?.title || "Không rõ vị trí"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {item.jobPosting?.skills
+                            ?.map((skill) => skill.skill.name)
+                            .join(", ") || "Không có kỹ năng"}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
+                        {companyName(item)}
+                      </td>
+                      <td className="px-6 py-4 text-[13px] text-slate-400">
+                        {formatDate(item.appliedAt)}
+                      </td>
+                      <td className="px-6 py-4 text-[13px] text-blue-600 dark:text-indigo-400">
+                        {item.cv?.title || `CV #${item.cvId}`}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-block rounded-sm px-2 py-1 text-[11px] font-semibold ${statusInfo.className}`}
+                        >
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+                          Xem
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-slate-800 text-sm bg-white dark:bg-slate-900">
-          <p className="text-gray-400 dark:text-gray-500 text-xs">
-            Hiển thị 1–4 trên tổng số 12 ứng tuyển
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={15} />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold ${p === page ? "bg-blue-600 dark:bg-indigo-600 text-white" : "hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-400"}`}
-              >
-                {p}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={page === totalPages}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
         </div>
       </div>
     </div>

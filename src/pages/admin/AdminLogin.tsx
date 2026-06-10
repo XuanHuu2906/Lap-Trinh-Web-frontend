@@ -16,7 +16,7 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login, logout } = useAuth();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +38,7 @@ export const AdminLogin: React.FC = () => {
       const res = await login(email, password);
       if (res.success && res.data) {
         const { user } = res.data;
-        
+
         // Kiểm tra xem người dùng có phải là admin hay không
         if (user.role !== "admin") {
           // Gọi logout để xóa session vừa tạo ra do đăng nhập sai quyền
@@ -51,10 +51,13 @@ export const AdminLogin: React.FC = () => {
         const redirectUrl = searchParams.get("redirect") || "/admin/dashboard";
         navigate(redirectUrl);
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đăng nhập admin:", err);
-      const errMsg = err.response?.data?.message || err.message || "Tài khoản hoặc mật khẩu quản trị viên không hợp lệ.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Tài khoản hoặc mật khẩu quản trị viên không hợp lệ.";
       setError(errMsg);
     } finally {
       setIsLoading(false);

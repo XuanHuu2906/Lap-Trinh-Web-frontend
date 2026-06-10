@@ -156,12 +156,8 @@ export default function FeaturedJobs({
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Việc làm nổi bật
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Cơ hội tốt nhất hôm nay
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900">Việc làm nổi bật</h2>
+          <p className="mt-1 text-sm text-gray-500">Cơ hội tốt nhất hôm nay</p>
         </div>
         <button
           type="button"
@@ -198,23 +194,6 @@ export default function FeaturedJobs({
           ))}
         </div>
       )}
-
-      <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl bg-linear-to-r from-blue-500 to-indigo-600 p-8 text-white sm:flex-row">
-        <div>
-          <p className="mb-1 text-lg font-bold">
-            Không tìm thấy việc phù hợp?
-          </p>
-          <p className="text-sm text-blue-100">
-            Tạo thông báo tìm việc để nhận tin ngay khi có việc mới.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="shrink-0 whitespace-nowrap rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50"
-        >
-          Tạo thông báo việc làm
-        </button>
-      </div>
     </section>
   );
 }
