@@ -1,270 +1,167 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Star,
-  Send,
-  X,
-  Phone,
-  Mail,
-  Calendar,
-  FileText,
-  Award,
-  AlertCircle,
-  MessageSquare,
-  Sparkles,
-  Check,
-} from "lucide-react";
+  createEvaluation,
+  createFeedback,
+  getApplicationsByJob,
+  getMyJobs,
+  updateApplicationStatus,
+  type ApplicationStatus,
+  type RecruiterApplication,
+  type RecruiterJob,
+} from "../../services/recruiter.service";
 
-interface Candidate {
-  id: number;
-  initials: string;
-  color: string;
-  name: string;
-  email: string;
-  phone: string;
-  position: string;
-  date: string;
-  status: string;
-  statusStyle: string;
-  score: number;
-  internalNotes: string;
-  feedbackMsg: string;
-  feedbackDate: string;
-}
+const statusLabel: Record<ApplicationStatus, string> = {
+  pending: "Mới",
+  reviewing: "Đang xem xét",
+  accepted: "Đạt",
+  rejected: "Không phù hợp",
+  cancelled: "Đã hủy",
+};
 
-const INITIAL_CANDIDATES: Candidate[] = [
-  {
-    id: 1,
-    initials: "NT",
-    color: "#6366f1",
-    name: "Nguyễn Văn Thái",
-    email: "thai.nguyen@email.com",
-    phone: "0912 345 678",
-    position: "Senior Frontend Engineer",
-    date: "24/10/2023",
-    status: "Mới",
-    statusStyle: "border border-blue-400 text-blue-600 bg-white",
-    score: 0,
-    internalNotes: "",
-    feedbackMsg: "",
-    feedbackDate: "",
-  },
-  {
-    id: 2,
-    initials: "TM",
-    color: "#f43f5e",
-    name: "Trần Thị Mai",
-    email: "mai.tran@email.com",
-    phone: "0988 777 666",
-    position: "Product Manager",
-    date: "23/10/2023",
-    status: "Đang phỏng vấn",
-    statusStyle: "border border-orange-400 text-orange-600 bg-white",
-    score: 4,
-    internalNotes:
-      "Tư duy sản phẩm tốt, đã làm Fintech, khả năng giao tiếp ngoại ngữ xuất sắc.",
-    feedbackMsg: "",
-    feedbackDate: "",
-  },
-  {
-    id: 3,
-    initials: "LH",
-    color: "#3b82f6",
-    name: "Lê Hoàng Hải",
-    email: "hai.le@email.com",
-    phone: "0909 123 456",
-    position: "Senior Frontend Engineer",
-    date: "20/10/2023",
-    status: "Đạt",
-    statusStyle: "border border-emerald-400 text-emerald-600 bg-white",
-    score: 5,
-    internalNotes:
-      "Kỹ thuật xuất sắc, giải quyết bài test nhanh, có kinh nghiệm triển khai CI/CD hệ thống lớn.",
-    feedbackMsg:
-      "Chúc mừng bạn Lê Hoàng Hải đã chính thức trúng tuyển vào vị trí Senior Frontend Engineer. Ban Nhân sự sẽ liên hệ trao đổi chi tiết về Offer Letter.",
-    feedbackDate: "21/10/2023",
-  },
-  {
-    id: 4,
-    initials: "PA",
-    color: "#ec4899",
-    name: "Phạm Phương Anh",
-    email: "anh.pham@email.com",
-    phone: "0933 555 444",
-    position: "HR Specialist",
-    date: "18/10/2023",
-    status: "Không phù hợp",
-    statusStyle: "border border-red-400 text-red-600 bg-white",
-    score: 2,
-    internalNotes:
-      "Kinh nghiệm tuyển dụng mảng Tech còn mỏng, chưa đáp ứng được nhu cầu mở rộng quy mô lớn hiện tại.",
-    feedbackMsg:
-      "Cảm ơn bạn đã quan tâm đến cơ hội tại HireArch. Rất tiếc thời điểm hiện tại định hướng của bạn chưa phù hợp hoàn toàn với vị trí này.",
-    feedbackDate: "19/10/2023",
-  },
-];
+const statusStyle: Record<ApplicationStatus, string> = {
+  pending: "border border-blue-400 text-blue-600 bg-white",
+  reviewing: "border border-orange-400 text-orange-600 bg-white",
+  accepted: "border border-emerald-400 text-emerald-600 bg-white",
+  rejected: "border border-red-400 text-red-600 bg-white",
+  cancelled: "border border-slate-300 text-slate-500 bg-white",
+};
+
+const nextStatusOptions = (status: ApplicationStatus) => {
+  if (status === "pending") return [{ label: "Chuyển sang đang xem xét", value: "reviewing" as const }];
+  if (status === "reviewing") {
+    return [
+      { label: "Duyệt / đạt", value: "accepted" as const },
+      { label: "Từ chối", value: "rejected" as const },
+    ];
+  }
+  return [];
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "--";
+  return new Date(value).toLocaleDateString("vi-VN");
+};
+
+const getCandidateName = (application: RecruiterApplication) => {
+  return application.candidateProfile?.fullName || application.candidateProfile?.user?.email || "Ứng viên chưa cập nhật tên";
+};
 
 export function ManageCandidatesPage() {
-  const [candidateList, setCandidateList] =
-    useState<Candidate[]>(INITIAL_CANDIDATES);
+  const [jobs, setJobs] = useState<RecruiterJob[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<number | "">("");
+  const [applications, setApplications] = useState<RecruiterApplication[]>([]);
+  const [selectedApplication, setSelectedApplication] = useState<RecruiterApplication | null>(null);
   const [search, setSearch] = useState("");
-  const [positionFilter, setPositionFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [selected, setSelected] = useState<number[]>([]);
-  const [allChecked, setAllChecked] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
+  const [feedback, setFeedback] = useState("");
+  const [score, setScore] = useState(3);
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  // Modal control states
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
-    null,
-  );
-  const [modalOpen, setModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const filteredApplications = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return applications;
 
-  // Temporary evaluation inputs (UC-16)
-  const [tempScore, setTempScore] = useState<number>(0);
-  const [tempNotes, setTempNotes] = useState<string>("");
+    return applications.filter((application) => {
+      const name = getCandidateName(application).toLowerCase();
+      const email = application.candidateProfile?.user?.email?.toLowerCase() ?? "";
+      return name.includes(keyword) || email.includes(keyword);
+    });
+  }, [applications, search]);
 
-  // Temporary feedback inputs (UC-15)
-  const [tempStatus, setTempStatus] = useState<string>("Mới");
-  const [tempFeedbackMsg, setTempFeedbackMsg] = useState<string>("");
+  const loadJobs = async () => {
+    const response = await getMyJobs({ page: 1, limit: 50, status: "" });
+    setJobs(response.data);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
-  };
-
-  const toggleAll = () => {
-    if (allChecked) {
-      setSelected([]);
-      setAllChecked(false);
-    } else {
-      setSelected(candidateList.map((_, i) => i));
-      setAllChecked(true);
+    if (!selectedJobId && response.data.length > 0) {
+      setSelectedJobId(response.data[0].id);
     }
   };
 
-  const toggleRow = (i: number) => {
-    setSelected((prev) =>
-      prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
-    );
-  };
+  const loadApplications = async () => {
+    if (!selectedJobId) {
+      setApplications([]);
+      return;
+    }
 
-  const handleOpenModal = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setTempScore(candidate.score);
-    setTempNotes(candidate.internalNotes);
-    setTempStatus(candidate.status);
-    setTempFeedbackMsg(candidate.feedbackMsg);
-    setModalOpen(true);
-  };
+    setLoading(true);
+    setError("");
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Mới":
-        return "border border-blue-400 text-blue-600 bg-white";
-      case "Đang phỏng vấn":
-        return "border border-orange-400 text-orange-600 bg-white";
-      case "Đạt":
-        return "border border-emerald-400 text-emerald-600 bg-white";
-      case "Không phù hợp":
-        return "border border-red-400 text-red-600 bg-white";
-      default:
-        return "border border-slate-300 text-slate-600 bg-white";
+    try {
+      const response = await getApplicationsByJob({
+        jobId: selectedJobId,
+        page: 1,
+        limit: 50,
+        status: statusFilter,
+      });
+      setApplications(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không tải được danh sách ứng viên");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // UC-16: Đánh giá ứng viên (Sao & Nhận xét nội bộ)
-  const handleSaveEvaluation = () => {
-    if (!selectedCandidate) return;
+  useEffect(() => {
+    void loadJobs().catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : "Không tải được danh sách tin tuyển dụng");
+    });
+  }, []);
 
-    setCandidateList((prev) =>
-      prev.map((c) => {
-        if (c.id === selectedCandidate.id) {
-          return {
-            ...c,
-            score: tempScore,
-            internalNotes: tempNotes,
-          };
-        }
-        return c;
-      }),
-    );
+  useEffect(() => {
+    void loadApplications();
+  }, [selectedJobId, statusFilter]);
 
-    // Update the local candidate reference in modal view as well
-    setSelectedCandidate((prev) =>
-      prev
-        ? {
-            ...prev,
-            score: tempScore,
-            internalNotes: tempNotes,
-          }
-        : null,
-    );
-
-    showToast(
-      `Đã lưu kết quả đánh giá cho ứng viên ${selectedCandidate.name} thành công!`,
-    );
+  const openApplication = (application: RecruiterApplication) => {
+    setSelectedApplication(application);
+    setFeedback(application.feedbacks?.[0]?.content ?? "");
+    setScore(application.evaluations?.[0]?.score ?? 3);
+    setNotes(application.evaluations?.[0]?.notes ?? "");
   };
 
-  // UC-15: Phản hồi ứng viên (Feedback chính thức & trạng thái)
-  const handleSendFeedback = () => {
-    if (!selectedCandidate) return;
+  const handleChangeStatus = async (nextStatus: "reviewing" | "accepted" | "rejected") => {
+    if (!selectedApplication) return;
+    setError("");
+    setMessage("");
 
-    const feedbackDateStr = new Date().toLocaleDateString("vi-VN");
-
-    setCandidateList((prev) =>
-      prev.map((c) => {
-        if (c.id === selectedCandidate.id) {
-          return {
-            ...c,
-            status: tempStatus,
-            statusStyle: getStatusStyle(tempStatus),
-            feedbackMsg: tempFeedbackMsg,
-            feedbackDate: feedbackDateStr,
-          };
-        }
-        return c;
-      }),
-    );
-
-    // Update the local candidate reference in modal view as well
-    setSelectedCandidate((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: tempStatus,
-            statusStyle: getStatusStyle(tempStatus),
-            feedbackMsg: tempFeedbackMsg,
-            feedbackDate: feedbackDateStr,
-          }
-        : null,
-    );
-
-    showToast(
-      `Đã gửi phản hồi chính thức & cập nhật trạng thái ứng tuyển thành công!`,
-    );
-  };
-
-  // Load predefined template email response
-  const loadTemplateFeedback = (status: string) => {
-    if (!selectedCandidate) return;
-
-    let template = "";
-    const name = selectedCandidate.name;
-    const pos = selectedCandidate.position;
-
-    if (status === "Đang phỏng vấn") {
-      template = `Kính gửi bạn ${name},\n\nCảm ơn bạn đã nộp hồ sơ ứng tuyển vị trí ${pos} tại công ty chúng tôi.\n\nQua quá trình xem xét ban đầu, chúng tôi rất ấn tượng với hồ sơ của bạn. Ban tuyển dụng muốn mời bạn tham gia một buổi phỏng vấn trực tiếp tại văn phòng công ty để trao đổi rõ hơn.\n\n- Thời gian: 14:00 Thứ Năm tuần tới\n- Địa điểm: Tầng 12, Tòa nhà công nghệ HireArch\n\nBạn vui lòng xác nhận khả năng tham dự bằng cách phản hồi lại email này trước 17:00 ngày mai.\n\nTrân trọng,\nĐội ngũ tuyển dụng HireArch.`;
-    } else if (status === "Đạt") {
-      template = `Kính gửi bạn ${name},\n\nChúng tôi rất vui mừng thông báo rằng bạn đã hoàn thành xuất sắc các vòng phỏng vấn cho vị trí ${pos}.\n\nĐại diện Ban Nhân Sự sẽ liên hệ trực tiếp với bạn qua số điện thoại ${selectedCandidate.phone} trong vòng 24 giờ tới để gửi thông tin chi tiết về Thư mời nhận việc (Offer Letter) và thảo luận về ngày bắt đầu làm việc.\n\nChào mừng bạn đến với HireArch!\n\nTrân trọng,\nĐội ngũ tuyển dụng HireArch.`;
-    } else if (status === "Không phù hợp") {
-      template = `Chào bạn ${name},\n\nCảm ơn bạn đã dành thời gian quan tâm và nộp hồ sơ ứng tuyển vị trí ${pos} tại công ty.\n\nHồ sơ của bạn có nhiều điểm sáng, tuy nhiên do nhu cầu hiện tại yêu cầu kỹ năng đặc thù hơn, chúng tôi rất tiếc chưa thể đồng hành cùng bạn trong đợt tuyển dụng này.\n\nHồ sơ của bạn sẽ được lưu giữ tại kho dữ liệu nhân sự của chúng tôi. Chúng tôi sẽ chủ động liên hệ ngay khi có vị trí khác phù hợp hơn với năng lực của bạn.\n\nChúc bạn luôn nhiều may mắn và thành công trên con đường sắp tới!\n\nTrân trọng,\nĐội ngũ tuyển dụng HireArch.`;
-    } else {
-      template = "";
+    try {
+      await updateApplicationStatus(selectedApplication.id, nextStatus);
+      setMessage("Cập nhật trạng thái ứng viên thành công");
+      setSelectedApplication(null);
+      await loadApplications();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không cập nhật được trạng thái");
     }
+  };
 
-    setTempFeedbackMsg(template);
+  const handleSaveFeedback = async () => {
+    if (!selectedApplication || !feedback.trim()) return;
+    setError("");
+    setMessage("");
+
+    try {
+      await createFeedback(selectedApplication.id, feedback.trim());
+      setMessage("Gửi phản hồi cho ứng viên thành công");
+      await loadApplications();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không gửi được phản hồi");
+    }
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!selectedApplication) return;
+    setError("");
+    setMessage("");
+
+    try {
+      await createEvaluation(selectedApplication.id, score, notes);
+      setMessage("Lưu đánh giá nội bộ thành công");
+      await loadApplications();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không lưu được đánh giá");
+    }
   };
 
   // Filtering candidates based on UI controls
@@ -282,254 +179,157 @@ export function ManageCandidatesPage() {
 
   return (
     <div className="p-8">
-      {/* Toast Alert System */}
-      {toastMessage && (
-        <div className="fixed top-24 right-8 bg-slate-900 text-white border-l-4 border-indigo-500 px-5 py-4 shadow-xl z-50 flex items-center gap-3 rounded-r-md animate-slide-left max-w-md">
-          <Sparkles className="w-5 h-5 text-indigo-400 shrink-0" />
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Hệ thống thông báo
-            </p>
-            <p className="text-[12px] font-semibold text-slate-100 mt-0.5 leading-normal">
-              {toastMessage}
-            </p>
-          </div>
-          <button
-            onClick={() => setToastMessage(null)}
-            className="ml-auto text-slate-400 hover:text-white p-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
+      <div className="mb-6">
+        <h1 className="text-[26px] font-bold text-slate-900 leading-tight">Quản lý ứng viên</h1>
+        <p className="text-[14px] text-slate-500 mt-1">Kết nối API applications dành cho recruiter.</p>
+      </div>
+
+      {(message || error) && (
+        <div className={`mb-4 border px-4 py-3 text-[13px] ${error ? "border-red-200 bg-red-50 text-red-600" : "border-green-200 bg-green-50 text-green-700"}`}>
+          {error || message}
         </div>
       )}
 
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[26px] font-bold text-slate-900 leading-tight">
-            Quản lý ứng viên
-          </h1>
-          <p className="text-[14px] text-slate-500 mt-1">
-            Theo dõi, chấm điểm đánh giá và phản hồi hồ sơ ứng tuyển.
-          </p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-3 mb-0 bg-white border border-slate-200 border-b-0 px-5 py-4">
-        <div className="relative flex-1 max-w-xs">
-          <svg
-            className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm tên, email, vị trí..."
-            className="w-full h-9 pl-9 pr-4 border border-slate-200 text-[13px] outline-none focus:border-indigo-500 placeholder:text-slate-300 text-slate-700 rounded-sm"
-          />
-        </div>
-        <select
-          value={positionFilter}
-          onChange={(e) => setPositionFilter(e.target.value)}
-          className="h-9 px-3 border border-slate-200 text-[13px] outline-none text-slate-500 bg-white appearance-none cursor-pointer min-w-42.5 rounded-sm"
-        >
-          <option value="">Tất cả vị trí</option>
-          <option>Senior Frontend Engineer</option>
-          <option>Product Manager</option>
-          <option>HR Specialist</option>
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 px-3 border border-slate-200 text-[13px] outline-none text-slate-500 bg-white appearance-none cursor-pointer min-w-42.5 rounded-sm"
-        >
-          <option value="">Tất cả trạng thái</option>
-          <option>Mới</option>
-          <option>Đang phỏng vấn</option>
-          <option>Đạt</option>
-          <option>Không phù hợp</option>
-        </select>
-        <div className="ml-auto">
-          <button className="h-9 px-4 border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors rounded-sm cursor-pointer">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <div className="bg-white border border-slate-200 p-5 mb-6">
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tin tuyển dụng</label>
+            <select
+              value={selectedJobId}
+              onChange={(e) => setSelectedJobId(e.target.value ? Number(e.target.value) : "")}
+              className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none text-slate-600 bg-white"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
-            </svg>
-            Lọc nâng cao
-          </button>
+              <option value="">Chọn tin tuyển dụng</option>
+              {jobs.map((job) => <option key={job.id} value={job.id}>{job.title}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Trạng thái</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | "")}
+              className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none text-slate-600 bg-white"
+            >
+              <option value="">Tất cả</option>
+              <option value="pending">Mới</option>
+              <option value="reviewing">Đang xem xét</option>
+              <option value="accepted">Đạt</option>
+              <option value="rejected">Không phù hợp</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tìm ứng viên</label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tên hoặc email ứng viên..."
+              className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none focus:border-slate-400 text-slate-700"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-slate-200 border-t-0 rounded-b-sm overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/75">
-              <th className="w-10 px-5 py-3.5 text-center">
-                <input
-                  type="checkbox"
-                  checked={allChecked}
-                  onChange={toggleAll}
-                  className="accent-indigo-600 cursor-pointer"
-                />
-              </th>
-              {[
-                "Ứng viên",
-                "Vị trí ứng tuyển",
-                "Ngày ứng tuyển",
-                "Đánh giá nội bộ",
-                "Trạng thái",
-                "Thao tác",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 py-3"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCandidates.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-5 py-12 text-center text-slate-400 text-xs font-semibold"
-                >
-                  Không tìm thấy ứng viên nào phù hợp với bộ lọc
-                </td>
+      <div className="grid grid-cols-[1fr_380px] gap-6 items-start">
+        <div className="bg-white border border-slate-200 overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                {["Ứng viên", "CV", "Ngày ứng tuyển", "Trạng thái", "Hành động"].map((h) => (
+                  <th key={h} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest px-6 py-3">{h}</th>
+                ))}
               </tr>
-            ) : (
-              filteredCandidates.map((c, i) => (
-                <tr
-                  key={c.id}
-                  className={`border-b border-slate-100 transition-colors ${selected.includes(i) ? "bg-indigo-50/30" : "hover:bg-slate-50/60"}`}
-                >
-                  <td className="w-10 px-5 py-4 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(i)}
-                      onChange={() => toggleRow(i)}
-                      className="accent-indigo-600 cursor-pointer"
-                    />
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan={5} className="px-6 py-8 text-center text-[13px] text-slate-400">Đang tải dữ liệu...</td></tr>}
+              {!loading && filteredApplications.length === 0 && <tr><td colSpan={5} className="px-6 py-8 text-center text-[13px] text-slate-400">Chưa có ứng viên cho tin này.</td></tr>}
+              {!loading && filteredApplications.map((application) => (
+                <tr key={application.id} className="border-b border-slate-50 hover:bg-slate-50">
+                  <td className="px-6 py-5">
+                    <p className="text-[14px] font-bold text-slate-900">{getCandidateName(application)}</p>
+                    <p className="text-[12px] text-slate-400 mt-1">{application.candidateProfile?.user?.email || "Chưa có email"}</p>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-3xs"
-                        style={{ backgroundColor: c.color }}
-                      >
-                        <span className="text-white text-[11px] font-bold">
-                          {c.initials}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-bold text-slate-800 leading-none">
-                          {c.name}
-                        </p>
-                        <p className="text-[11px] text-slate-400 font-medium mt-1">
-                          {c.email}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-[13px] text-slate-700 font-semibold">
-                    {c.position}
-                  </td>
-                  <td className="px-4 py-4 text-[13px] text-slate-500 font-medium">
-                    {c.date}
-                  </td>
-
-                  {/* Internal Rating Stars columns (UC-16 visual indication) */}
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-0.5">
-                      {c.score > 0 ? (
-                        Array.from({ length: 5 }).map((_, idx) => (
-                          <Star
-                            key={idx}
-                            className={`w-3.5 h-3.5 ${idx < c.score ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
-                          />
-                        ))
-                      ) : (
-                        <span className="text-[11px] text-slate-400 font-semibold italic">
-                          Chưa đánh giá
-                        </span>
-                      )}
-                    </div>
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-sm ${c.statusStyle}`}
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{
-                          backgroundColor:
-                            c.status === "Mới"
-                              ? "#3b82f6"
-                              : c.status === "Đang phỏng vấn"
-                                ? "#f97316"
-                                : c.status === "Đạt"
-                                  ? "#10b981"
-                                  : "#ef4444",
-                        }}
-                      />
-                      {c.status}
+                  <td className="px-6 py-5 text-[13px] text-slate-500">{application.cv?.title || "Chưa có CV"}</td>
+                  <td className="px-6 py-5 text-[13px] text-slate-500">{formatDate(application.appliedAt)}</td>
+                  <td className="px-6 py-5">
+                    <span className={`inline-block text-[10px] font-bold px-2 py-1 rounded-sm ${statusStyle[application.status]}`}>
+                      {statusLabel[application.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleOpenModal(c)}
-                        className="text-[11px] text-indigo-600 font-bold border border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50 px-3.5 py-1.5 rounded-sm transition-all cursor-pointer"
-                      >
-                        Đánh giá & Phản hồi
-                      </button>
-                    </div>
+                  <td className="px-6 py-5">
+                    <button
+                      onClick={() => openApplication(application)}
+                      className="h-8 px-3 border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                    >
+                      Xem / xử lý
+                    </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
-          <p className="text-[13px] text-slate-400">
-            Hiển thị {filteredCandidates.length} ứng viên trong danh sách
-          </p>
-          <div className="flex items-center gap-1">
-            <button className="h-8 px-3 text-[13px] text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors rounded-sm">
-              Trước
-            </button>
-            <button className="w-8 h-8 text-[13px] border bg-indigo-600 text-white border-indigo-600 rounded-sm">
-              1
-            </button>
-            <button className="h-8 px-3 text-[13px] text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors rounded-sm">
-              Sau
-            </button>
-          </div>
+        <div className="bg-white border border-slate-200 p-5 min-h-80">
+          {!selectedApplication ? (
+            <div className="text-center text-[13px] text-slate-400 py-16">Chọn một ứng viên để xem chi tiết, phản hồi và đánh giá.</div>
+          ) : (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-[18px] font-bold text-slate-900">{getCandidateName(selectedApplication)}</h2>
+                <p className="text-[13px] text-slate-500">{selectedApplication.candidateProfile?.phone || "Chưa có số điện thoại"}</p>
+                {selectedApplication.cv?.pdfUrl && (
+                  <a className="text-[13px] font-semibold text-blue-600 hover:underline" href={selectedApplication.cv.pdfUrl} target="_blank" rel="noreferrer">Xem CV PDF</a>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Chuyển trạng thái</label>
+                <div className="flex gap-2 flex-wrap">
+                  {nextStatusOptions(selectedApplication.status).length === 0 && <span className="text-[13px] text-slate-400">Không còn bước chuyển hợp lệ.</span>}
+                  {nextStatusOptions(selectedApplication.status).map((item) => (
+                    <button
+                      key={item.value}
+                      onClick={() => void handleChangeStatus(item.value)}
+                      className="h-8 px-3 bg-[#0f1f3d] text-white text-[12px] font-bold hover:bg-[#1a2f52]"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Phản hồi cho ứng viên</label>
+                <textarea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  rows={5}
+                  className="w-full border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-slate-400 text-slate-700"
+                />
+                <button onClick={() => void handleSaveFeedback()} className="mt-2 h-8 px-3 border border-slate-300 text-[12px] font-semibold text-slate-700 hover:bg-slate-50">
+                  Gửi phản hồi
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Đánh giá nội bộ</label>
+                <select value={score} onChange={(e) => setScore(Number(e.target.value))} className="w-full h-9 border border-slate-200 px-3 text-[13px] mb-2">
+                  {[1, 2, 3, 4, 5].map((item) => <option key={item} value={item}>{item} sao</option>)}
+                </select>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                  className="w-full border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-slate-400 text-slate-700"
+                />
+                <button onClick={() => void handleSaveEvaluation()} className="mt-2 h-8 px-3 border border-slate-300 text-[12px] font-semibold text-slate-700 hover:bg-slate-50">
+                  Lưu đánh giá
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

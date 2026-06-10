@@ -1,286 +1,215 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  deleteJob,
+  getMyJobs,
+  updateJobStatus,
+  type JobStatus,
+  type PaginationMeta,
+  type RecruiterJob,
+} from "../../services/recruiter.service";
 
-const jobs = [
-  {
-    title: "Senior Frontend Engineer",
-    location: "Ho Chi Minh City, VN (Hybrid)",
-    posted: "12/10/2023",
-    deadline: "12/11/2023",
-    deadlineOver: false,
-    applicants: 45,
-    applicantColor: "bg-blue-500",
-    status: "ĐANG MỞ",
-    statusStyle: "bg-green-100 text-green-700",
-  },
-  {
-    title: "Product Manager",
-    location: "Hanoi, VN (On-site)",
-    posted: "05/10/2023",
-    deadline: "05/11/2023",
-    deadlineOver: true,
-    applicants: 12,
-    applicantColor: "bg-blue-400",
-    status: "ĐÃ ĐÓNG",
-    statusStyle: "bg-red-100 text-red-600",
-  },
-  {
-    title: "UX/UI Designer",
-    location: "Remote",
-    posted: "28/09/2023",
-    deadline: "28/10/2023",
-    deadlineOver: false,
-    applicants: 89,
-    applicantColor: "bg-blue-500",
-    status: "TẠM DỪNG",
-    statusStyle: "bg-yellow-100 text-yellow-700",
-  },
-];
+const statusLabel: Record<JobStatus, string> = {
+  active: "ĐANG MỞ",
+  closed: "ĐÃ ĐÓNG",
+  draft: "NHÁP",
+  deleted: "ĐÃ XÓA",
+};
+
+const statusStyle: Record<JobStatus, string> = {
+  active: "bg-green-100 text-green-700",
+  closed: "bg-red-100 text-red-600",
+  draft: "bg-yellow-100 text-yellow-700",
+  deleted: "bg-slate-100 text-slate-500",
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "--";
+  return new Date(value).toLocaleDateString("vi-VN");
+};
 
 export function ManageJobsPage() {
+  const [jobs, setJobs] = useState<RecruiterJob[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<JobStatus | "">("");
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta>({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const filtered = jobs.filter((j) => {
-    const matchSearch = j.title.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = !statusFilter || j.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return jobs;
+    return jobs.filter((job) => job.title.toLowerCase().includes(keyword));
+  }, [jobs, search]);
+
+  const loadJobs = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await getMyJobs({ page, limit: 10, status: statusFilter });
+      setJobs(response.data);
+      setMeta(response.meta ?? { total: response.data.length, page, limit: 10, totalPages: 1 });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không tải được danh sách tin tuyển dụng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadJobs();
+  }, [page, statusFilter]);
+
+  const handleToggleStatus = async (job: RecruiterJob) => {
+    const nextStatus = job.status === "active" ? "closed" : "active";
+    setMessage("");
+    setError("");
+
+    try {
+      await updateJobStatus(job.id, nextStatus);
+      setMessage("Cập nhật trạng thái tin thành công");
+      await loadJobs();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không cập nhật được trạng thái");
+    }
+  };
+
+  const handleDelete = async (job: RecruiterJob) => {
+    const ok = window.confirm(`Bạn có chắc muốn xóa tin: ${job.title}?`);
+    if (!ok) return;
+
+    setMessage("");
+    setError("");
+
+    try {
+      await deleteJob(job.id);
+      setMessage("Xóa tin tuyển dụng thành công");
+      await loadJobs();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không xóa được tin tuyển dụng");
+    }
+  };
 
   return (
     <div className="p-8">
-      {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[26px] font-bold text-slate-900 leading-tight">
-            Quản lý tin đăng
-          </h1>
-          <p className="text-[14px] text-slate-500 mt-1">
-            Xem và quản lý tất cả các tin tuyển dụng đã đăng.
-          </p>
+          <h1 className="text-[26px] font-bold text-slate-900 leading-tight">Quản lý tin đăng</h1>
+          <p className="text-[14px] text-slate-500 mt-1">Dữ liệu được lấy từ API /api/jobs/my của recruiter.</p>
         </div>
       </div>
 
-      {/* Filter bar */}
+      {(message || error) && (
+        <div className={`mb-4 border px-4 py-3 text-[13px] ${error ? "border-red-200 bg-red-50 text-red-600" : "border-green-200 bg-green-50 text-green-700"}`}>
+          {error || message}
+        </div>
+      )}
+
       <div className="bg-white border border-slate-200 p-5 mb-6">
         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">
           Bộ lọc tìm kiếm
         </p>
         <div className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-50">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-              Tìm kiếm tin
-            </label>
-            <div className="relative">
-              <svg
-                className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Nhập tiêu đề công việc..."
-                className="w-full h-10 pl-9 pr-4 border border-slate-200 text-[13px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700"
-              />
-            </div>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tìm kiếm tin</label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Nhập tiêu đề công việc..."
+              className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none focus:border-slate-400 placeholder:text-slate-300 text-slate-700"
+            />
           </div>
 
           <div className="min-w-50">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-              Trạng thái
-            </label>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-10 pl-4 pr-8 border border-slate-200 text-[13px] outline-none text-slate-600 bg-white appearance-none cursor-pointer"
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="ĐANG MỞ">Đang mở</option>
-                <option value="ĐÃ ĐÓNG">Đã đóng</option>
-                <option value="TẠM DỪNG">Tạm dừng</option>
-              </select>
-              <svg
-                className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Trạng thái</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setPage(1);
+                setStatusFilter(e.target.value as JobStatus | "");
+              }}
+              className="w-full h-10 px-4 border border-slate-200 text-[13px] outline-none text-slate-600 bg-white cursor-pointer"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Đang mở</option>
+              <option value="closed">Đã đóng</option>
+              <option value="draft">Nháp</option>
+            </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setSearch("");
-                setStatusFilter("");
-              }}
-              className="h-10 px-4 border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
-            >
-              XÓA LỌC
-            </button>
-            <button className="h-10 px-4 bg-[#0f1f3d] text-white text-[12px] font-bold tracking-wide hover:bg-[#1a2f52] transition-colors">
-              ÁP DỤNG
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setSearch("");
+              setStatusFilter("");
+              setPage(1);
+            }}
+            className="h-10 px-4 border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+          >
+            XÓA LỌC
+          </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-slate-200">
+      <div className="bg-white border border-slate-200 overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50">
-              {[
-                "Tiêu đề công việc",
-                "Ngày đăng",
-                "Hạn nộp",
-                "Số lượng ứng tuyển",
-                "Trạng thái",
-                "Hành động",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest px-6 py-3"
-                >
+              {["Tiêu đề công việc", "Ngày đăng", "Hạn nộp", "Ứng viên", "Trạng thái", "Hành động"].map((h) => (
+                <th key={h} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest px-6 py-3">
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((job, i) => (
-              <tr
-                key={i}
-                className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
-              >
+            {loading && (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-[13px] text-slate-400">Đang tải dữ liệu...</td>
+              </tr>
+            )}
+
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-[13px] text-slate-400">Chưa có tin tuyển dụng nào.</td>
+              </tr>
+            )}
+
+            {!loading && filtered.map((job) => (
+              <tr key={job.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
                 <td className="px-6 py-5">
-                  <p className="text-[14px] font-bold text-slate-900">
-                    {job.title}
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <svg
-                      className="w-3 h-3 text-slate-400"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                    </svg>
-                    <span className="text-[12px] text-slate-400">
-                      {job.location}
-                    </span>
-                  </div>
+                  <p className="text-[14px] font-bold text-slate-900">{job.title}</p>
+                  <p className="text-[12px] text-slate-400 mt-1">{job.location || "Chưa cập nhật địa điểm"}</p>
                 </td>
-                <td className="px-6 py-5 text-[13px] text-slate-500">
-                  {job.posted}
-                </td>
+                <td className="px-6 py-5 text-[13px] text-slate-500">{formatDate(job.createdAt)}</td>
+                <td className="px-6 py-5 text-[13px] text-slate-500">{formatDate(job.expiresAt)}</td>
                 <td className="px-6 py-5">
-                  <span
-                    className={`text-[13px] font-medium ${job.deadlineOver ? "text-red-500" : "text-slate-500"}`}
-                  >
-                    {job.deadline}
+                  <span className="inline-flex w-9 h-9 rounded-full bg-blue-500 text-white text-[12px] font-bold items-center justify-center">
+                    {job._count?.applications ?? 0}
                   </span>
                 </td>
                 <td className="px-6 py-5">
-                  <div className="flex items-center">
-                    <div
-                      className={`w-9 h-9 rounded-full ${job.applicantColor} flex items-center justify-center`}
-                    >
-                      <span className="text-white text-[12px] font-bold">
-                        {job.applicants}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-5">
-                  <span
-                    className={`inline-block text-[10px] font-bold px-2 py-1 rounded-sm tracking-wide ${job.statusStyle}`}
-                  >
-                    {job.status}
+                  <span className={`inline-block text-[10px] font-bold px-2 py-1 rounded-sm tracking-wide ${statusStyle[job.status] ?? "bg-slate-100 text-slate-500"}`}>
+                    {statusLabel[job.status] ?? job.status}
                   </span>
                 </td>
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-2">
-                    {/* Chỉnh sửa */}
-                    <div className="relative group">
-                      <button className="w-8 h-8 flex items-center justify-center border border-slate-200 hover:bg-slate-100 transition-colors text-slate-500 cursor-pointer">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
+                    {(job.status === "active" || job.status === "closed") && (
+                      <button
+                        onClick={() => void handleToggleStatus(job)}
+                        className="h-8 px-3 border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                      >
+                        {job.status === "active" ? "Đóng" : "Mở"}
                       </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] font-bold rounded-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm z-50">
-                        Chỉnh sửa tin đăng
-                      </div>
-                    </div>
-
-                    {/* Tạm dừng */}
-                    <div className="relative group">
-                      <button className="w-8 h-8 flex items-center justify-center border border-slate-200 hover:bg-yellow-50 hover:border-yellow-300 transition-colors text-slate-500 hover:text-yellow-600 cursor-pointer">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-yellow-600 text-white text-[10px] font-bold rounded-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm z-50">
-                        Tạm dừng tin tuyển dụng
-                      </div>
-                    </div>
-
-                    {/* Xóa */}
-                    <div className="relative group">
-                      <button className="w-8 h-8 flex items-center justify-center border border-slate-200 hover:bg-red-50 hover:border-red-300 transition-colors text-slate-500 hover:text-red-500 cursor-pointer">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm z-50">
-                        Xóa tin tuyển dụng
-                      </div>
-                    </div>
+                    )}
+                    <button
+                      onClick={() => void handleDelete(job)}
+                      className="h-8 px-3 border border-red-200 text-[12px] font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Xóa
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -288,50 +217,23 @@ export function ManageJobsPage() {
           </tbody>
         </table>
 
-        {/* Pagination */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
-          <p className="text-[13px] text-slate-400">
-            Hiển thị 1 - 3 của 24 kết quả
-          </p>
-          <div className="flex items-center gap-1">
-            <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors rounded-sm">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+          <p className="text-[13px] text-slate-400">Tổng: {meta.total} kết quả</p>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="h-8 px-3 border border-slate-200 text-[12px] disabled:opacity-50"
+            >
+              Trước
             </button>
-            {[1, 2, 3].map((p) => (
-              <button
-                key={p}
-                className={`w-8 h-8 text-[13px] rounded-sm transition-colors ${p === 1 ? "bg-[#0f1f3d] text-white" : "text-slate-500 hover:bg-slate-100"}`}
-              >
-                {p}
-              </button>
-            ))}
-            <span className="px-1 text-slate-400 text-[13px]">...</span>
-            <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors rounded-sm">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+            <span className="text-[13px] text-slate-500">Trang {meta.page} / {meta.totalPages || 1}</span>
+            <button
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="h-8 px-3 border border-slate-200 text-[12px] disabled:opacity-50"
+            >
+              Sau
             </button>
           </div>
         </div>
