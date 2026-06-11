@@ -1,30 +1,30 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import {
-  LayoutDashboard,
-  PlusCircle,
+  ChevronLeft,
+  ChevronRight,
   FileText,
-  Users,
-  MessageSquare,
-  Settings,
-  LogOut,
   Layers,
+  LayoutDashboard,
+  MessageSquare,
+  PlusCircle,
+  Users,
   X,
-  Bell,
 } from "lucide-react";
 
-interface SidebarProps {
+type RecruiterSidebarProps = {
   pathname: string;
   onLogout: () => void;
   onCloseMobile?: () => void;
   isMobile?: boolean;
-}
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+};
 
 const navItems = [
   {
     label: "Tổng quan",
-    path: "/recruiter",
-    exact: true,
+    path: "/recruiter/overview",
+    aliases: ["/recruiter"],
     icon: LayoutDashboard,
   },
   {
@@ -47,139 +47,118 @@ const navItems = [
     path: "/recruiter/chat",
     icon: MessageSquare,
   },
-  {
-    label: "Thông báo",
-    path: "/recruiter/notifications",
-    icon: Bell,
-  },
-  {
-    label: "Hồ sơ công ty",
-    path: "/recruiter/settings",
-    icon: Settings,
-  },
 ];
 
-const mockUser = {
-  name: "Nguyễn Văn Recruiter",
-  role: "HR Manager",
-  initials: "NR",
-};
-
-export const RecruiterSidebar: React.FC<SidebarProps> = ({
+export function RecruiterSidebar({
   pathname,
-  onLogout,
   onCloseMobile,
   isMobile = false,
-}) => {
-  const isActive = (path: string, exact?: boolean) => {
-    if (exact) {
-      return pathname === path;
-    }
-    return pathname.startsWith(path);
-  };
+  isCollapsed = false,
+  onToggleCollapse,
+}: RecruiterSidebarProps) {
+  const collapsed = isCollapsed && !isMobile;
+  const isActive = (path: string, aliases: string[] = []) =>
+    pathname === path ||
+    pathname.startsWith(`${path}/`) ||
+    aliases.some((alias) => pathname === alias);
 
   const content = (
     <>
-      {/* Header / Logo */}
-      <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800 bg-slate-950">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Layers className="w-5 h-5 text-white" />
+      <div
+        className={`flex h-16 items-center border-b border-slate-800 bg-slate-950 px-4 ${collapsed ? "justify-center" : "justify-between"
+          }`}
+      >
+        <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600">
+            <Layers className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-white text-base font-extrabold tracking-wider leading-none">
-              HIREARCH
-            </h1>
-            <span className="text-[9px] tracking-[2px] text-indigo-400 font-bold uppercase block mt-1">
-              NHÀ TUYỂN DỤNG
-            </span>
-          </div>
+          {!collapsed ? (
+            <div>
+              <h1 className="text-base font-extrabold leading-none tracking-wider text-white">
+                HIREARCH
+              </h1>
+              <span className="mt-1 block text-[9px] font-bold uppercase tracking-[2px] text-indigo-400">
+                Nhà tuyển dụng
+              </span>
+            </div>
+          ) : null}
         </div>
-        {isMobile && onCloseMobile && (
+
+        {isMobile && onCloseMobile ? (
           <button
+            type="button"
             onClick={onCloseMobile}
-            className="text-slate-400 hover:text-white cursor-pointer lg:hidden"
+            className="text-slate-400 hover:text-white lg:hidden"
+            aria-label="Đóng menu"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
-        )}
+        ) : !isMobile ? (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            title={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+            aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </button>
+        ) : null}
       </div>
 
-      {/* Menu Items */}
-      <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
-        <div className="px-3 mb-3">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Quản lý tuyển dụng
-          </span>
-        </div>
+      <nav className={`flex-1 overflow-y-auto py-6 ${collapsed ? "px-3" : "px-4"}`}>
+        <div className="space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path, item.aliases);
 
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path, item.exact);
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={onCloseMobile}
-              className={`group flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-150 ${
-                active
-                  ? "bg-indigo-600/10 text-indigo-400 font-bold border-l-4 border-indigo-500 pl-3"
-                  : "hover:bg-slate-800/60 hover:text-white text-slate-400"
-              }`}
-            >
-              <Icon
-                className={`w-5 h-5 shrink-0 transition-colors duration-150 ${
-                  active
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={onCloseMobile}
+                title={collapsed ? item.label : undefined}
+                className={`group flex items-center rounded-lg py-3 transition-all duration-150 ${collapsed ? "justify-center px-0" : "gap-4 px-4"
+                  } ${active
+                    ? `${collapsed ? "" : "border-l-4 pl-3"} border-indigo-500 bg-indigo-600/10 font-bold text-indigo-400`
+                    : "text-slate-400 hover:bg-slate-800/60 hover:text-white"
+                  }`}
+              >
+                <Icon
+                  className={`h-5 w-5 shrink-0 transition-colors duration-150 ${active
                     ? "text-indigo-400"
                     : "text-slate-400 group-hover:text-slate-200"
-                }`}
-              />
-              <span className="text-sm font-semibold">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Sidebar Footer User Info */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/40 mt-auto">shrink-0
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-            <span className="text-white text-xs font-bold">
-              {mockUser.initials}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-white text-xs font-semibold truncate leading-none">
-              {mockUser.name}
-            </p>
-            <p className="text-slate-500 text-[11px] mt-1 truncate">
-              {mockUser.role}
-            </p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+                    }`}
+                />
+                {!collapsed ? (
+                  <span className="text-sm font-semibold">{item.label}</span>
+                ) : null}
+              </Link>
+            );
+          })}
         </div>
-      </div>
+      </nav>
     </>
   );
 
   if (isMobile) {
     return (
-      <div className="w-70 bg-slate-900 text-slate-300 flex flex-col h-full animate-slide-right shadow-2xl">
+      <aside className="z-10 flex h-full w-70 flex-col bg-slate-900 text-slate-300 shadow-2xl">
         {content}
-      </div>
+      </aside>
     );
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-65 bg-slate-900 text-slate-300 border-r border-slate-800 shrink-0 fixed top-0 left-0 h-full z-30">
+    <aside
+      className={`fixed left-0 top-0 z-30 hidden h-full shrink-0 flex-col border-r border-slate-800 bg-slate-900 text-slate-300 transition-[width] duration-200 lg:flex ${collapsed ? "w-20" : "w-65"
+        }`}
+    >
       {content}
     </aside>
   );
-};
+}

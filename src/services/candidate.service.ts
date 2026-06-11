@@ -8,6 +8,7 @@ export type CandidateProfile = {
   address?: string | null;
   dateOfBirth?: string | null;
   avatarUrl?: string | null;
+  avatarStoragePath?: string | null;
   bio?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -76,7 +77,9 @@ export const candidateService = {
     const formData = new FormData();
     formData.append("avatar", file);
 
-    const response = await api.post<ApiResponse<{ avatarUrl: string }>>(
+    const response = await api.post<
+      ApiResponse<{ avatarUrl: string | null; avatarStoragePath: string | null }>
+    >(
       "/users/candidate/avatar",
       formData,
       {
