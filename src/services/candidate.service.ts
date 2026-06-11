@@ -34,6 +34,17 @@ type ApiResponse<T> = {
 };
 
 let candidateProfileCache: ApiResponse<CandidateProfile> | null = null;
+export const CANDIDATE_PROFILE_CHANGED_EVENT = "candidate-profile:changed";
+
+const notifyCandidateProfileChanged = (detail: Partial<CandidateProfile>) => {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent<Partial<CandidateProfile>>(CANDIDATE_PROFILE_CHANGED_EVENT, {
+      detail,
+    }),
+  );
+};
 
 export const getCachedCandidateProfile = () => candidateProfileCache;
 
@@ -57,6 +68,7 @@ export const candidateService = {
       payload,
     );
     candidateProfileCache = response.data;
+    notifyCandidateProfileChanged(response.data.data);
     return response.data;
   },
 
@@ -74,7 +86,20 @@ export const candidateService = {
       },
     );
 
-    clearCandidateProfileCache();
-    return response.data;
+    const result = response.data;
+    const avatarUrl = result.data.avatarUrl;
+
+    if (candidateProfileCache) {
+      candidateProfileCache = {
+        ...candidateProfileCache,
+        data: {
+          ...candidateProfileCache.data,
+          avatarUrl,
+        },
+      };
+    }
+
+    notifyCandidateProfileChanged({ avatarUrl });
+    return result;
   },
 };

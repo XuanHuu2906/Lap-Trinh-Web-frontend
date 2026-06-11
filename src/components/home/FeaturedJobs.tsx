@@ -87,10 +87,12 @@ function JobCard({
   return (
     <article
       onClick={() => onSelect?.(job)}
-      className="group cursor-pointer rounded-lg border border-gray-200 bg-white p-5 transition-all hover:border-blue-300 hover:shadow-md"
+      className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white transition-all hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-900/10"
     >
+      <div className="h-1 bg-linear-to-r from-blue-600 via-cyan-400 to-green-400" />
+      <div className="p-5">
       <div className="mb-4 flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white shadow-md shadow-blue-600/20">
           {getLogoText(job)}
         </div>
         <div className="min-w-0">
@@ -119,6 +121,7 @@ function JobCard({
         <span className="shrink-0 font-semibold text-green-600">
           {formatSalary(job)}
         </span>
+      </div>
       </div>
     </article>
   );
@@ -153,11 +156,17 @@ export default function FeaturedJobs({
   onSelectJob,
 }: FeaturedJobsProps) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
+          <span className="mb-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            Cơ hội đang tuyển
+          </span>
           <h2 className="text-2xl font-bold text-gray-900">Việc làm nổi bật</h2>
-          <p className="mt-1 text-sm text-gray-500">Cơ hội tốt nhất hôm nay</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Những vị trí mới, rõ thông tin và dễ ứng tuyển trong hôm nay
+          </p>
         </div>
         <button
           type="button"
@@ -194,6 +203,7 @@ export default function FeaturedJobs({
           ))}
         </div>
       )}
+      </div>
     </section>
   );
 }

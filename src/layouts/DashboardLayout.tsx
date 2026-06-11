@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  CANDIDATE_PROFILE_CHANGED_EVENT,
   candidateService,
   getCachedCandidateProfile,
   type CandidateProfile,
@@ -43,6 +44,8 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const cachedCandidateProfile = getCachedCandidateProfile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCandidateSidebarCollapsed, setIsCandidateSidebarCollapsed] =
+    useState(false);
   const [candidateProfile, setCandidateProfile] =
     useState<CandidateProfile | null>(cachedCandidateProfile?.data ?? null);
 
@@ -69,6 +72,37 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
 
     return () => {
       isMounted = false;
+    };
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== "candidate") return;
+
+    const handleCandidateProfileChanged = (event: Event) => {
+      const { detail } = event as CustomEvent<Partial<CandidateProfile>>;
+
+      setCandidateProfile((current) => {
+        if (current) return { ...current, ...detail };
+
+        void candidateService
+          .getProfile(true)
+          .then((response) => setCandidateProfile(response.data))
+          .catch(() => setCandidateProfile(null));
+
+        return current;
+      });
+    };
+
+    window.addEventListener(
+      CANDIDATE_PROFILE_CHANGED_EVENT,
+      handleCandidateProfileChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        CANDIDATE_PROFILE_CHANGED_EVENT,
+        handleCandidateProfileChanged,
+      );
     };
   }, [role]);
 
@@ -133,9 +167,10 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
       return (
         <CandidateSidebar
           {...props}
-          displayName={dashboardUser.name}
-          initials={dashboardUser.initials}
-          avatarUrl={dashboardUser.avatarUrl}
+          isCollapsed={isCandidateSidebarCollapsed}
+          onToggleCollapse={() =>
+            setIsCandidateSidebarCollapsed((current) => !current)
+          }
         />
       );
     }
@@ -161,7 +196,13 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
         </div>
       ) : null}
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-65">
+      <div
+        className={`flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 ${
+          role === "candidate" && isCandidateSidebarCollapsed
+            ? "lg:pl-20"
+            : "lg:pl-65"
+        }`}
+      >
         <Topbar
           role={role}
           pathname={pathname}

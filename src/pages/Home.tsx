@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HeroSection from "../components/home/HeroSection";
 import FeaturedJobs from "../components/home/FeaturedJobs";
 import WhyChooseUs from "../components/home/WhyChooseUs";
+import { homeService, type SystemStats } from "@/services/home.service";
 import { jobService } from "@/services/job.service";
 import type { Job } from "@/types/job.type";
 
@@ -13,23 +14,31 @@ export default function Home() {
   const [featuredJobsError, setFeaturedJobsError] = useState<string | null>(
     null,
   );
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadFeaturedJobs = async () => {
+    const loadHomeData = async () => {
       try {
         setIsLoadingFeaturedJobs(true);
         setFeaturedJobsError(null);
 
-        const response = await jobService.getFeaturedJobs(6);
+        const [featuredResponse, homeResponse] = await Promise.allSettled([
+          jobService.getFeaturedJobs(6),
+          homeService.getHomeContent(),
+        ]);
 
-        if (isMounted) {
-          setFeaturedJobs(response.data);
-        }
-      } catch {
-        if (isMounted) {
+        if (!isMounted) return;
+
+        if (featuredResponse.status === "fulfilled") {
+          setFeaturedJobs(featuredResponse.value.data);
+        } else {
           setFeaturedJobsError("Không thể tải việc làm nổi bật.");
+        }
+
+        if (homeResponse.status === "fulfilled") {
+          setSystemStats(homeResponse.value.data.systemStats);
         }
       } finally {
         if (isMounted) {
@@ -38,7 +47,7 @@ export default function Home() {
       }
     };
 
-    loadFeaturedJobs();
+    loadHomeData();
 
     return () => {
       isMounted = false;
@@ -64,7 +73,12 @@ export default function Home() {
 
   return (
     <main className="bg-white">
-      <HeroSection onSearch={handleHeroSearch} />
+      <HeroSection
+        onSearch={handleHeroSearch}
+        featuredJobs={featuredJobs}
+        isLoadingFeaturedJobs={isLoadingFeaturedJobs}
+        systemStats={systemStats}
+      />
       <FeaturedJobs
         jobs={featuredJobs}
         isLoading={isLoadingFeaturedJobs}
