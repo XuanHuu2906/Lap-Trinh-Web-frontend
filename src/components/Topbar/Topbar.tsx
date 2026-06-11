@@ -60,7 +60,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/recruiter/candidates": "Quản lý ứng viên",
   "/recruiter/chat": "Trò chuyện",
   "/recruiter/notifications": "Thông báo",
-  "/recruiter/settings": "Cài đặt doanh nghiệp",
+  "/recruiter/settings": "Cài đặt hệ thống",
 
   "/admin": "Tổng quan hệ thống",
   "/admin/dashboard": "Tổng quan hệ thống",
@@ -88,8 +88,8 @@ const fallbackUsers: Record<DashboardRole, TopbarUser> = {
   recruiter: {
     name: "Nhà tuyển dụng",
     roleLabel: "HR Manager",
-    initials: "NT",
-    email: "",
+    initials: "NTD",
+    email: "recruiter@hirearch.com",
     profilePath: "/recruiter/settings",
   },
   admin: {
@@ -101,27 +101,28 @@ const fallbackUsers: Record<DashboardRole, TopbarUser> = {
   },
 };
 
-const ROLE_NOTIFICATION_PREVIEWS: Partial<
-  Record<DashboardRole, TopbarNotification[]>
-> = {
-  admin: [
-    {
-      id: "admin-job-review",
-      title: "Tin tuyển dụng cần duyệt",
-      message: "Có tin tuyển dụng mới đang chờ kiểm duyệt nội dung.",
-      timeLabel: "10 phút trước",
-      isRead: false,
-    },
-  ],
-  recruiter: [
-    {
-      id: "recruiter-application",
-      title: "Hồ sơ ứng tuyển mới",
-      message: "Một ứng viên vừa nộp hồ sơ vào tin tuyển dụng của bạn.",
-      timeLabel: "2 phút trước",
-      isRead: false,
-    },
-  ],
+const formatNotificationTime = (value: string) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 1) return "Vừa xong";
+  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 };
 
 const formatNotificationTime = (value: string) =>
@@ -140,31 +141,34 @@ export function Topbar({
   user,
 }: TopbarProps) {
   const { theme, toggleTheme } = useTheme();
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<TopbarNotification[]>([]);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
+
   const currentUser = user || fallbackUsers[role];
   const darkMode = theme === "dark";
+
   const notificationsPath =
-    role === "candidate" ? "/candidate/notifications" : `/${role}/notifications`;
+    role === "candidate"
+      ? "/candidate/notifications"
+      : `/${role}/notifications`;
+
   const matchedKey = Object.keys(PAGE_TITLES).find(
     (key) => pathname === key || pathname.startsWith(`${key}/`),
   );
+
   const pageTitle = matchedKey ? PAGE_TITLES[matchedKey] : "Bảng điều khiển";
-  const displayedNotifications =
-    role === "candidate" ? notifications : ROLE_NOTIFICATION_PREVIEWS[role] ?? [];
+
+  const displayedNotifications = notifications;
+
   const hasUnreadNotifications = displayedNotifications.some(
     (item) => !item.isRead,
   );
 
   useEffect(() => {
     if (!isNotificationsOpen) return;
-
-    if (role !== "candidate") {
-      setIsNotificationsLoading(false);
-      return;
-    }
 
     let isMounted = true;
 
@@ -187,14 +191,18 @@ export function Topbar({
             })),
           );
         }
-      } catch {
-        if (isMounted) setNotifications([]);
+      } catch (error) {
+        console.error("Lỗi khi tải thông báo:", error);
+
+        if (isMounted) {
+          setNotifications([]);
+        }
       } finally {
         if (isMounted) setIsNotificationsLoading(false);
       }
     };
 
-    loadNotifications();
+    void loadNotifications();
 
     return () => {
       isMounted = false;
@@ -212,17 +220,30 @@ export function Topbar({
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="min-w-0">
+
+        <div className="hidden sm:block">
           <span className="mb-1 block text-[10px] font-bold uppercase leading-none tracking-widest text-slate-400 dark:text-slate-500">
             {BREADCRUMBS[role]}
           </span>
-          <h2 className="truncate text-base font-bold leading-none text-slate-900 dark:text-white">
+
+          <h2 className="text-base font-bold leading-none text-slate-900 dark:text-white">
             {pageTitle}
           </h2>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
+        {role !== "admin" ? (
+          <div className="relative hidden md:block">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+            <input
+              placeholder="Tìm kiếm..."
+              className="h-9 w-52 rounded-lg border border-slate-200 bg-white pl-9 pr-4 text-[13px] text-slate-700 outline-none transition-all focus:w-60 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+            />
+          </div>
+        ) : null}
+
         <button
           type="button"
           onClick={toggleTheme}
@@ -247,6 +268,7 @@ export function Topbar({
             aria-label="Thông báo"
           >
             <Bell className="h-5 w-5 stroke-[1.8]" />
+
             {hasUnreadNotifications ? (
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-slate-900" />
             ) : null}
@@ -258,11 +280,13 @@ export function Topbar({
                 className="fixed inset-0 z-40"
                 onClick={() => setIsNotificationsOpen(false)}
               />
-              <div className="absolute right-0 z-50 mt-3 w-88 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900">
+
+              <div className="absolute right-0 z-50 mt-3 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  <span className="block text-sm font-bold text-slate-900 dark:text-white">
                     Thông báo
                   </span>
+
                   <Link
                     to={notificationsPath}
                     onClick={() => setIsNotificationsOpen(false)}
@@ -292,16 +316,19 @@ export function Topbar({
                             className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
                               item.isRead
                                 ? "bg-slate-300 dark:bg-slate-700"
-                                : "bg-blue-600"
+                                : "bg-indigo-500"
                             }`}
                           />
+
                           <div className="min-w-0 flex-1">
                             <p className="line-clamp-1 text-xs font-bold text-slate-900 dark:text-white">
                               {item.title}
                             </p>
+
                             <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
                               {item.message}
                             </p>
+
                             <span className="mt-1.5 block text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                               {item.timeLabel}
                             </span>
@@ -327,6 +354,7 @@ export function Topbar({
           >
             <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
               <span>{currentUser.initials}</span>
+
               {currentUser.avatarUrl ? (
                 <img
                   src={currentUser.avatarUrl}
@@ -338,14 +366,17 @@ export function Topbar({
                 />
               ) : null}
             </div>
-            <div className="hidden min-w-0 text-left md:block">
-              <span className="block max-w-40 truncate text-sm font-bold leading-4 text-slate-900 dark:text-white">
+
+            <div className="hidden text-left leading-none md:block">
+              <span className="block text-xs font-bold text-slate-800 dark:text-white">
                 {currentUser.name}
               </span>
-              <span className="mt-0.5 block max-w-40 truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+
+              <span className="mt-0.5 block max-w-40 truncate text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                 {currentUser.email || currentUser.roleLabel}
               </span>
             </div>
+
             <ChevronDown className="hidden h-4 w-4 text-slate-400 md:block" />
           </button>
 
@@ -355,23 +386,58 @@ export function Topbar({
                 className="fixed inset-0 z-40"
                 onClick={() => setIsProfileOpen(false)}
               />
-              <div className="absolute right-0 z-50 mt-3 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900">
+
+              <div className="absolute right-0 z-50 mt-3 w-60 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-md dark:border-slate-800 dark:bg-slate-900">
                 <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                   <span className="block text-xs font-bold text-slate-900 dark:text-white">
                     {currentUser.name}
                   </span>
-                  <span className="mt-1 block truncate text-[11px] text-slate-500 dark:text-slate-400">
-                    {currentUser.email || currentUser.roleLabel}
+
+                  <span className="mt-0.5 block truncate text-xs font-bold text-slate-700 dark:text-white">
+                    {currentUser.email || currentUser.name}
                   </span>
                 </div>
-                <Link
-                  to={currentUser.profilePath}
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                >
-                  <User className="h-4 w-4 text-slate-400" />
-                  Hồ sơ cá nhân
-                </Link>
+
+                {role === "recruiter" ? (
+                  <>
+                    <Link
+                      to="/recruiter/settings?tab=company"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                    >
+                      <User className="h-4 w-4 text-slate-400" />
+                      Hồ sơ công ty
+                    </Link>
+
+                    <Link
+                      to="/recruiter/settings?tab=contact"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                    >
+                      <Settings className="h-4 w-4 text-slate-400" />
+                      Thông tin liên hệ
+                    </Link>
+
+                    <Link
+                      to="/recruiter/settings?tab=password"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                    >
+                      <Settings className="h-4 w-4 text-slate-400" />
+                      Đổi mật khẩu
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    to={currentUser.profilePath}
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                  >
+                    <User className="h-4 w-4 text-slate-400" />
+                    Thông tin cá nhân
+                  </Link>
+                )}
+
                 <button
                   type="button"
                   onClick={() => {
