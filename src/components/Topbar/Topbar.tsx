@@ -6,6 +6,7 @@ import {
   LogOut,
   Menu,
   Moon,
+  Settings,
   Sun,
   User,
 } from "lucide-react";
@@ -37,6 +38,7 @@ interface TopbarProps {
   onOpenMobileSidebar: () => void;
   onLogout: () => void;
   user?: TopbarUser;
+  isSidebarCollapsed?: boolean;
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -125,20 +127,13 @@ const formatNotificationTime = (value: string) => {
   }).format(date);
 };
 
-const formatNotificationTime = (value: string) =>
-  new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-
 export function Topbar({
   role,
   pathname,
   onOpenMobileSidebar,
   onLogout,
   user,
+  isSidebarCollapsed = false,
 }: TopbarProps) {
   const { theme, toggleTheme } = useTheme();
 
@@ -210,7 +205,11 @@ export function Topbar({
   }, [isNotificationsOpen, role]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-[68px] shrink-0 items-center justify-between border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/95 sm:px-8">
+    <header
+      className={`fixed left-0 right-0 top-0 z-40 flex h-[68px] shrink-0 items-center justify-between border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur transition-[left,background-color,border-color] duration-200 dark:border-slate-800 dark:bg-slate-900/95 sm:px-8 ${
+        isSidebarCollapsed ? "lg:left-20" : "lg:left-65"
+      }`}
+    >
       <div className="flex min-w-0 items-center gap-4">
         <button
           type="button"
@@ -233,17 +232,6 @@ export function Topbar({
       </div>
 
       <div className="flex items-center gap-4">
-        {role !== "admin" ? (
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-            <input
-              placeholder="Tìm kiếm..."
-              className="h-9 w-52 rounded-lg border border-slate-200 bg-white pl-9 pr-4 text-[13px] text-slate-700 outline-none transition-all focus:w-60 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
-            />
-          </div>
-        ) : null}
-
         <button
           type="button"
           onClick={toggleTheme}
@@ -313,11 +301,10 @@ export function Topbar({
                       >
                         <div className="flex items-start gap-3">
                           <span
-                            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
-                              item.isRead
-                                ? "bg-slate-300 dark:bg-slate-700"
-                                : "bg-indigo-500"
-                            }`}
+                            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.isRead
+                              ? "bg-slate-300 dark:bg-slate-700"
+                              : "bg-indigo-500"
+                              }`}
                           />
 
                           <div className="min-w-0 flex-1">
@@ -407,15 +394,6 @@ export function Topbar({
                     >
                       <User className="h-4 w-4 text-slate-400" />
                       Hồ sơ công ty
-                    </Link>
-
-                    <Link
-                      to="/recruiter/settings?tab=contact"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                    >
-                      <Settings className="h-4 w-4 text-slate-400" />
-                      Thông tin liên hệ
                     </Link>
 
                     <Link
