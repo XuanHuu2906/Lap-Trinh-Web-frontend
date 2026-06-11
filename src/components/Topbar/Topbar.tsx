@@ -206,7 +206,7 @@ export function Topbar({
 
   return (
     <header
-      className={`fixed left-0 right-0 top-0 z-40 flex h-[68px] shrink-0 items-center justify-between border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur transition-[left,background-color,border-color] duration-200 dark:border-slate-800 dark:bg-slate-900/95 sm:px-8 ${
+      className={`fixed left-0 right-0 top-0 z-40 flex h-17 shrink-0 items-center justify-between border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur transition-[left,background-color,border-color] duration-200 dark:border-slate-800 dark:bg-slate-900/95 sm:px-8 ${
         isSidebarCollapsed ? "lg:left-20" : "lg:left-65"
       }`}
     >
@@ -236,7 +236,9 @@ export function Topbar({
           type="button"
           onClick={toggleTheme}
           className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-          title={darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+          title={
+            darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"
+          }
         >
           {darkMode ? (
             <Sun className="h-5 w-5 text-amber-400" />
@@ -269,7 +271,7 @@ export function Topbar({
                 onClick={() => setIsNotificationsOpen(false)}
               />
 
-              <div className="absolute right-0 z-50 mt-3 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
+              <div className="absolute right-0 z-50 mt-3 w-88 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                   <span className="block text-sm font-bold text-slate-900 dark:text-white">
                     Thông báo
@@ -301,10 +303,11 @@ export function Topbar({
                       >
                         <div className="flex items-start gap-3">
                           <span
-                            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.isRead
-                              ? "bg-slate-300 dark:bg-slate-700"
-                              : "bg-indigo-500"
-                              }`}
+                            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                              item.isRead
+                                ? "bg-slate-300 dark:bg-slate-700"
+                                : "bg-indigo-500"
+                            }`}
                           />
 
                           <div className="min-w-0 flex-1">
@@ -339,7 +342,7 @@ export function Topbar({
             }}
             className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm transition hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 dark:hover:border-blue-800"
           >
-            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
               <span>{currentUser.initials}</span>
 
               {currentUser.avatarUrl ? (

@@ -45,7 +45,7 @@ function App() {
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="jobs" element={<JobList />} />
-          <Route path="jobs/:id" element={<JobDetail />} />
+          <Route path="jobs/:id" element={<JobDetail variant="public" />} />
           <Route path="cv-templates" element={<CVTemplatePage />} />
           <Route path="resources" element={<Navigate to="/cv-templates" replace />} />
           <Route
@@ -74,9 +74,9 @@ function App() {
             <Route path="applied-jobs" element={<AppliedJobs />} />
             <Route path="saved-jobs" element={<SavedJobs />} />
             <Route path="my-cvs" element={<MyCVs />} />
-            <Route path="job-search" element={<JobSearch />} />
-            <Route path="find-jobs" element={<JobSearch />} />
-            <Route path="jobs/:id" element={<JobDetail />} />
+            <Route path="job-search" element={<JobSearch variant="candidate" />} />
+            <Route path="find-jobs" element={<JobSearch variant="candidate" />} />
+            <Route path="jobs/:id" element={<JobDetail variant="candidate" />} />
             <Route path="chat" element={<Chat />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="cv-templates" element={<CVTemplatePage />} />

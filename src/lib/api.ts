@@ -41,6 +41,10 @@ const refreshAccessToken = async () => {
 };
 
 api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
+
   const token =
     localStorage.getItem("accessToken") ||
     localStorage.getItem("token") ||
