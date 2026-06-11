@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Bookmark,
   BriefcaseBusiness,
@@ -28,6 +28,78 @@ type SearchFilters = {
   experienceLevel: string;
   jobType: string;
   salary: string;
+};
+
+type JobSearchVariant = "public" | "candidate";
+
+type JobSearchStyle = {
+  page: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  layout: string;
+  filterPanel: string;
+  filterButton: string;
+  inputWrap: string;
+  input: string;
+  select: string;
+  cardGrid: string;
+  jobCard: string;
+  emptyState: string;
+  skeletonCard: string;
+};
+
+const jobSearchStyles: Record<JobSearchVariant, JobSearchStyle> = {
+  public: {
+    page: "mx-auto w-full max-w-6xl px-4 py-10 text-slate-800 dark:text-slate-100",
+    eyebrow:
+      "text-xs font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400",
+    title: "mt-2 text-3xl font-black text-slate-950 dark:text-white",
+    subtitle: "mt-2 text-sm text-slate-500 dark:text-slate-400",
+    layout: "flex items-start gap-5",
+    filterPanel:
+      "w-64 shrink-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900",
+    filterButton:
+      "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 lg:hidden",
+    inputWrap:
+      "flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-800 dark:bg-slate-950",
+    input:
+      "h-11 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-600",
+    select:
+      "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100",
+    cardGrid: "mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3",
+    jobCard:
+      "flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/70",
+    emptyState:
+      "flex min-h-80 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-center shadow-sm dark:border-slate-800 dark:bg-slate-900",
+    skeletonCard:
+      "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900",
+  },
+  candidate: {
+    page: "mx-auto max-w-7xl text-slate-800 dark:text-slate-100",
+    eyebrow:
+      "text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500",
+    title: "mt-2 text-3xl font-bold text-slate-950 dark:text-white",
+    subtitle: "mt-2 text-sm text-slate-500 dark:text-slate-400",
+    layout: "flex items-start gap-5",
+    filterPanel:
+      "w-64 shrink-0 border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900",
+    filterButton:
+      "inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 lg:hidden",
+    inputWrap:
+      "flex items-center border border-slate-200 bg-slate-50 px-3 dark:border-slate-800 dark:bg-slate-950",
+    input:
+      "h-11 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-600",
+    select:
+      "h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100",
+    cardGrid: "mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3",
+    jobCard:
+      "flex flex-col border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/70",
+    emptyState:
+      "flex min-h-80 flex-col items-center justify-center border border-slate-200 bg-white text-center shadow-sm dark:border-slate-800 dark:bg-slate-900",
+    skeletonCard:
+      "border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900",
+  },
 };
 
 type JobSearchCacheData = {
@@ -154,9 +226,9 @@ const flattenCategories = (categories: CategoryOption[]) =>
     })),
   ]);
 
-function JobCardSkeleton() {
+function JobCardSkeleton({ className }: { className: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className={className}>
       <div className="mb-4 h-3 w-32 rounded bg-slate-100 dark:bg-slate-800" />
       <div className="mb-5 flex gap-3">
         <div className="h-11 w-11 rounded-lg bg-slate-100 dark:bg-slate-800" />
@@ -174,11 +246,15 @@ function JobCardSkeleton() {
   );
 }
 
-export default function JobSearch() {
+export default function JobSearch({
+  variant = "public",
+}: {
+  variant?: JobSearchVariant;
+}) {
   const navigate = useNavigate();
-  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
-  const isCandidatePage = location.pathname.startsWith("/candidate");
+  const isCandidatePage = variant === "candidate";
+  const styles = jobSearchStyles[variant];
   const initialCache = getFreshJobCache(
     makeCacheKey(1, DEFAULT_FILTERS, "newest"),
   );
@@ -422,16 +498,16 @@ export default function JobSearch() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl text-slate-800 dark:text-slate-100">
+    <div className={styles.page}>
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">
+          <p className={styles.eyebrow}>
             HireArch / Cổng ứng viên
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-950 dark:text-white">
+          <h1 className={styles.title}>
             Tìm việc làm
           </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className={styles.subtitle}>
             Tìm kiếm cơ hội đang hoạt động từ dữ liệu tuyển dụng thật.
           </p>
         </div>
@@ -458,9 +534,9 @@ export default function JobSearch() {
         </div>
       ) : null}
 
-      <div className="flex items-start gap-5">
+      <div className={styles.layout}>
         <aside
-          className={`w-64 shrink-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${
+          className={`${styles.filterPanel} ${
             mobileFilterOpen ? "block" : "hidden"
           } lg:block`}
         >
@@ -480,7 +556,7 @@ export default function JobSearch() {
               <label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Từ khóa
               </label>
-              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-800 dark:bg-slate-950">
+              <div className={styles.inputWrap}>
                 <Search className="mr-2 h-4 w-4 text-slate-400" />
                 <input
                   value={keyword}
@@ -489,7 +565,7 @@ export default function JobSearch() {
                     if (event.key === "Enter") handleApplyFilters();
                   }}
                   placeholder="Tên việc, công ty..."
-                  className="h-11 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-600"
+                  className={styles.input}
                 />
               </div>
             </div>
@@ -501,7 +577,7 @@ export default function JobSearch() {
               <select
                 value={categoryId}
                 onChange={(event) => setCategoryId(event.target.value)}
-                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                className={styles.select}
               >
                 <option value="">Tất cả ngành nghề</option>
                 {categoryOptions.map((item) => (
@@ -543,7 +619,7 @@ export default function JobSearch() {
               <select
                 value={experienceLevel}
                 onChange={(event) => setExperienceLevel(event.target.value)}
-                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                className={styles.select}
               >
                 {EXPERIENCE_OPTIONS.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -560,7 +636,7 @@ export default function JobSearch() {
               <select
                 value={jobType}
                 onChange={(event) => setJobType(event.target.value)}
-                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                className={styles.select}
               >
                 {JOB_TYPE_OPTIONS.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -586,7 +662,7 @@ export default function JobSearch() {
               <button
                 type="button"
                 onClick={() => setMobileFilterOpen((current) => !current)}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 lg:hidden"
+                className={styles.filterButton}
               >
                 <SlidersHorizontal size={15} />
                 Bộ lọc
@@ -599,13 +675,13 @@ export default function JobSearch() {
           </div>
 
           {isLoading ? (
-            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className={styles.cardGrid}>
               {Array.from({ length: 6 }).map((_, index) => (
-                <JobCardSkeleton key={index} />
+                <JobCardSkeleton key={index} className={styles.skeletonCard} />
               ))}
             </div>
           ) : jobs.length === 0 ? (
-            <div className="flex min-h-80 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className={styles.emptyState}>
               <BriefcaseBusiness className="mb-4 text-slate-300 dark:text-slate-700" size={46} />
               <p className="font-semibold text-slate-950 dark:text-white">
                 Không có việc làm phù hợp.
@@ -615,11 +691,11 @@ export default function JobSearch() {
               </p>
             </div>
           ) : (
-            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className={styles.cardGrid}>
               {jobs.map((job) => (
                 <article
                   key={job.id}
-                  className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/70"
+                  className={styles.jobCard}
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">
                     <p className="line-clamp-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">

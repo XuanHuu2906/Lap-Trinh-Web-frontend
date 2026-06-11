@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../utils/supabase";
 import Footer from "../../components/layout/Footer";
 import {
-  completePendingApplyJob,
+  clearPendingApplyJob,
   getPendingApplyJob,
 } from "@/services/job-application-flow";
 
@@ -21,15 +21,14 @@ export function LoginPage() {
 
   // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
   const navigateAfterLogin = async (user: { role: string }) => {
-    if (user.role === "candidate" && getPendingApplyJob()) {
-      try {
-        await completePendingApplyJob();
-        navigate("/candidate/applied-jobs");
-        return;
-      } catch {
-        navigate("/candidate/job-search");
-        return;
-      }
+    const pendingJobId = getPendingApplyJob();
+
+    if (user.role === "candidate" && pendingJobId) {
+      clearPendingApplyJob();
+      navigate(`/candidate/jobs/${pendingJobId}`, {
+        state: { openApplyForm: true },
+      });
+      return;
     }
 
     if (user.role === "admin") {
