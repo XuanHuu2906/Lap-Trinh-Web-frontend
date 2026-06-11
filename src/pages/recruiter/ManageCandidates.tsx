@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   createEvaluation,
   createFeedback,
@@ -59,6 +60,9 @@ const getCandidateName = (application: RecruiterApplication) => {
 };
 
 export function ManageCandidatesPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const jobIdParam = searchParams.get("jobId");
+
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | "">("");
   const [applications, setApplications] = useState<RecruiterApplication[]>([]);
@@ -98,10 +102,17 @@ export function ManageCandidatesPage() {
     try {
       const response = await getMyJobs({ page: 1, limit: 50, status: "" });
       const myJobs = response.data ?? [];
+      const requestedJobId = jobIdParam ? Number(jobIdParam) : null;
 
       setJobs(myJobs);
 
-      if (!selectedJobId && myJobs.length > 0) {
+      if (
+        requestedJobId &&
+        Number.isInteger(requestedJobId) &&
+        myJobs.some((job) => job.id === requestedJobId)
+      ) {
+        setSelectedJobId(requestedJobId);
+      } else if (!selectedJobId && myJobs.length > 0) {
         setSelectedJobId(myJobs[0].id);
       }
     } catch (err) {
@@ -156,7 +167,7 @@ export function ManageCandidatesPage() {
   useEffect(() => {
     void loadJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [jobIdParam]);
 
   useEffect(() => {
     void loadApplications();
@@ -170,6 +181,21 @@ export function ManageCandidatesPage() {
     setNotes(application.evaluations?.[0]?.notes ?? "");
     setMessage("");
     setError("");
+  };
+
+  const handleSelectJob = (value: string) => {
+    const nextJobId = value ? Number(value) : "";
+    setSelectedJobId(nextJobId);
+    setSelectedApplication(null);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextJobId) {
+      nextParams.set("jobId", String(nextJobId));
+    } else {
+      nextParams.delete("jobId");
+    }
+
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleChangeStatus = async (
@@ -255,9 +281,7 @@ export function ManageCandidatesPage() {
             <select
               value={selectedJobId}
               disabled={jobsLoading}
-              onChange={(e) =>
-                setSelectedJobId(e.target.value ? Number(e.target.value) : "")
-              }
+              onChange={(e) => handleSelectJob(e.target.value)}
               className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none"
             >
               <option value="">

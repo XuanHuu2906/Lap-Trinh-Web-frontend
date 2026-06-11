@@ -1,4 +1,4 @@
-import { requestApi } from "./api";
+import { requestApi, type ApiResponse } from "./api";
 
 export type JobStatus = "draft" | "active" | "closed" | "deleted";
 export type JobType = "full-time" | "part-time" | "remote" | "hybrid" | "freelance" | "internship";
@@ -41,6 +41,7 @@ export interface CreateJobPayload {
   categoryId?: number | null;
   expiresAt?: string | null;
   skillIds?: number[];
+  status?: "active" | "draft";
 }
 
 export interface RecruiterApplication {
@@ -87,7 +88,28 @@ export interface RecruiterProfile {
   website?: string | null;
   description?: string | null;
   logoUrl?: string | null;
+  logoStoragePath?: string | null;
 }
+
+let recruiterProfileCache: ApiResponse<RecruiterProfile> | null = null;
+export const RECRUITER_PROFILE_CHANGED_EVENT = "recruiter-profile:changed";
+
+const notifyRecruiterProfileChanged = (detail: Partial<RecruiterProfile>) => {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent<Partial<RecruiterProfile>>(
+      RECRUITER_PROFILE_CHANGED_EVENT,
+      { detail },
+    ),
+  );
+};
+
+export const getCachedRecruiterProfile = () => recruiterProfileCache;
+
+export const clearRecruiterProfileCache = () => {
+  recruiterProfileCache = null;
+};
 
 export interface PaginationMeta {
   total: number;
@@ -110,6 +132,14 @@ export async function getMyJobs(params: { page?: number; limit?: number; status?
 
 export async function createJob(data: CreateJobPayload) {
   return requestApi<RecruiterJob>({ method: "POST", url: "/jobs", data });
+}
+
+export async function getMyJobDetail(id: number) {
+  return requestApi<RecruiterJob>({ method: "GET", url: `/jobs/${id}/recruiter` });
+}
+
+export async function updateJob(id: number, data: CreateJobPayload) {
+  return requestApi<RecruiterJob>({ method: "PUT", url: `/jobs/${id}`, data });
 }
 
 export async function updateJobStatus(id: number, status: "active" | "closed") {
@@ -153,8 +183,15 @@ export async function createEvaluation(applicationId: number, score: number, not
   return requestApi({ method: "POST", url: `/applications/${applicationId}/evaluate`, data: { score, notes } });
 }
 
-export async function getRecruiterProfile() {
-  return requestApi<RecruiterProfile>({ method: "GET", url: "/users/recruiter/profile" });
+export async function getRecruiterProfile(forceRefresh = false) {
+  if (!forceRefresh && recruiterProfileCache) return recruiterProfileCache;
+
+  const response = await requestApi<RecruiterProfile>({
+    method: "GET",
+    url: "/users/recruiter/profile",
+  });
+  recruiterProfileCache = response;
+  return response;
 }
 
 export async function updateRecruiterProfile(data: {
@@ -165,17 +202,38 @@ export async function updateRecruiterProfile(data: {
   website?: string | null;
   description?: string | null;
 }) {
-  return requestApi<RecruiterProfile>({ method: "PUT", url: "/users/recruiter/profile", data });
+  const response = await requestApi<RecruiterProfile>({
+    method: "PUT",
+    url: "/users/recruiter/profile",
+    data,
+  });
+  recruiterProfileCache = response;
+  notifyRecruiterProfileChanged(response.data);
+  return response;
 }
 
 export async function uploadRecruiterLogo(file: File) {
   const formData = new FormData();
   formData.append("logo", file);
 
-  return requestApi<{ logoUrl: string }>({
+  const response = await requestApi<{ logoUrl: string | null; logoStoragePath: string | null }>({
     method: "POST",
     url: "/users/recruiter/logo",
     data: formData,
     headers: { "Content-Type": "multipart/form-data" },
   });
+
+  if (recruiterProfileCache) {
+    recruiterProfileCache = {
+      ...recruiterProfileCache,
+      data: {
+        ...recruiterProfileCache.data,
+        logoUrl: response.data.logoUrl,
+        logoStoragePath: response.data.logoStoragePath,
+      },
+    };
+  }
+
+  notifyRecruiterProfileChanged(response.data);
+  return response;
 }

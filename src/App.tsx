@@ -15,7 +15,6 @@ import { ForgotPasswordPage } from "./pages/auth/ForgotPassword";
 import { LoginPage } from "./pages/auth/Login";
 import { CandidateRegisterPage } from "./pages/auth/RegisterCandidate";
 import { EnterpriseRegisterPage } from "./pages/auth/RegisterEnterprise";
-import { RecruiterRegisterPage } from "./pages/auth/RegisterEmployer";
 import { ResetPasswordPage } from "./pages/auth/ResetPassword";
 import { SetupProfilePage } from "./pages/auth/SetupProfile";
 import AppliedJobs from "./pages/candidate/AppliedJobs";
@@ -36,6 +35,7 @@ import { ManageJobsPage } from "./pages/recruiter/ManageJobs";
 import { RecruiterNotificationsPage } from "./pages/recruiter/Notifications";
 import { RecruiterOverviewPage } from "./pages/recruiter/Overview";
 import { PostJobPage } from "./pages/recruiter/PostJob";
+import { RecruiterJobDetailPage } from "./pages/recruiter/RecruiterJobDetail";
 import { SettingsPage } from "./pages/recruiter/Settings";
 
 function App() {
@@ -60,7 +60,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/register" element={<CandidateRegisterPage />} />
         <Route path="/register-candidate" element={<CandidateRegisterPage />} />
-        <Route path="/register-employer" element={<RecruiterRegisterPage />} />
+        <Route path="/register-employer" element={<EnterpriseRegisterPage />} />
         <Route path="/register-enterprise" element={<EnterpriseRegisterPage />} />
 
         <Route element={<ProtectedRoute allowedRoles={["pending"]} />}>
@@ -91,6 +91,8 @@ function App() {
             <Route path="overview" element={<RecruiterOverviewPage />} />
             <Route path="post-job" element={<PostJobPage />} />
             <Route path="manage-jobs" element={<ManageJobsPage />} />
+            <Route path="manage-jobs/:id" element={<RecruiterJobDetailPage />} />
+            <Route path="manage-jobs/:id/edit" element={<PostJobPage />} />
             <Route path="candidates" element={<ManageCandidatesPage />} />
             <Route path="chat" element={<RecruiterChatPage />} />
             <Route path="notifications" element={<RecruiterNotificationsPage />} />

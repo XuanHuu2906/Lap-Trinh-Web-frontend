@@ -80,9 +80,9 @@ export function EnterpriseRegisterPage() {
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col justify-between text-slate-800">
       {/* Vùng không gian để căn thẻ đăng ký */}
-      <main className="flex-1 flex items-start justify-center px-4 pt-12.5 pb-12.5">
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
         {/* Thẻ đăng ký nhà tuyển dụng (Card) màu trắng nổi bật */}
-        <div className="w-full  bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
+        <div className="w-full max-w-125 bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-slate-900 leading-none tracking-tight">
               Đăng ký nhà tuyển dụng

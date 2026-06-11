@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  Eye,
+  Lock,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Unlock,
+  UsersRound,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   deleteJob,
   getMyJobs,
   updateJobStatus,
+  type PaginationMeta,
   type RecruiterJob,
 } from "../../services/recruiter.service";
 
@@ -62,6 +72,9 @@ export function ManageJobsPage() {
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatusFilter>("");
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [openMenuJobId, setOpenMenuJobId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -72,12 +85,13 @@ export function ManageJobsPage() {
 
     try {
       const response = await getMyJobs({
-        page: 1,
-        limit: 50,
+        page,
+        limit: 10,
         status: statusFilter,
       });
 
       setJobs(response.data ?? []);
+      setMeta(response.meta ?? null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -92,7 +106,27 @@ export function ManageJobsPage() {
   useEffect(() => {
     void loadJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, page]);
+
+  useEffect(() => {
+    const closeMenu = () => setOpenMenuJobId(null);
+    const closeMenuOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMenu();
+    };
+
+    window.addEventListener("click", closeMenu);
+    window.addEventListener("keydown", closeMenuOnEscape);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+      window.removeEventListener("keydown", closeMenuOnEscape);
+    };
+  }, []);
+
+  const handleStatusFilterChange = (nextStatus: JobStatusFilter) => {
+    setStatusFilter(nextStatus);
+    setPage(1);
+  };
 
   const filteredJobs = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -192,7 +226,7 @@ export function ManageJobsPage() {
       <div className="mb-6 grid grid-cols-4 gap-4">
         <button
           type="button"
-          onClick={() => setStatusFilter("")}
+          onClick={() => handleStatusFilterChange("")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === ""
               ? "border-indigo-300 bg-indigo-50"
@@ -209,7 +243,7 @@ export function ManageJobsPage() {
 
         <button
           type="button"
-          onClick={() => setStatusFilter("active")}
+          onClick={() => handleStatusFilterChange("active")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === "active"
               ? "border-emerald-300 bg-emerald-50"
@@ -226,7 +260,7 @@ export function ManageJobsPage() {
 
         <button
           type="button"
-          onClick={() => setStatusFilter("draft")}
+          onClick={() => handleStatusFilterChange("draft")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === "draft"
               ? "border-slate-300 bg-slate-50"
@@ -243,7 +277,7 @@ export function ManageJobsPage() {
 
         <button
           type="button"
-          onClick={() => setStatusFilter("closed")}
+          onClick={() => handleStatusFilterChange("closed")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === "closed"
               ? "border-red-300 bg-red-50"
@@ -269,7 +303,9 @@ export function ManageJobsPage() {
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as JobStatusFilter)}
+          onChange={(e) =>
+            handleStatusFilterChange(e.target.value as JobStatusFilter)
+          }
           className="h-10 w-48 border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none"
         >
           <option value="">Tất cả trạng thái</option>
@@ -304,7 +340,7 @@ export function ManageJobsPage() {
               ].map((heading) => (
                 <th
                   key={heading}
-                  className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400"
+                  className="px-5 py-3 text-left text-[12px] font-semibold text-slate-500"
                 >
                   {heading}
                 </th>
@@ -336,98 +372,198 @@ export function ManageJobsPage() {
             )}
 
             {!loading &&
-              filteredJobs.map((job) => (
-                <tr
-                  key={job.id}
-                  className="border-b border-slate-50 transition-colors hover:bg-slate-50"
-                >
-                  <td className="px-5 py-5">
-                    <p className="text-[14px] font-bold text-slate-900">
-                      {job.title}
-                    </p>
+              filteredJobs.map((job) => {
+                const applicationCount = job._count?.applications ?? 0;
+                const menuOpen = openMenuJobId === job.id;
 
-                    <p className="mt-1 text-[12px] text-slate-400">
-                      {job.location || "Chưa cập nhật địa điểm"} •{" "}
-                      {job.jobType || "Không rõ hình thức"}
-                    </p>
-                  </td>
+                return (
+                  <tr
+                    key={job.id}
+                    className="border-b border-slate-50 transition-colors hover:bg-slate-50"
+                  >
+                    <td className="px-5 py-4">
+                      <p className="text-[14px] font-bold text-slate-900">
+                        {job.title}
+                      </p>
 
-                  <td className="px-5 py-5 text-[13px] text-slate-600">
-                    {job.category?.name || "Chưa phân loại"}
-                  </td>
+                      <p className="mt-1 text-[12px] text-slate-400">
+                        {job.location || "Chưa cập nhật địa điểm"} •{" "}
+                        {job.jobType || "Không rõ hình thức"}
+                      </p>
+                    </td>
 
-                  <td className="px-5 py-5 text-[13px] text-slate-600">
-                    {formatSalary(job.salaryMin, job.salaryMax)}
-                  </td>
+                    <td className="px-5 py-4 text-[13px] text-slate-600">
+                      {job.category?.name || "Chưa phân loại"}
+                    </td>
 
-                  <td className="px-5 py-5">
-                    <span
-                      className={`inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${
-                        statusStyle[job.status] ??
-                        "border-slate-200 bg-slate-50 text-slate-600"
-                      }`}
-                    >
-                      {statusLabel[job.status] ?? job.status}
-                    </span>
-                  </td>
+                    <td className="px-5 py-4 text-[13px] text-slate-600">
+                      {formatSalary(job.salaryMin, job.salaryMax)}
+                    </td>
 
-                  <td className="px-5 py-5 text-[13px] text-slate-500">
-                    {formatDate(job.createdAt)}
-                  </td>
-
-                  <td className="px-5 py-5 text-[13px] text-slate-500">
-                    {formatDate(job.expiresAt)}
-                  </td>
-
-                  <td className="px-5 py-5 text-[13px] font-semibold text-slate-700">
-                    {job._count?.applications ?? 0}
-                  </td>
-
-                  <td className="px-5 py-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {job.status !== "active" && job.status !== "deleted" && (
-                        <button
-                          type="button"
-                          onClick={() => void handleUpdateStatus(job.id, "active")}
-                          className="h-8 border border-emerald-300 px-3 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50"
-                        >
-                          Mở
-                        </button>
-                      )}
-
-                      {job.status === "active" && (
-                        <button
-                          type="button"
-                          onClick={() => void handleUpdateStatus(job.id, "closed")}
-                          className="h-8 border border-orange-300 px-3 text-[12px] font-semibold text-orange-700 hover:bg-orange-50"
-                        >
-                          Đóng
-                        </button>
-                      )}
-
-                      <Link
-                        to="/recruiter/candidates"
-                        className="inline-flex h-8 items-center border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                    <td className="px-5 py-4">
+                      <span
+                        className={`inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${
+                          statusStyle[job.status] ??
+                          "border-slate-200 bg-slate-50 text-slate-600"
+                        }`}
                       >
-                        Ứng viên
-                      </Link>
+                        {statusLabel[job.status] ?? job.status}
+                      </span>
+                    </td>
 
-                      {job.status !== "deleted" && (
-                        <button
-                          type="button"
-                          onClick={() => void handleDeleteJob(job.id)}
-                          className="h-8 border border-red-200 px-3 text-[12px] font-semibold text-red-600 hover:bg-red-50"
+                    <td className="px-5 py-4 text-[13px] text-slate-500">
+                      {formatDate(job.createdAt)}
+                    </td>
+
+                    <td className="px-5 py-4 text-[13px] text-slate-500">
+                      {formatDate(job.expiresAt)}
+                    </td>
+
+                    <td className="px-5 py-4 text-[13px] font-semibold text-slate-700">
+                      <Link
+                        to={`/recruiter/candidates?jobId=${job.id}`}
+                        className="hover:text-indigo-600 hover:underline"
+                      >
+                        {applicationCount} ứng viên
+                      </Link>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/recruiter/manage-jobs/${job.id}`}
+                          className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
                         >
-                          Xóa
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                          <Eye className="h-3.5 w-3.5" />
+                          Xem
+                        </Link>
+
+                        <Link
+                          to={`/recruiter/candidates?jobId=${job.id}`}
+                          className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                        >
+                          <UsersRound className="h-3.5 w-3.5" />
+                          Ứng viên
+                        </Link>
+
+                        <div
+                          className="relative"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenMenuJobId(menuOpen ? null : job.id)
+                            }
+                            aria-haspopup="menu"
+                            aria-expanded={menuOpen}
+                            className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+
+                          {menuOpen && (
+                            <div
+                              role="menu"
+                              className="absolute right-0 top-9 z-20 w-40 border border-slate-200 bg-white py-1 shadow-lg"
+                            >
+                              <Link
+                                to={`/recruiter/manage-jobs/${job.id}/edit`}
+                                role="menuitem"
+                                className="flex h-9 items-center gap-2 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Sửa tin
+                              </Link>
+
+                              {job.status !== "active" &&
+                                job.status !== "deleted" && (
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() => {
+                                      setOpenMenuJobId(null);
+                                      void handleUpdateStatus(job.id, "active");
+                                    }}
+                                    className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50"
+                                  >
+                                    <Unlock className="h-3.5 w-3.5" />
+                                    Mở tin
+                                  </button>
+                                )}
+
+                              {job.status === "active" && (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setOpenMenuJobId(null);
+                                    void handleUpdateStatus(job.id, "closed");
+                                  }}
+                                  className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-orange-700 hover:bg-orange-50"
+                                >
+                                  <Lock className="h-3.5 w-3.5" />
+                                  Đóng tin
+                                </button>
+                              )}
+
+                              {job.status !== "deleted" && (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setOpenMenuJobId(null);
+                                    void handleDeleteJob(job.id);
+                                  }}
+                                  className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  Xóa tin
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
+
+      {meta && meta.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between border border-slate-200 bg-white px-4 py-3">
+          <p className="text-[13px] text-slate-500">
+            Trang {meta.page}/{meta.totalPages} • {meta.total} tin
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1 || loading}
+              className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Trước
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setPage((current) =>
+                  Math.min(meta.totalPages, current + 1),
+                )
+              }
+              disabled={page >= meta.totalPages || loading}
+              className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
