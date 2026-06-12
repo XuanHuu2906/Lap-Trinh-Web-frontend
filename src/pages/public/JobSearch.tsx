@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { CompanyLogo } from "@/components/company/CompanyLogo";
 import { savePendingSaveJob } from "@/services/job-save-flow";
 import { jobService } from "@/services/job.service";
 import type { Job, JobQuery } from "@/types/job.type";
@@ -193,8 +194,6 @@ const getFreshSavedJobIds = () => {
 
 const companyName = (job: Job) =>
   job.recruiter?.recruiterProfile?.companyName || "Không rõ công ty";
-
-const logoText = (job: Job) => companyName(job).charAt(0).toUpperCase() || "H";
 
 const formatSalary = (job: Job) => {
   if (job.salaryUnit === "negotiable") return "Thỏa thuận";
@@ -699,9 +698,22 @@ export default function JobSearch({
                   className={styles.jobCard}
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">
-                    <p className="line-clamp-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {companyName(job)}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          isCandidatePage
+                            ? `/candidate/companies/${job.recruiterId}`
+                            : `/companies/${job.recruiterId}`,
+                        )
+                      }
+                      className="group/company inline-flex max-w-[85%] items-center gap-1.5 text-left text-xs font-bold uppercase tracking-wide text-slate-500 transition hover:text-blue-700 dark:text-slate-400 dark:hover:text-blue-300"
+                    >
+                      <span className="line-clamp-1">{companyName(job)}</span>
+                      <span className="text-blue-600 opacity-0 transition group-hover/company:opacity-100">
+                        ↗
+                      </span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => toggleSave(job.id)}
@@ -725,9 +737,25 @@ export default function JobSearch({
                   </div>
 
                   <div className="mb-4 flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
-                      {logoText(job)}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          isCandidatePage
+                            ? `/candidate/companies/${job.recruiterId}`
+                            : `/companies/${job.recruiterId}`,
+                        )
+                      }
+                      title={`Xem hồ sơ ${companyName(job)}`}
+                      className="group/logo rounded-xl shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-blue-400 dark:ring-slate-700"
+                    >
+                      <CompanyLogo
+                        name={companyName(job)}
+                        logoUrl={job.recruiter?.recruiterProfile?.logoUrl}
+                        className="h-12 w-12 rounded-xl text-sm group-hover/logo:bg-blue-50"
+                        imageClassName="p-1.5"
+                      />
+                    </button>
                     <div className="min-w-0">
                       <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-slate-950 dark:text-white">
                         {job.title}

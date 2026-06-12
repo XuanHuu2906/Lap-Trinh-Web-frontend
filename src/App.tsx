@@ -29,6 +29,7 @@ import CandidateSettings from "./pages/candidate/Settings";
 import JobDetail from "./pages/public/JobDetail";
 import JobList from "./pages/public/JobList";
 import JobSearch from "./pages/public/JobSearch";
+import CompanyProfile from "./pages/public/CompanyProfile";
 import { RecruiterChatPage } from "./pages/recruiter/Chat";
 import { ManageCandidatesPage } from "./pages/recruiter/ManageCandidates";
 import { ManageJobsPage } from "./pages/recruiter/ManageJobs";
@@ -48,6 +49,10 @@ function App() {
           <Route path="employers" element={<EmployerHome />} />
           <Route path="jobs" element={<JobList />} />
           <Route path="jobs/:id" element={<JobDetail variant="public" />} />
+          <Route
+            path="companies/:recruiterId"
+            element={<CompanyProfile variant="public" />}
+          />
           <Route path="cv-templates" element={<CVTemplatePage />} />
           <Route path="resources" element={<Navigate to="/cv-templates" replace />} />
           <Route
@@ -79,6 +84,10 @@ function App() {
             <Route path="job-search" element={<JobSearch variant="candidate" />} />
             <Route path="find-jobs" element={<JobSearch variant="candidate" />} />
             <Route path="jobs/:id" element={<JobDetail variant="candidate" />} />
+            <Route
+              path="companies/:recruiterId"
+              element={<CompanyProfile variant="candidate" />}
+            />
             <Route path="chat" element={<Chat />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="cv-templates" element={<CVTemplatePage />} />

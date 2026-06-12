@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { CompanyLogo } from "@/components/company/CompanyLogo";
 import { applicationService } from "@/services/application.service";
 import { clearCandidateDashboardCache } from "@/services/candidate-dashboard-cache";
 import { chatService } from "@/services/chat.service";
@@ -169,9 +170,17 @@ function getCvLabel(cv: CandidateCV) {
   return `${cv.title} (${typeLabel}${statusLabel})`;
 }
 
-function getApiErrorMessage(error: any, fallback: string) {
-  const status = error?.response?.status;
-  const backendMessage = error?.response?.data?.message;
+function getApiErrorMessage(error: unknown, fallback: string) {
+  const apiError = error as {
+    response?: {
+      status?: number;
+      data?: {
+        message?: string;
+      };
+    };
+  };
+  const status = apiError.response?.status;
+  const backendMessage = apiError.response?.data?.message;
 
   if (backendMessage) return backendMessage;
   if (status === 401) {
@@ -458,7 +467,7 @@ export default function JobDetail({
             cvId: current.cvId || getDefaultCvId(response.data),
           }));
         }
-      } catch (loadError: any) {
+      } catch (loadError) {
         if (isMounted) {
           setApplyMessage(
             getApiErrorMessage(loadError, "Không thể tải danh sách CV của bạn."),
@@ -525,7 +534,7 @@ export default function JobDetail({
       }
 
       navigate("/candidate/applied-jobs");
-    } catch (applyError: any) {
+    } catch (applyError) {
       setApplyMessage(
         getApiErrorMessage(applyError, "Không thể ứng tuyển vị trí này."),
       );
@@ -588,6 +597,9 @@ export default function JobDetail({
   }
 
   const companyName = getCompanyName(job);
+  const companyPath = isCandidateLayout
+    ? `/candidate/companies/${job.recruiterId}`
+    : `/companies/${job.recruiterId}`;
   const tags = getTags(job);
   const requirements = splitLines(job.requirements);
   const benefits = splitLines(job.benefits);
@@ -607,16 +619,37 @@ export default function JobDetail({
         <div className="space-y-5">
           <section className={styles.heroCard}>
             <div className="mb-5 flex items-start gap-4">
-              <div className={styles.logo}>
-                {companyName.slice(0, 1).toUpperCase()}
-              </div>
+              <button
+                type="button"
+                onClick={() => navigate(companyPath)}
+                title={`Xem hồ sơ ${companyName}`}
+                className="group/logo shrink-0 rounded-2xl shadow-md ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg hover:ring-2 hover:ring-blue-400 dark:ring-slate-700"
+              >
+                <CompanyLogo
+                  name={companyName}
+                  logoUrl={job.recruiter?.recruiterProfile?.logoUrl}
+                  className="h-16 w-16 rounded-2xl text-2xl group-hover/logo:bg-blue-50"
+                  imageClassName="p-2"
+                />
+              </button>
               <div>
                 <h1 className={`text-2xl font-bold ${styles.heading}`}>
                   {job.title}
                 </h1>
-                <p className={`mt-1 ${styles.muted}`}>
-                  {companyName} / {job.location || "Chưa cập nhật"}
-                </p>
+                <div className={`mt-1 ${styles.muted}`}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(companyPath)}
+                    className="group/company inline-flex items-center gap-1.5 font-semibold transition hover:text-blue-600 dark:hover:text-blue-300"
+                  >
+                    {companyName}
+                    <span className="text-xs opacity-0 transition group-hover/company:opacity-100">
+                      ↗
+                    </span>
+                  </button>
+                  {" / "}
+                  {job.location || "Chưa cập nhật"}
+                </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <span
@@ -719,17 +752,36 @@ export default function JobDetail({
             </div>
           </section>
 
-          <section className={styles.companyCard}>
-            <p className="mb-1 text-sm font-semibold text-blue-700 dark:text-blue-300">
-              Nhà tuyển dụng
-            </p>
-            <p className="text-xs leading-relaxed text-blue-600 dark:text-blue-300">
-              {companyName}
-              {job._count
-                ? ` / ${job._count.applications} hồ sơ đã ứng tuyển`
-                : ""}
-            </p>
-          </section>
+          <button
+            type="button"
+            onClick={() => navigate(companyPath)}
+            className={`${styles.companyCard} group block w-full overflow-hidden text-left transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-100 hover:shadow-md dark:hover:border-blue-700 dark:hover:bg-blue-950/50`}
+          >
+            <div className="flex items-center gap-3">
+              <CompanyLogo
+                name={companyName}
+                logoUrl={job.recruiter?.recruiterProfile?.logoUrl}
+                className="h-12 w-12 rounded-xl text-base shadow-sm ring-1 ring-blue-100 dark:ring-blue-900"
+                imageClassName="p-1.5"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
+                  Nhà tuyển dụng
+                </p>
+                <p className="mt-0.5 truncate font-bold text-blue-900 dark:text-blue-100">
+                  {companyName}
+                </p>
+                <p className="mt-1 text-xs text-blue-600 dark:text-blue-300">
+                  {job._count
+                    ? `${job._count.applications} hồ sơ đã ứng tuyển`
+                    : "Xem thông tin doanh nghiệp"}
+                </p>
+              </div>
+              <span className="text-lg text-blue-600 transition group-hover:translate-x-1">
+                →
+              </span>
+            </div>
+          </button>
         </aside>
       </div>
 
