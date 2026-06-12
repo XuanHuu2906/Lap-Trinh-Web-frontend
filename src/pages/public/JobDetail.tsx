@@ -37,6 +37,13 @@ type JobDetailStyle = {
   muted: string;
   backButton: string;
   tag: string;
+  logo: string;
+  primaryButton: string;
+  modalPrimaryButton: string;
+  modalPanel: string;
+  modalSection: string;
+  formControl: string;
+  outlineButton: string;
   infoDivider: string;
 };
 
@@ -55,6 +62,20 @@ const jobDetailStyles: Record<JobDetailVariant, JobDetailStyle> = {
     backButton:
       "mb-6 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300",
     tag: "rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+    logo:
+      "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white shadow-sm",
+    primaryButton:
+      "flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70",
+    modalPrimaryButton:
+      "inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60",
+    modalPanel:
+      "w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950",
+    modalSection:
+      "rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900",
+    formControl:
+      "w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white",
+    outlineButton:
+      "rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900",
     infoDivider:
       "border-b border-slate-200 pb-3 last:border-0 last:pb-0 dark:border-slate-800",
   },
@@ -72,6 +93,20 @@ const jobDetailStyles: Record<JobDetailVariant, JobDetailStyle> = {
     backButton:
       "mb-6 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300",
     tag: "bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+    logo:
+      "flex h-16 w-16 shrink-0 items-center justify-center bg-blue-600 text-2xl font-bold text-white shadow-sm",
+    primaryButton:
+      "flex w-full items-center justify-center gap-2 bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70",
+    modalPrimaryButton:
+      "inline-flex items-center justify-center gap-2 bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60",
+    modalPanel:
+      "w-full max-w-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950",
+    modalSection:
+      "border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900",
+    formControl:
+      "w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white",
+    outlineButton:
+      "border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900",
     infoDivider:
       "border-b border-slate-200 pb-3 last:border-0 last:pb-0 dark:border-slate-800",
   },
@@ -162,6 +197,7 @@ function ApplyConfirmationModal({
   onClose,
   onSubmit,
   onCreateCV,
+  styles,
 }: {
   job: Job;
   cvs: CandidateCV[];
@@ -173,13 +209,14 @@ function ApplyConfirmationModal({
   onClose: () => void;
   onSubmit: () => void;
   onCreateCV: () => void;
+  styles: JobDetailStyle;
 }) {
   const companyName = getCompanyName(job);
   const selectedCv = cvs.find((cv) => String(cv.id) === formState.cvId);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
-      <div className="w-full max-w-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+      <div className={styles.modalPanel}>
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
           <div>
             <h2 className="text-lg font-bold text-slate-950 dark:text-white">
@@ -200,7 +237,7 @@ function ApplyConfirmationModal({
         </div>
 
         <div className="space-y-5 px-5 py-5">
-          <section className="border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <section className={styles.modalSection}>
             <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
               Vị trí sẽ ứng tuyển
             </p>
@@ -232,7 +269,7 @@ function ApplyConfirmationModal({
                   onChange={(event) =>
                     onChange({ ...formState, cvId: event.target.value })
                   }
-                  className="h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className={`h-11 ${styles.formControl}`}
                 >
                   {cvs.map((cv) => (
                     <option key={cv.id} value={cv.id}>
@@ -271,7 +308,7 @@ function ApplyConfirmationModal({
                   }
                   rows={5}
                   placeholder="Viết vài dòng giới thiệu lý do bạn phù hợp với vị trí này..."
-                  className="w-full resize-none border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className={`resize-none py-2 ${styles.formControl}`}
                 />
               </label>
             </>
@@ -286,7 +323,7 @@ function ApplyConfirmationModal({
           <button
             type="button"
             onClick={onClose}
-            className="border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+            className={styles.outlineButton}
           >
             Hủy
           </button>
@@ -295,7 +332,7 @@ function ApplyConfirmationModal({
             <button
               type="button"
               onClick={onCreateCV}
-              className="bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+              className={styles.modalPrimaryButton}
             >
               Tạo CV
             </button>
@@ -304,7 +341,7 @@ function ApplyConfirmationModal({
               type="button"
               onClick={onSubmit}
               disabled={isApplying || !formState.cvId || isLoadingCVs}
-              className="inline-flex items-center gap-2 bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className={styles.modalPrimaryButton}
             >
               {isApplying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Đồng ý gửi hồ sơ
@@ -375,15 +412,29 @@ export default function JobDetail({
   }, [id]);
 
   useEffect(() => {
-    if (locationState.openApplyForm && job && user?.role === "candidate") {
+    if (!locationState.openApplyForm || !job) return;
+
+    if (!isAuthenticated || !user) {
+      savePendingApplyJob(job.id);
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (user.role === "candidate") {
       setIsApplyModalOpen(true);
       navigate(location.pathname, { replace: true });
+      return;
     }
+
+    setApplyMessage("Chá»‰ tĂ i khoáº£n á»©ng viĂªn má»›i cĂ³ thá»ƒ á»©ng tuyá»ƒn.");
+    navigate(location.pathname, { replace: true });
   }, [
+    isAuthenticated,
     job,
     location.pathname,
     locationState.openApplyForm,
     navigate,
+    user,
     user?.role,
   ]);
 
@@ -540,7 +591,7 @@ export default function JobDetail({
         <div className="space-y-5">
           <section className={styles.heroCard}>
             <div className="mb-5 flex items-start gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center bg-blue-600 text-2xl font-bold text-white shadow-sm">
+              <div className={styles.logo}>
                 {companyName.slice(0, 1).toUpperCase()}
               </div>
               <div>
@@ -567,7 +618,7 @@ export default function JobDetail({
               type="button"
               onClick={handleOpenApplyModal}
               disabled={isApplying}
-              className="flex w-full items-center justify-center gap-2 bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
+              className={styles.primaryButton}
             >
               <CheckCircle2 size={18} />
               {isAuthenticated ? "Ứng tuyển" : "Đăng nhập để ứng tuyển"}
@@ -678,6 +729,7 @@ export default function JobDetail({
           onClose={() => setIsApplyModalOpen(false)}
           onSubmit={handleSubmitApplication}
           onCreateCV={() => navigate("/candidate/cv-builder")}
+          styles={styles}
         />
       ) : null}
     </div>

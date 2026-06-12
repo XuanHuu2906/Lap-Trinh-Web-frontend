@@ -193,7 +193,9 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
     return {
       name: user?.fullName || "Nguyễn Văn Recruiter",
       email: user?.email || "recruiter@hirearch.com",
-      initials: getInitials(recruiterProfile?.companyName || user?.fullName || "NTD"),
+      initials: getInitials(
+        recruiterProfile?.companyName || user?.fullName || "NTD",
+      ),
       avatarUrl: getAssetUrl(recruiterProfile?.logoUrl),
       roleLabel: recruiterProfile?.contactName || "HR Manager",
       profilePath: "/recruiter/settings",
@@ -264,7 +266,7 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
           isSidebarCollapsed={isSidebarCollapsed}
         />
 
-        <main className="flex-1 overflow-y-auto px-6 pb-8 pt-[100px] sm:px-8">
+        <main className="flex-1 overflow-y-auto px-6 pb-8 pt-25 sm:px-8">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>
