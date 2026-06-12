@@ -27,10 +27,10 @@ const statusLabel: Record<string, string> = {
 };
 
 const statusStyle: Record<string, string> = {
-  active: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  draft: "border-slate-200 bg-slate-50 text-slate-600",
-  closed: "border-red-200 bg-red-50 text-red-600",
-  deleted: "border-slate-200 bg-slate-100 text-slate-500",
+  active: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+  draft: "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  closed: "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+  deleted: "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 const formatDate = (value?: string | null) => {
@@ -215,8 +215,8 @@ export function ManageJobsPage() {
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${
             error
-              ? "border-red-200 bg-red-50 text-red-600"
-              : "border-green-200 bg-green-50 text-green-700"
+              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
           }`}
         >
           {error || message}
@@ -229,14 +229,14 @@ export function ManageJobsPage() {
           onClick={() => handleStatusFilterChange("")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === ""
-              ? "border-indigo-300 bg-indigo-50"
-              : "border-slate-200 bg-white hover:bg-slate-50"
+              ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/30"
+              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
           }`}
         >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Tổng tin
           </p>
-          <p className="mt-2 text-[28px] font-black text-slate-900">
+          <p className="mt-2 text-[28px] font-black text-slate-900 dark:text-slate-50">
             {totalJobs}
           </p>
         </button>
@@ -246,14 +246,14 @@ export function ManageJobsPage() {
           onClick={() => handleStatusFilterChange("active")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === "active"
-              ? "border-emerald-300 bg-emerald-50"
-              : "border-slate-200 bg-white hover:bg-slate-50"
+              ? "border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
           }`}
         >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Đang mở
           </p>
-          <p className="mt-2 text-[28px] font-black text-slate-900">
+          <p className="mt-2 text-[28px] font-black text-slate-900 dark:text-slate-50">
             {activeJobs}
           </p>
         </button>
@@ -263,14 +263,14 @@ export function ManageJobsPage() {
           onClick={() => handleStatusFilterChange("draft")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === "draft"
-              ? "border-slate-300 bg-slate-50"
-              : "border-slate-200 bg-white hover:bg-slate-50"
+              ? "border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
+              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
           }`}
         >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Bản nháp
           </p>
-          <p className="mt-2 text-[28px] font-black text-slate-900">
+          <p className="mt-2 text-[28px] font-black text-slate-900 dark:text-slate-50">
             {draftJobs}
           </p>
         </button>
@@ -280,25 +280,25 @@ export function ManageJobsPage() {
           onClick={() => handleStatusFilterChange("closed")}
           className={`border p-4 text-left transition-colors ${
             statusFilter === "closed"
-              ? "border-red-300 bg-red-50"
-              : "border-slate-200 bg-white hover:bg-slate-50"
+              ? "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
           }`}
         >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Đã đóng
           </p>
-          <p className="mt-2 text-[28px] font-black text-slate-900">
+          <p className="mt-2 text-[28px] font-black text-slate-900 dark:text-slate-50">
             {closedJobs}
           </p>
         </button>
       </div>
 
-      <div className="mb-5 flex items-center gap-3 border border-slate-200 bg-white p-4">
+      <div className="mb-5 flex items-center gap-3 border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Tìm theo tiêu đề, địa điểm hoặc danh mục..."
-          className="h-10 flex-1 border border-slate-200 px-4 text-[13px] text-slate-700 outline-none focus:border-slate-400"
+          className="h-10 flex-1 border border-slate-200 px-4 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
         />
 
         <select
@@ -306,7 +306,7 @@ export function ManageJobsPage() {
           onChange={(e) =>
             handleStatusFilterChange(e.target.value as JobStatusFilter)
           }
-          className="h-10 w-48 border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none"
+          className="h-10 w-48 border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="active">Đang mở</option>
@@ -318,16 +318,16 @@ export function ManageJobsPage() {
           type="button"
           onClick={() => void loadJobs()}
           disabled={loading}
-          className="h-10 border border-slate-300 px-5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+          className="h-10 border border-slate-300 px-5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           Làm mới
         </button>
       </div>
 
-      <div className="overflow-x-auto border border-slate-200 bg-white">
+      <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
+            <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
               {[
                 "Tin tuyển dụng",
                 "Danh mục",
@@ -340,7 +340,7 @@ export function ManageJobsPage() {
               ].map((heading) => (
                 <th
                   key={heading}
-                  className="px-5 py-3 text-left text-[12px] font-semibold text-slate-500"
+                  className="px-5 py-3 text-left text-[12px] font-semibold text-slate-500 dark:text-slate-400"
                 >
                   {heading}
                 </th>
@@ -353,7 +353,7 @@ export function ManageJobsPage() {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-6 py-10 text-center text-[13px] text-slate-400"
+                  className="px-6 py-10 text-center text-[13px] text-slate-400 dark:text-slate-500"
                 >
                   Đang tải danh sách tin tuyển dụng...
                 </td>
@@ -364,7 +364,7 @@ export function ManageJobsPage() {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-6 py-10 text-center text-[13px] text-slate-400"
+                  className="px-6 py-10 text-center text-[13px] text-slate-400 dark:text-slate-500"
                 >
                   Chưa có tin tuyển dụng nào phù hợp.
                 </td>
@@ -379,24 +379,24 @@ export function ManageJobsPage() {
                 return (
                   <tr
                     key={job.id}
-                    className="border-b border-slate-50 transition-colors hover:bg-slate-50"
+                    className="border-b border-slate-50 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
                   >
                     <td className="px-5 py-4">
-                      <p className="text-[14px] font-bold text-slate-900">
+                      <p className="text-[14px] font-bold text-slate-900 dark:text-slate-50">
                         {job.title}
                       </p>
 
-                      <p className="mt-1 text-[12px] text-slate-400">
+                      <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">
                         {job.location || "Chưa cập nhật địa điểm"} •{" "}
                         {job.jobType || "Không rõ hình thức"}
                       </p>
                     </td>
 
-                    <td className="px-5 py-4 text-[13px] text-slate-600">
+                    <td className="px-5 py-4 text-[13px] text-slate-600 dark:text-slate-300">
                       {job.category?.name || "Chưa phân loại"}
                     </td>
 
-                    <td className="px-5 py-4 text-[13px] text-slate-600">
+                    <td className="px-5 py-4 text-[13px] text-slate-600 dark:text-slate-300">
                       {formatSalary(job.salaryMin, job.salaryMax)}
                     </td>
 
@@ -404,25 +404,25 @@ export function ManageJobsPage() {
                       <span
                         className={`inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${
                           statusStyle[job.status] ??
-                          "border-slate-200 bg-slate-50 text-slate-600"
+                          "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                         }`}
                       >
                         {statusLabel[job.status] ?? job.status}
                       </span>
                     </td>
 
-                    <td className="px-5 py-4 text-[13px] text-slate-500">
+                    <td className="px-5 py-4 text-[13px] text-slate-500 dark:text-slate-400">
                       {formatDate(job.createdAt)}
                     </td>
 
-                    <td className="px-5 py-4 text-[13px] text-slate-500">
+                    <td className="px-5 py-4 text-[13px] text-slate-500 dark:text-slate-400">
                       {formatDate(job.expiresAt)}
                     </td>
 
-                    <td className="px-5 py-4 text-[13px] font-semibold text-slate-700">
+                    <td className="px-5 py-4 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                       <Link
                         to={`/recruiter/candidates?jobId=${job.id}`}
-                        className="hover:text-indigo-600 hover:underline"
+                        className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-300"
                       >
                         {applicationCount} ứng viên
                       </Link>
@@ -432,7 +432,7 @@ export function ManageJobsPage() {
                       <div className="flex items-center gap-2">
                         <Link
                           to={`/recruiter/manage-jobs/${job.id}`}
-                          className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                          className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
                           <Eye className="h-3.5 w-3.5" />
                           Xem
@@ -440,7 +440,7 @@ export function ManageJobsPage() {
 
                         <Link
                           to={`/recruiter/candidates?jobId=${job.id}`}
-                          className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                          className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
                           <UsersRound className="h-3.5 w-3.5" />
                           Ứng viên
@@ -457,7 +457,7 @@ export function ManageJobsPage() {
                             }
                             aria-haspopup="menu"
                             aria-expanded={menuOpen}
-                            className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100"
+                            className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
@@ -465,12 +465,12 @@ export function ManageJobsPage() {
                           {menuOpen && (
                             <div
                               role="menu"
-                              className="absolute right-0 top-9 z-20 w-40 border border-slate-200 bg-white py-1 shadow-lg"
+                              className="absolute right-0 top-9 z-20 w-40 border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-900"
                             >
                               <Link
                                 to={`/recruiter/manage-jobs/${job.id}/edit`}
                                 role="menuitem"
-                                className="flex h-9 items-center gap-2 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
+                                className="flex h-9 items-center gap-2 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                               >
                                 <Pencil className="h-3.5 w-3.5" />
                                 Sửa tin
@@ -485,7 +485,7 @@ export function ManageJobsPage() {
                                       setOpenMenuJobId(null);
                                       void handleUpdateStatus(job.id, "active");
                                     }}
-                                    className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50"
+                                    className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
                                   >
                                     <Unlock className="h-3.5 w-3.5" />
                                     Mở tin
@@ -500,7 +500,7 @@ export function ManageJobsPage() {
                                     setOpenMenuJobId(null);
                                     void handleUpdateStatus(job.id, "closed");
                                   }}
-                                  className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-orange-700 hover:bg-orange-50"
+                                  className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-orange-700 hover:bg-orange-50 dark:text-orange-300 dark:hover:bg-orange-950/30"
                                 >
                                   <Lock className="h-3.5 w-3.5" />
                                   Đóng tin
@@ -515,7 +515,7 @@ export function ManageJobsPage() {
                                     setOpenMenuJobId(null);
                                     void handleDeleteJob(job.id);
                                   }}
-                                  className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-red-600 hover:bg-red-50"
+                                  className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                   Xóa tin
@@ -534,8 +534,8 @@ export function ManageJobsPage() {
       </div>
 
       {meta && meta.totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between border border-slate-200 bg-white px-4 py-3">
-          <p className="text-[13px] text-slate-500">
+        <div className="mt-4 flex items-center justify-between border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400">
             Trang {meta.page}/{meta.totalPages} • {meta.total} tin
           </p>
 
@@ -544,7 +544,7 @@ export function ManageJobsPage() {
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={page <= 1 || loading}
-              className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Trước
             </button>
@@ -557,7 +557,7 @@ export function ManageJobsPage() {
                 )
               }
               disabled={page >= meta.totalPages || loading}
-              className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Sau
             </button>

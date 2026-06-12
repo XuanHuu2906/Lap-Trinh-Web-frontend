@@ -15,10 +15,10 @@ const statusLabel: Record<string, string> = {
 };
 
 const statusStyle: Record<string, string> = {
-  active: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  draft: "border-slate-200 bg-slate-50 text-slate-600",
-  closed: "border-red-200 bg-red-50 text-red-600",
-  deleted: "border-slate-200 bg-slate-100 text-slate-500",
+  active: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+  draft: "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  closed: "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+  deleted: "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 const formatDate = (value?: string | null) => {
@@ -135,7 +135,7 @@ export function RecruiterJobDetailPage() {
         <div>
           <Link
             to="/recruiter/manage-jobs"
-            className="text-[13px] font-semibold text-slate-500 hover:text-slate-900"
+            className="text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
             ← Quay lại quản lý tin
           </Link>
@@ -160,7 +160,7 @@ export function RecruiterJobDetailPage() {
 
             <Link
               to={`/recruiter/candidates?jobId=${job.id}`}
-              className="inline-flex h-10 items-center justify-center border border-slate-300 px-4 text-[13px] font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center border border-slate-300 px-4 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Ứng viên
             </Link>
@@ -172,8 +172,8 @@ export function RecruiterJobDetailPage() {
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${
             error
-              ? "border-red-200 bg-red-50 text-red-600"
-              : "border-green-200 bg-green-50 text-green-700"
+              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
           }`}
         >
           {error || message}
@@ -181,7 +181,7 @@ export function RecruiterJobDetailPage() {
       )}
 
       {loading && (
-        <div className="border border-slate-200 bg-white px-6 py-10 text-center text-[13px] text-slate-400">
+        <div className="border border-slate-200 bg-white px-6 py-10 text-center text-[13px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-500">
           Đang tải tin tuyển dụng...
         </div>
       )}
@@ -189,113 +189,113 @@ export function RecruiterJobDetailPage() {
       {!loading && job && (
         <div className="grid grid-cols-[1fr_300px] items-start gap-6">
           <div className="space-y-5">
-            <section className="border border-slate-200 bg-white p-6">
-              <h2 className="mb-4 text-[15px] font-bold text-slate-900">
+            <section className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <h2 className="mb-4 text-[15px] font-bold text-slate-900 dark:text-slate-50">
                 Mô tả công việc
               </h2>
-              <p className="whitespace-pre-wrap text-[14px] leading-7 text-slate-600">
+              <p className="whitespace-pre-wrap text-[14px] leading-7 text-slate-600 dark:text-slate-300">
                 {job.description}
               </p>
             </section>
 
-            <section className="border border-slate-200 bg-white p-6">
-              <h2 className="mb-4 text-[15px] font-bold text-slate-900">
+            <section className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <h2 className="mb-4 text-[15px] font-bold text-slate-900 dark:text-slate-50">
                 Yêu cầu ứng viên
               </h2>
-              <p className="whitespace-pre-wrap text-[14px] leading-7 text-slate-600">
+              <p className="whitespace-pre-wrap text-[14px] leading-7 text-slate-600 dark:text-slate-300">
                 {job.requirements || "Chưa cập nhật yêu cầu."}
               </p>
             </section>
 
-            <section className="border border-slate-200 bg-white p-6">
-              <h2 className="mb-4 text-[15px] font-bold text-slate-900">
+            <section className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <h2 className="mb-4 text-[15px] font-bold text-slate-900 dark:text-slate-50">
                 Quyền lợi
               </h2>
-              <p className="whitespace-pre-wrap text-[14px] leading-7 text-slate-600">
+              <p className="whitespace-pre-wrap text-[14px] leading-7 text-slate-600 dark:text-slate-300">
                 {job.benefits || "Chưa cập nhật quyền lợi."}
               </p>
             </section>
           </div>
 
-          <aside className="sticky top-6 space-y-4 border border-slate-200 bg-white p-5">
+          <aside className="sticky top-6 space-y-4 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Trạng thái
               </p>
               <span
                 className={`mt-2 inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${
                   statusStyle[job.status] ??
-                  "border-slate-200 bg-slate-50 text-slate-600"
+                  "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 {statusLabel[job.status] ?? job.status}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+            <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   Danh mục
                 </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-700">
+                <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                   {job.category?.name || "Chưa phân loại"}
                 </p>
               </div>
 
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   Ứng viên
                 </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-700">
+                <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                   {job._count?.applications ?? 0}
                 </p>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-4">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Mức lương
               </p>
-              <p className="mt-1 text-[13px] font-semibold text-slate-700">
+              <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                 {formatSalary(job.salaryMin, job.salaryMax)}
               </p>
             </div>
 
-            <div className="border-t border-slate-100 pt-4">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Địa điểm
               </p>
-              <p className="mt-1 text-[13px] font-semibold text-slate-700">
+              <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                 {job.location || "Chưa cập nhật"}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+            <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   Ngày đăng
                 </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-700">
+                <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                   {formatDate(job.createdAt)}
                 </p>
               </div>
 
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   Hết hạn
                 </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-700">
+                <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                   {formatDate(job.expiresAt)}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2 border-t border-slate-100 pt-4">
+            <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
               {job.status !== "active" && job.status !== "deleted" && (
                 <button
                   type="button"
                   onClick={() => void handleStatusChange("active")}
-                  className="h-9 w-full border border-emerald-300 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50"
+                  className="h-9 w-full border border-emerald-300 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
                 >
                   Mở tin
                 </button>
@@ -305,7 +305,7 @@ export function RecruiterJobDetailPage() {
                 <button
                   type="button"
                   onClick={() => void handleStatusChange("closed")}
-                  className="h-9 w-full border border-orange-300 text-[12px] font-semibold text-orange-700 hover:bg-orange-50"
+                  className="h-9 w-full border border-orange-300 text-[12px] font-semibold text-orange-700 hover:bg-orange-50 dark:border-orange-900/60 dark:text-orange-300 dark:hover:bg-orange-950/30"
                 >
                   Đóng tin
                 </button>
@@ -315,7 +315,7 @@ export function RecruiterJobDetailPage() {
                 <button
                   type="button"
                   onClick={() => void handleDelete()}
-                  className="h-9 w-full border border-red-200 text-[12px] font-semibold text-red-600 hover:bg-red-50"
+                  className="h-9 w-full border border-red-200 text-[12px] font-semibold text-red-600 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
                 >
                   Xóa tin
                 </button>

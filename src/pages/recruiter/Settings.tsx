@@ -233,8 +233,8 @@ export function SettingsPage() {
           <div
             className={`mb-5 border px-4 py-3 text-[13px] ${
               error
-                ? "border-red-200 bg-red-50 text-red-600"
-                : "border-green-200 bg-green-50 text-green-700"
+                ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+                : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
             }`}
           >
             {error || message}
@@ -242,16 +242,16 @@ export function SettingsPage() {
         )}
 
         <div className="grid grid-cols-[220px_1fr] items-start gap-6">
-          <aside className="border border-slate-200 bg-white shadow-sm">
+          <aside className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
             {settingsTabs.map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => handleTabChange(tab)}
-                className={`w-full border-b border-slate-100 px-5 py-3 text-left text-[13px] transition-colors last:border-b-0 ${
+                className={`w-full border-b border-slate-100 px-5 py-3 text-left text-[13px] transition-colors last:border-b-0 dark:border-slate-800 ${
                   activeTab === tab
-                    ? "border-l-4 border-l-[#0f1f3d] bg-slate-100 font-bold text-slate-900"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? "border-l-4 border-l-[#0f1f3d] bg-slate-100 font-bold text-slate-900 dark:border-l-indigo-500 dark:bg-indigo-950/30 dark:text-indigo-300"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 }`}
               >
                 {tab}
@@ -259,22 +259,22 @@ export function SettingsPage() {
             ))}
           </aside>
 
-          <main className="border border-slate-200 bg-white shadow-sm">
+          <main className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
             {activeTab === "Hồ sơ công ty" && (
               <form onSubmit={handleSubmitCompany}>
-                <div className="border-b border-slate-200 px-8 py-6">
-                  <h2 className="text-[18px] font-bold text-slate-900">
+                <div className="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
+                  <h2 className="text-[18px] font-bold text-slate-900 dark:text-slate-50">
                     Hồ sơ công ty
                   </h2>
 
-                  <p className="mt-1 text-[13px] text-slate-500">
+                  <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
                     Thông tin này sẽ được hiển thị công khai trên các tin tuyển dụng của bạn.
                   </p>
                 </div>
 
                 <div className="px-8 py-7">
-                  <div className="mb-7 flex items-center gap-5 border-b border-slate-100 pb-7">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-100">
+                  <div className="mb-7 flex items-center gap-5 border-b border-slate-100 pb-7 dark:border-slate-800">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
                       {logoPreview ? (
                         <img
                           src={logoPreview}
@@ -282,25 +282,25 @@ export function SettingsPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <span className="text-[11px] font-bold uppercase text-slate-400">
+                        <span className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">
                           Logo
                         </span>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Logo doanh nghiệp
                       </label>
 
-                      <p className="mt-1 text-[12px] text-slate-400">
+                      <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">
                         Định dạng JPG, PNG. Nên dùng ảnh vuông để hiển thị đẹp hơn.
                       </p>
 
                       <button
                         type="button"
                         onClick={() => fileRef.current?.click()}
-                        className="mt-3 h-9 border border-slate-300 px-4 text-[12px] font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                        className="mt-3 h-9 border border-slate-300 px-4 text-[12px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         Thay đổi Logo
                       </button>
@@ -317,7 +317,7 @@ export function SettingsPage() {
 
                   <div className="space-y-5">
                     <div>
-                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Tên công ty *
                       </label>
 
@@ -325,17 +325,17 @@ export function SettingsPage() {
                         required
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                        className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                       />
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Website công ty
                       </label>
 
                       <div className="flex">
-                        <span className="flex h-11 items-center border border-r-0 border-slate-300 bg-slate-50 px-4 text-[13px] text-slate-400">
+                        <span className="flex h-11 items-center border border-r-0 border-slate-300 bg-slate-50 px-4 text-[13px] text-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-500">
                           https://
                         </span>
 
@@ -349,13 +349,13 @@ export function SettingsPage() {
                             setWebsite(value ? `https://${value}` : "");
                           }}
                           placeholder="www.tencongty.com"
-                          className="h-11 flex-1 border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                          className="h-11 flex-1 border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Mô tả doanh nghiệp
                       </label>
 
@@ -368,21 +368,21 @@ export function SettingsPage() {
                         }}
                         rows={6}
                         placeholder="Giới thiệu ngắn gọn về công ty, lĩnh vực hoạt động, môi trường làm việc..."
-                        className="w-full resize-y border border-slate-300 px-4 py-3 text-[14px] leading-relaxed text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                        className="w-full resize-y border border-slate-300 px-4 py-3 text-[14px] leading-relaxed text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                       />
 
-                      <p className="mt-1 text-right text-[12px] text-slate-400">
+                      <p className="mt-1 text-right text-[12px] text-slate-400 dark:text-slate-500">
                         {description.length} / {MAX_DESC} ký tự
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5">
+                <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => void loadProfile()}
-                    className="h-10 px-5 text-[13px] font-semibold text-slate-600 hover:text-slate-900"
+                    className="h-10 px-5 text-[13px] font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                   >
                     Hủy bỏ
                   </button>
@@ -400,19 +400,19 @@ export function SettingsPage() {
 
             {activeTab === "Thông tin liên hệ" && (
               <form onSubmit={handleSubmitContact}>
-                <div className="border-b border-slate-200 px-8 py-6">
-                  <h2 className="text-[18px] font-bold text-slate-900">
+                <div className="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
+                  <h2 className="text-[18px] font-bold text-slate-900 dark:text-slate-50">
                     Thông tin liên hệ
                   </h2>
 
-                  <p className="mt-1 text-[13px] text-slate-500">
+                  <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
                     Cập nhật người phụ trách tuyển dụng, số điện thoại và địa chỉ liên hệ.
                   </p>
                 </div>
 
                 <div className="space-y-5 px-8 py-7">
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Người liên hệ
                     </label>
 
@@ -420,12 +420,12 @@ export function SettingsPage() {
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
                       placeholder="VD: Nguyễn Văn A"
-                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Số điện thoại
                     </label>
 
@@ -433,12 +433,12 @@ export function SettingsPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="VD: 0900000000"
-                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Địa chỉ công ty
                     </label>
 
@@ -446,20 +446,20 @@ export function SettingsPage() {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="VD: Hà Nội, TP.HCM hoặc Remote"
-                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                     />
                   </div>
 
-                  <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] leading-relaxed text-blue-700">
+                  <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] leading-relaxed text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300">
                     Thông tin liên hệ giúp ứng viên và quản trị viên nhận diện doanh nghiệp rõ ràng hơn.
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5">
+                <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => void loadProfile()}
-                    className="h-10 px-5 text-[13px] font-semibold text-slate-600 hover:text-slate-900"
+                    className="h-10 px-5 text-[13px] font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                   >
                     Hủy bỏ
                   </button>
@@ -477,19 +477,19 @@ export function SettingsPage() {
 
             {activeTab === "Đổi mật khẩu" && (
               <form onSubmit={handleChangePassword}>
-                <div className="border-b border-slate-200 px-8 py-6">
-                  <h2 className="text-[18px] font-bold text-slate-900">
+                <div className="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
+                  <h2 className="text-[18px] font-bold text-slate-900 dark:text-slate-50">
                     Đổi mật khẩu
                   </h2>
 
-                  <p className="mt-1 text-[13px] text-slate-500">
+                  <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
                     Cập nhật mật khẩu đăng nhập để tăng cường bảo mật tài khoản.
                   </p>
                 </div>
 
                 <div className="space-y-5 px-8 py-7">
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Mật khẩu hiện tại *
                     </label>
 
@@ -497,12 +497,12 @@ export function SettingsPage() {
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Mật khẩu mới *
                     </label>
 
@@ -510,16 +510,16 @@ export function SettingsPage() {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                     />
 
-                    <p className="mt-1 text-[12px] text-slate-400">
+                    <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">
                       Mật khẩu mới phải có ít nhất 6 ký tự.
                     </p>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Xác nhận mật khẩu mới *
                     </label>
 
@@ -527,16 +527,16 @@ export function SettingsPage() {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d]"
+                      className="h-11 w-full border border-slate-300 px-4 text-[14px] text-slate-800 outline-none transition-colors focus:border-[#0f1f3d] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500"
                     />
                   </div>
 
-                  <div className="rounded-md border border-amber-100 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-700">
+                  <div className="rounded-md border border-amber-100 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
                     Sau khi đổi mật khẩu thành công, bạn nên đăng xuất và đăng nhập lại để kiểm tra.
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5">
+                <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => {
@@ -546,7 +546,7 @@ export function SettingsPage() {
                       setError("");
                       setMessage("");
                     }}
-                    className="h-10 px-5 text-[13px] font-semibold text-slate-600 hover:text-slate-900"
+                    className="h-10 px-5 text-[13px] font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                   >
                     Hủy bỏ
                   </button>
