@@ -88,6 +88,8 @@ const getStatusLabel = (status: RecruiterApplication["status"]) => {
       return "Chưa xem";
     case "reviewing":
       return "Đang đánh giá";
+    case "interview":
+      return "Mời phỏng vấn";
     case "accepted":
       return "Đã duyệt";
     case "rejected":
@@ -105,6 +107,8 @@ const getStatusColor = (status: RecruiterApplication["status"]) => {
       return "bg-red-100 text-red-600";
     case "reviewing":
       return "bg-yellow-100 text-yellow-700";
+    case "interview":
+      return "bg-violet-100 text-violet-700";
     case "accepted":
       return "bg-green-100 text-green-700";
     case "rejected":

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   Check,
@@ -14,6 +14,9 @@ import {
   notificationService,
   type NotificationItem,
 } from "@/services/notification.service";
+import { useVisiblePolling } from "@/hooks/useVisiblePolling";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/utils/supabase";
 
 type FilterType = "all" | "unread" | "read";
 
@@ -76,6 +79,7 @@ const getNotificationType = (
 };
 
 export function RecruiterNotificationsPage() {
+  const { user } = useAuth();
   const cachedNotifications = getCachedNotifications(notificationParams);
 
   const [notifications, setNotifications] = useState<NotificationItem[]>(
@@ -86,10 +90,15 @@ export function RecruiterNotificationsPage() {
   const [error, setError] = useState("");
   const [hiddenIds, setHiddenIds] = useState<number[]>([]);
 
-  const loadNotifications = async (forceRefresh = false) => {
+  const loadNotifications = useCallback(async (
+    forceRefresh = false,
+    options: { showLoading?: boolean; updateError?: boolean } = {},
+  ) => {
+    const { showLoading = true, updateError = true } = options;
+
     try {
-      setLoading(true);
-      setError("");
+      if (showLoading) setLoading(true);
+      if (updateError) setError("");
 
       const response = await notificationService.getNotifications(
         notificationParams,
@@ -98,19 +107,60 @@ export function RecruiterNotificationsPage() {
 
       setNotifications(response.data);
     } catch (err) {
-      setError(
+      if (updateError) {
+        setError(
         err instanceof Error
           ? err.message
           : "Không thể tải danh sách thông báo",
-      );
+        );
+      } else {
+        console.error("Loi polling thong bao:", err);
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadNotifications(false);
-  }, []);
+  }, [loadNotifications]);
+
+  useVisiblePolling(
+    () =>
+      loadNotifications(true, {
+        showLoading: false,
+        updateError: false,
+      }),
+    { intervalMs: 120_000 },
+  );
+
+  useEffect(() => {
+    const client = supabase;
+    if (user?.role !== "recruiter" || !user.id || !client) return;
+
+    const channel = client
+      .channel(`notifications-page-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          void loadNotifications(true, {
+            showLoading: false,
+            updateError: false,
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [loadNotifications, user?.id, user?.role]);
 
   const visibleNotifications = useMemo(() => {
     return notifications.filter((item) => !hiddenIds.includes(item.id));
