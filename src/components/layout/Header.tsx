@@ -37,14 +37,14 @@ export default function Header() {
   }`;
 
   const switchButtonClass = isEmployerHome
-    ? "inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:border-sky-300/70 hover:bg-white/10"
-    : "inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100";
+    ? "hidden items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:border-sky-300/70 hover:bg-white/10 sm:inline-flex"
+    : "hidden items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 sm:inline-flex";
 
   const goToPostJob = () => {
     navigate(
       isAuthenticated && user?.role === "recruiter"
         ? "/recruiter/post-job"
-        : "/register-employer",
+        : "/login",
     );
     setMenuOpen(false);
   };
@@ -64,6 +64,19 @@ export default function Header() {
     setMenuOpen(false);
   };
 
+  const renderSwitchButton = () =>
+    isEmployerHome ? (
+      <button type="button" onClick={goToCandidateHome} className={switchButtonClass}>
+        <UserRound className="h-4 w-4" />
+        Dành cho ứng viên
+      </button>
+    ) : (
+      <button type="button" onClick={goToEmployerHome} className={switchButtonClass}>
+        <BriefcaseBusiness className="h-4 w-4" />
+        Dành cho nhà tuyển dụng
+      </button>
+    );
+
   return (
     <header
       className={`sticky top-0 z-50 border-b shadow-sm ${
@@ -72,27 +85,10 @@ export default function Header() {
           : "border-gray-200 bg-white text-slate-900"
       }`}
     >
-      {isEmployerHome ? (
-        <div className="border-b border-white/10 bg-[#17191a]">
-          <div className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-5 px-4 text-sm font-semibold text-slate-200">
-            <span className="hidden sm:inline">
-              Thông báo tức thì, phản hồi hồ sơ nhanh và dễ dàng hơn
-            </span>
-            <button
-              type="button"
-              onClick={goToPostJob}
-              className="rounded-lg bg-violet-600 px-5 py-2 text-xs font-bold text-white transition hover:bg-violet-500"
-            >
-              Đăng tin ngay
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           to={isEmployerHome ? "/employers" : "/"}
-          className="flex items-center gap-2"
+          className="flex min-w-0 shrink-0 items-center gap-2 justify-self-start"
         >
           <div
             className={`rounded px-2 py-1 text-xs font-bold uppercase tracking-widest text-white ${
@@ -110,24 +106,11 @@ export default function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-6 justify-self-center md:flex">
           {isEmployerHome ? (
-            <>
-              <button type="button" onClick={goToPostJob} className={plainButtonClass}>
-                Đăng tin
-              </button>
-              <button type="button" className={plainButtonClass}>
-                Trợ giúp
-              </button>
-              <button
-                type="button"
-                onClick={goToCandidateHome}
-                className={switchButtonClass}
-              >
-                <UserRound className="h-4 w-4" />
-                Dành cho ứng viên
-              </button>
-            </>
+            <button type="button" onClick={goToPostJob} className={plainButtonClass}>
+              Đăng tin
+            </button>
           ) : (
             <>
               <NavLink to="/" end className={linkClass}>
@@ -136,19 +119,13 @@ export default function Header() {
               <NavLink to="/jobs" className={linkClass}>
                 Tìm việc
               </NavLink>
-              <button
-                type="button"
-                onClick={goToEmployerHome}
-                className={switchButtonClass}
-              >
-                <BriefcaseBusiness className="h-4 w-4" />
-                Dành cho nhà tuyển dụng
-              </button>
             </>
           )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center justify-end gap-3 justify-self-end">
+          {renderSwitchButton()}
+
           {isAuthenticated ? (
             <button
               type="button"
@@ -165,24 +142,18 @@ export default function Header() {
             <>
               <button
                 type="button"
-                onClick={() => navigate(isEmployerHome ? "/register-employer" : "/login")}
-                className={`hidden cursor-pointer text-sm font-semibold transition-colors sm:block ${
-                  isEmployerHome
-                    ? "text-slate-300 hover:text-white"
-                    : "text-gray-600 hover:text-blue-700"
-                }`}
+                onClick={() => navigate("/login")}
+                className="hidden cursor-pointer text-sm font-medium text-gray-600 transition-colors hover:text-blue-700 sm:block"
               >
-                {isEmployerHome ? "Đăng ký/Đăng nhập" : "Đăng nhập"}
+                Đăng nhập
               </button>
-              {!isEmployerHome ? (
-                <button
-                  type="button"
-                  onClick={() => navigate("/register")}
-                  className="cursor-pointer rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
-                >
-                  Đăng ký
-                </button>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                className="cursor-pointer rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
+              >
+                Đăng ký
+              </button>
             </>
           )}
 
@@ -209,9 +180,6 @@ export default function Header() {
             <>
               <button type="button" onClick={goToPostJob} className="text-left">
                 Đăng tin
-              </button>
-              <button type="button" className="text-left">
-                Trợ giúp
               </button>
               <button
                 type="button"

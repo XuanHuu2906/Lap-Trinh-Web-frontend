@@ -225,7 +225,7 @@ export default function HeroSection({
 
   return (
     <section className="bg-[#eef4ff]">
-      <div className="mx-auto grid min-h-[640px] max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
+      <div className="mx-auto grid min-h-160 max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
           <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm">
             <Sparkles className="h-3.5 w-3.5" />
@@ -241,24 +241,24 @@ export default function HeroSection({
           </p>
 
           <div className="mt-8 max-w-4xl rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-blue-900/10">
-            <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_230px_150px]">
-              <div className="flex h-14 min-w-0 items-center gap-3 px-4">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+              <div className="flex h-14 min-w-0 flex-1 items-center gap-3 px-4">
                 <Search className="h-5 w-5 shrink-0 text-slate-400" />
                 <input
                   value={keyword}
                   onChange={(event) => setKeyword(event.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Chức danh, từ khóa hoặc công ty"
+                  placeholder="Chức danh, từ khóa "
                   className="min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
                 />
               </div>
 
-              <label className="flex h-14 min-w-0 items-center gap-3 border-t border-slate-100 px-4 md:border-l md:border-t-0">
+              <label className="flex h-14 min-w-0 items-center gap-3 border-t border-slate-100 px-4 lg:w-58 lg:border-l lg:border-t-0">
                 <MapPin className="h-5 w-5 shrink-0 text-slate-400" />
                 <select
                   value={location}
                   onChange={(event) => setLocation(event.target.value)}
-                  className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-sm font-medium text-slate-700 outline-none"
+                  className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-sm font-semibold text-slate-700 outline-none"
                   aria-label="Địa điểm"
                 >
                   <option value="">Tất cả địa điểm</option>
@@ -273,7 +273,7 @@ export default function HeroSection({
               <button
                 type="button"
                 onClick={handleSearch}
-                className="mt-2 inline-flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-semibold text-white transition hover:bg-blue-800 md:mt-0"
+                className="inline-flex h-14 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white transition hover:bg-blue-800 lg:w-40"
               >
                 Tìm kiếm
                 <ArrowRight className="h-4 w-4" />
@@ -281,23 +281,25 @@ export default function HeroSection({
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-slate-500">
-              Tìm kiếm phổ biến:
-            </span>
-            {POPULAR_SEARCHES.map((term) => (
-              <button
-                key={term}
-                type="button"
-                onClick={() => {
-                  setKeyword(term);
-                  onSearch?.(term, location);
-                }}
-                className="cursor-pointer rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
-              >
-                {term}
-              </button>
-            ))}
+          <div className="mt-5 max-w-4xl rounded-2xl border border-blue-100 bg-white/65 p-2.5 shadow-sm shadow-blue-900/5">
+            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-0.5">
+              <span className="shrink-0 px-1 text-xs font-semibold text-slate-500">
+                Tìm kiếm phổ biến:
+              </span>
+              {POPULAR_SEARCHES.map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => {
+                    setKeyword(term);
+                    onSearch?.(term, location);
+                  }}
+                  className="shrink-0 cursor-pointer rounded-full border border-blue-100 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="mt-8 grid max-w-xl grid-cols-3 gap-4">

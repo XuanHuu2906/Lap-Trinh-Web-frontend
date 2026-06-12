@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { savePendingSaveJob } from "@/services/job-save-flow";
 import { jobService } from "@/services/job.service";
 import type { Job, JobQuery } from "@/types/job.type";
 
@@ -441,7 +442,7 @@ export default function JobSearch({
 
   const toggleSave = async (jobId: number) => {
     if (!isAuthenticated) {
-      setErrorMessage("Bạn cần đăng nhập ứng viên để lưu việc làm.");
+      savePendingSaveJob(jobId);
       navigate("/login");
       return;
     }
