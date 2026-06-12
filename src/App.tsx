@@ -37,6 +37,7 @@ import { RecruiterOverviewPage } from "./pages/recruiter/Overview";
 import { PostJobPage } from "./pages/recruiter/PostJob";
 import { RecruiterJobDetailPage } from "./pages/recruiter/RecruiterJobDetail";
 import { SettingsPage } from "./pages/recruiter/Settings";
+import EmployerHome from "./pages/EmployerHome";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
       <Routes>
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Home />} />
+          <Route path="employers" element={<EmployerHome />} />
           <Route path="jobs" element={<JobList />} />
           <Route path="jobs/:id" element={<JobDetail variant="public" />} />
           <Route path="cv-templates" element={<CVTemplatePage />} />
