@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getCachedSavedJobs, jobService } from "@/services/job.service";
+import { CompanyLogo } from "@/components/company/CompanyLogo";
 import type { Job } from "@/types/job.type";
 
 type SavedJob = {
@@ -27,10 +28,6 @@ type SummaryCardInfo = {
 
 function getCompanyName(job: Job) {
   return job.recruiter?.recruiterProfile?.companyName || "Không rõ công ty";
-}
-
-function getLogoText(job: Job) {
-  return getCompanyName(job).charAt(0).toUpperCase() || "H";
 }
 
 function formatMoney(value: number) {
@@ -212,9 +209,18 @@ function SavedJobItem({
   return (
     <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50 md:flex-row md:items-center md:justify-between">
       <div className="flex min-w-0 items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-          {getLogoText(job)}
-        </div>
+        <Link
+          to={`/candidate/companies/${job.recruiterId}`}
+          title={`Xem hồ sơ ${getCompanyName(job)}`}
+          className="rounded-xl shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-blue-400 dark:ring-slate-700"
+        >
+          <CompanyLogo
+            name={getCompanyName(job)}
+            logoUrl={job.recruiter?.recruiterProfile?.logoUrl}
+            className="h-12 w-12 rounded-xl text-sm"
+            imageClassName="p-1.5"
+          />
+        </Link>
 
         <div className="min-w-0">
           <Link
@@ -223,9 +229,12 @@ function SavedJobItem({
           >
             {job.title}
           </Link>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <Link
+            to={`/candidate/companies/${job.recruiterId}`}
+            className="mt-1 inline-block text-xs text-slate-500 transition hover:text-blue-600 hover:underline dark:text-slate-400 dark:hover:text-indigo-400"
+          >
             {getCompanyName(job)}
-          </p>
+          </Link>
           <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />

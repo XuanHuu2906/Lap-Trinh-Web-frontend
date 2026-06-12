@@ -13,6 +13,7 @@ import {
   applicationService,
   type CandidateApplication,
 } from "@/services/application.service";
+import { CompanyLogo } from "@/components/company/CompanyLogo";
 import {
   getCandidateDashboardCache,
   setCandidateDashboardCache,
@@ -89,10 +90,6 @@ function formatStatNumber(value: number) {
 
 function getCompanyName(job?: Job) {
   return job?.recruiter?.recruiterProfile?.companyName || "Không rõ công ty";
-}
-
-function getLogoText(job?: Job) {
-  return getCompanyName(job).charAt(0).toUpperCase() || "H";
 }
 
 function formatSalary(job: Job) {
@@ -280,7 +277,16 @@ function ApplicationRow({
         {application.jobPosting?.title || "Không rõ vị trí"}
       </td>
       <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
-        {getCompanyName(application.jobPosting)}
+        {application.jobPosting ? (
+          <Link
+            to={`/candidate/companies/${application.jobPosting.recruiterId}`}
+            className="font-semibold transition hover:text-blue-600 hover:underline dark:hover:text-indigo-400"
+          >
+            {getCompanyName(application.jobPosting)}
+          </Link>
+        ) : (
+          getCompanyName(application.jobPosting)
+        )}
       </td>
       <td className="px-6 py-4 text-[13px] text-slate-400">
         {formatDate(application.appliedAt)}
@@ -357,22 +363,34 @@ function SuggestedJobsPanel({
 
 function SuggestedJobItem({ job }: { job: Job }) {
   return (
-    <Link
-      to={`/candidate/jobs/${job.id}`}
-      className="block border-b border-slate-100 px-6 py-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-    >
+    <div className="border-b border-slate-100 px-6 py-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
-          {getLogoText(job)}
-        </div>
+        <Link
+          to={`/candidate/companies/${job.recruiterId}`}
+          title={`Xem hồ sơ ${getCompanyName(job)}`}
+          className="rounded-xl shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-blue-400 dark:ring-slate-700"
+        >
+          <CompanyLogo
+            name={getCompanyName(job)}
+            logoUrl={job.recruiter?.recruiterProfile?.logoUrl}
+            className="h-10 w-10 rounded-xl text-sm"
+            imageClassName="p-1"
+          />
+        </Link>
 
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-bold text-slate-800 dark:text-slate-100">
+          <Link
+            to={`/candidate/jobs/${job.id}`}
+            className="block truncate text-[13px] font-bold text-slate-800 transition hover:text-blue-600 dark:text-slate-100 dark:hover:text-indigo-400"
+          >
             {job.title}
-          </p>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">
+          </Link>
+          <Link
+            to={`/candidate/companies/${job.recruiterId}`}
+            className="text-[12px] text-slate-500 transition hover:text-blue-600 hover:underline dark:text-slate-400 dark:hover:text-indigo-400"
+          >
             {getCompanyName(job)}
-          </p>
+          </Link>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
@@ -382,7 +400,7 @@ function SuggestedJobItem({ job }: { job: Job }) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

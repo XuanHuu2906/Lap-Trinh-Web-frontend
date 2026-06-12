@@ -9,7 +9,7 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   applicationService,
   getCachedMyApplications,
@@ -314,7 +314,16 @@ function ApplicationRow({
         </p>
       </td>
       <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
-        {getCompanyName(application)}
+        {application.jobPosting ? (
+          <Link
+            to={`/candidate/companies/${application.jobPosting.recruiterId}`}
+            className="font-semibold transition hover:text-blue-600 hover:underline dark:hover:text-indigo-400"
+          >
+            {getCompanyName(application)}
+          </Link>
+        ) : (
+          getCompanyName(application)
+        )}
       </td>
       <td className="px-6 py-4 text-[13px] text-slate-400">
         {formatDate(application.appliedAt)}
@@ -393,9 +402,18 @@ function ApplicationDetailModal({
             <h3 className="mt-2 font-bold text-slate-950 dark:text-white">
               {application.jobPosting?.title || "Không rõ vị trí"}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              {getCompanyName(application)}
-            </p>
+            {application.jobPosting ? (
+              <Link
+                to={`/candidate/companies/${application.jobPosting.recruiterId}`}
+                className="mt-1 inline-block text-sm text-slate-500 transition hover:text-blue-600 hover:underline dark:hover:text-indigo-400"
+              >
+                {getCompanyName(application)}
+              </Link>
+            ) : (
+              <p className="mt-1 text-sm text-slate-500">
+                {getCompanyName(application)}
+              </p>
+            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
