@@ -2,17 +2,21 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Clock,
   FileText,
+  MessageSquare,
   Search,
   ShieldCheck,
   X,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   applicationService,
   getCachedMyApplications,
   type CandidateApplication,
 } from "@/services/application.service";
+import { chatService } from "@/services/chat.service";
+import { jobService } from "@/services/job.service";
 
 type StatusDisplay = {
   label: string;
@@ -185,11 +189,15 @@ function ApplicationsTable({
   isLoading,
   error,
   onView,
+  onChat,
+  chatOpeningId,
 }: {
   applications: CandidateApplication[];
   isLoading: boolean;
   error: string | null;
   onView: (application: CandidateApplication) => void;
+  onChat: (application: CandidateApplication) => void;
+  chatOpeningId: number | null;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -213,6 +221,8 @@ function ApplicationsTable({
             isLoading={isLoading}
             error={error}
             onView={onView}
+            onChat={onChat}
+            chatOpeningId={chatOpeningId}
           />
         </tbody>
       </table>
@@ -225,11 +235,15 @@ function ApplicationsTableBody({
   isLoading,
   error,
   onView,
+  onChat,
+  chatOpeningId,
 }: {
   applications: CandidateApplication[];
   isLoading: boolean;
   error: string | null;
   onView: (application: CandidateApplication) => void;
+  onChat: (application: CandidateApplication) => void;
+  chatOpeningId: number | null;
 }) {
   if (isLoading) {
     return (
@@ -268,6 +282,8 @@ function ApplicationsTableBody({
           key={application.id}
           application={application}
           onView={onView}
+          onChat={onChat}
+          isOpeningChat={chatOpeningId === application.id}
         />
       ))}
     </>
@@ -277,9 +293,13 @@ function ApplicationsTableBody({
 function ApplicationRow({
   application,
   onView,
+  onChat,
+  isOpeningChat,
 }: {
   application: CandidateApplication;
   onView: (application: CandidateApplication) => void;
+  onChat: (application: CandidateApplication) => void;
+  isOpeningChat: boolean;
 }) {
   const status = getStatusDisplay(application.status);
 
@@ -310,13 +330,24 @@ function ApplicationRow({
         </span>
       </td>
       <td className="px-6 py-4">
-        <button
-          type="button"
-          onClick={() => onView(application)}
-          className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          Xem
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => onView(application)}
+            className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            Xem
+          </button>
+          <button
+            type="button"
+            onClick={() => onChat(application)}
+            disabled={isOpeningChat}
+            className="inline-flex items-center gap-1.5 border border-indigo-200 px-3 py-1 text-[12px] font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            {isOpeningChat ? "Đang mở..." : "Nhắn tin"}
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -447,6 +478,7 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 }
 
 export default function AppliedJobs() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 
@@ -458,6 +490,8 @@ export default function AppliedJobs() {
   );
   const [isLoading, setIsLoading] = useState(!cachedApplications);
   const [error, setError] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatOpeningId, setChatOpeningId] = useState<number | null>(null);
   const [selectedApplication, setSelectedApplication] =
     useState<CandidateApplication | null>(null);
 
@@ -512,6 +546,37 @@ export default function AppliedJobs() {
     });
   }, [applications, search]);
 
+  const handleOpenChat = async (application: CandidateApplication) => {
+    setChatOpeningId(application.id);
+    setChatError(null);
+
+    try {
+      let recruiterProfileId =
+        application.jobPosting?.recruiter?.recruiterProfile?.id;
+
+      if (!recruiterProfileId) {
+        const jobResponse = await jobService.getJobById(application.jobPostingId);
+        recruiterProfileId = jobResponse.data.recruiter?.recruiterProfile?.id;
+      }
+
+      if (!recruiterProfileId) {
+        throw new Error("Khong tim thay ho so nha tuyen dung.");
+      }
+
+      const conversation = await chatService.createConversation({
+        recruiterProfileId,
+        jobPostingId: application.jobPostingId,
+      });
+
+      navigate(`/candidate/chat?conversationId=${conversation.id}`);
+    } catch (chatError) {
+      console.error("Khong the mo cuoc tro chuyen:", chatError);
+      setChatError("Khong the mo cuoc tro chuyen voi nha tuyen dung luc nay.");
+    } finally {
+      setChatOpeningId(null);
+    }
+  };
+
   const counters: CounterCardInfo[] = useMemo(
     () => [
       {
@@ -560,11 +625,19 @@ export default function AppliedJobs() {
           onStatusChange={setStatus}
         />
 
+        {chatError ? (
+          <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-950/60 dark:bg-red-950/20 dark:text-red-300">
+            {chatError}
+          </div>
+        ) : null}
+
         <ApplicationsTable
           applications={filteredApplications}
           isLoading={isLoading}
           error={error}
           onView={setSelectedApplication}
+          onChat={(application) => void handleOpenChat(application)}
+          chatOpeningId={chatOpeningId}
         />
       </div>
 
