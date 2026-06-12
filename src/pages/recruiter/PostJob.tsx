@@ -284,8 +284,8 @@ export function PostJobPage() {
         <div
           className={`mb-5 border px-4 py-3 text-[13px] ${
             error
-              ? "border-red-200 bg-red-50 text-red-600"
-              : "border-green-200 bg-green-50 text-green-700"
+              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
           }`}
         >
           {error || message}
@@ -293,7 +293,7 @@ export function PostJobPage() {
       )}
 
       {initialLoading && (
-        <div className="border border-slate-200 bg-white px-6 py-10 text-center text-[13px] text-slate-400">
+        <div className="border border-slate-200 bg-white px-6 py-10 text-center text-[13px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-500">
           Đang tải tin tuyển dụng...
         </div>
       )}
@@ -304,13 +304,13 @@ export function PostJobPage() {
           className="grid items-start gap-6 lg:grid-cols-[1fr_280px]"
         >
           <div className="space-y-5">
-            <div className="border border-slate-200 bg-white p-6">
-              <h2 className="mb-5 text-[14px] font-bold text-slate-800">
+            <div className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <h2 className="mb-5 text-[14px] font-bold text-slate-800 dark:text-slate-50">
                 Thông tin cơ bản
               </h2>
 
               <div className="mb-4">
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Tiêu đề công việc *
                 </label>
 
@@ -319,13 +319,13 @@ export function PostJobPage() {
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Vd: Senior Frontend Engineer"
-                  className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                  className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>
 
               <div className="mb-4 grid gap-4 md:grid-cols-3">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Ngành nghề *
                   </label>
 
@@ -333,7 +333,7 @@ export function PostJobPage() {
                     required={categoryOptions.length > 0}
                     value={categoryId}
                     onChange={(event) => setCategoryId(event.target.value)}
-                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none"
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                   >
                     <option value="">Chọn ngành nghề...</option>
                     {categoryOptions.map((item) => (
@@ -345,7 +345,7 @@ export function PostJobPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Loại hình công việc *
                   </label>
 
@@ -355,7 +355,7 @@ export function PostJobPage() {
                     onChange={(event) =>
                       setJobType(event.target.value as JobType | "")
                     }
-                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none"
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                   >
                     <option value="">Chọn loại hình...</option>
                     {jobTypeOptions.map((item) => (
@@ -367,7 +367,7 @@ export function PostJobPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Kinh nghiệm
                   </label>
 
@@ -378,7 +378,7 @@ export function PostJobPage() {
                         event.target.value as ExperienceLevel | "",
                       )
                     }
-                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none"
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                   >
                     <option value="">Chọn kinh nghiệm...</option>
                     {experienceOptions.map((item) => (
@@ -392,7 +392,7 @@ export function PostJobPage() {
 
               <div className="mb-4 grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Địa điểm
                   </label>
 
@@ -400,12 +400,12 @@ export function PostJobPage() {
                     value={location}
                     onChange={(event) => setLocation(event.target.value)}
                     placeholder="Vd: Hà Nội, TP.HCM hoặc Remote"
-                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Hạn nộp
                   </label>
 
@@ -414,14 +414,14 @@ export function PostJobPage() {
                     min={todayInputValue()}
                     value={expiresAt}
                     onChange={(event) => setExpiresAt(event.target.value)}
-                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Lương tối thiểu
                   </label>
 
@@ -431,12 +431,12 @@ export function PostJobPage() {
                     value={salaryMin}
                     onChange={(event) => setSalaryMin(event.target.value)}
                     placeholder="VD: 10000000"
-                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Lương tối đa
                   </label>
 
@@ -446,12 +446,12 @@ export function PostJobPage() {
                     value={salaryMax}
                     onChange={(event) => setSalaryMax(event.target.value)}
                     placeholder="VD: 20000000"
-                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Đơn vị
                   </label>
 
@@ -460,7 +460,7 @@ export function PostJobPage() {
                     onChange={(event) =>
                       setSalaryUnit(event.target.value as "VND" | "USD")
                     }
-                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none"
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                   >
                     <option value="VND">VND</option>
                     <option value="USD">USD</option>
@@ -469,13 +469,13 @@ export function PostJobPage() {
               </div>
             </div>
 
-            <div className="space-y-5 border border-slate-200 bg-white p-6">
-              <h2 className="text-[14px] font-bold text-slate-800">
+            <div className="space-y-5 border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
+              <h2 className="text-[14px] font-bold text-slate-800 dark:text-slate-50">
                 Mô tả chi tiết
               </h2>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Mô tả công việc *
                 </label>
 
@@ -485,12 +485,12 @@ export function PostJobPage() {
                   onChange={(event) => setDescription(event.target.value)}
                   rows={6}
                   placeholder="Mô tả nhiệm vụ, trách nhiệm và mục tiêu của vị trí..."
-                  className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Yêu cầu
                 </label>
 
@@ -499,12 +499,12 @@ export function PostJobPage() {
                   onChange={(event) => setRequirements(event.target.value)}
                   rows={4}
                   placeholder="Nhập kỹ năng, kinh nghiệm, bằng cấp hoặc yêu cầu cần có..."
-                  className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Quyền lợi
                 </label>
 
@@ -513,18 +513,18 @@ export function PostJobPage() {
                   onChange={(event) => setBenefits(event.target.value)}
                   rows={4}
                   placeholder="Nhập chế độ đãi ngộ, phúc lợi, môi trường làm việc..."
-                  className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>
             </div>
           </div>
 
-          <div className="sticky top-6 border border-slate-200 bg-white p-5">
-            <h2 className="mb-3 text-[14px] font-bold text-slate-800">
+          <div className="sticky top-6 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+            <h2 className="mb-3 text-[14px] font-bold text-slate-800 dark:text-slate-50">
               {isEditing ? "Cập nhật" : "Xuất bản"}
             </h2>
 
-            <p className="mb-5 text-[13px] leading-relaxed text-slate-500">
+            <p className="mb-5 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
               Kiểm tra kỹ thông tin trước khi lưu để ứng viên hiểu rõ vị trí và yêu cầu công việc.
             </p>
 
@@ -547,7 +547,7 @@ export function PostJobPage() {
                 type="button"
                 onClick={() => void submitJob("draft")}
                 disabled={loading}
-                className="mt-3 h-10 w-full border border-slate-300 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                className="mt-3 h-10 w-full border border-slate-300 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 {loading && submitStatus === "draft" ? "ĐANG LƯU..." : "LƯU NHÁP"}
               </button>
@@ -562,7 +562,7 @@ export function PostJobPage() {
                     : "/recruiter/manage-jobs",
                 )
               }
-              className="mt-3 h-10 w-full border border-slate-300 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
+              className="mt-3 h-10 w-full border border-slate-300 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Quay lại quản lý tin
             </button>

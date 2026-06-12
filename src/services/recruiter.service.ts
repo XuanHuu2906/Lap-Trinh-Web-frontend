@@ -46,6 +46,8 @@ export interface CreateJobPayload {
 
 export interface RecruiterApplication {
   id: number;
+  candidateProfileId?: number;
+  jobPostingId?: number;
   status: ApplicationStatus;
   coverLetter?: string | null;
   appliedAt: string;

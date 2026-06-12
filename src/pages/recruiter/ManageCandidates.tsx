@@ -25,12 +25,12 @@ const statusLabel: Record<ApplicationStatus, string> = {
 };
 
 const statusStyle: Record<ApplicationStatus, string> = {
-  pending: "border border-blue-400 text-blue-600 bg-white",
-  reviewing: "border border-orange-400 text-orange-600 bg-white",
-  interview: "border border-violet-400 text-violet-600 bg-white",
-  accepted: "border border-emerald-400 text-emerald-600 bg-white",
-  rejected: "border border-red-400 text-red-600 bg-white",
-  cancelled: "border border-slate-300 text-slate-500 bg-white",
+  pending: "border border-blue-400 text-blue-600 bg-white dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
+  reviewing: "border border-orange-400 text-orange-600 bg-white dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
+  interview: "border border-violet-400 text-violet-600 bg-white dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
+  accepted: "border border-emerald-400 text-emerald-600 bg-white dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+  rejected: "border border-red-400 text-red-600 bg-white dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+  cancelled: "border border-slate-300 text-slate-500 bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 type FeedbackStatus = "interview" | "accepted" | "rejected";
@@ -368,18 +368,18 @@ export function ManageCandidatesPage() {
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${
             error
-              ? "border-red-200 bg-red-50 text-red-600"
-              : "border-green-200 bg-green-50 text-green-700"
+              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
           }`}
         >
           {error || message}
         </div>
       )}
 
-      <div className="mb-6 border border-slate-200 bg-white p-5">
+      <div className="mb-6 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Tin tuyển dụng
             </label>
 
@@ -387,7 +387,7 @@ export function ManageCandidatesPage() {
               value={selectedJobId}
               disabled={jobsLoading}
               onChange={(e) => handleSelectJob(e.target.value)}
-              className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none"
+              className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             >
               <option value="">
                 {jobsLoading ? "Đang tải..." : "Chọn tin tuyển dụng"}
@@ -402,7 +402,7 @@ export function ManageCandidatesPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Trạng thái
             </label>
 
@@ -411,7 +411,7 @@ export function ManageCandidatesPage() {
               onChange={(e) =>
                 setStatusFilter(e.target.value as ApplicationStatus | "")
               }
-              className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none"
+              className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             >
               <option value="">Tất cả</option>
               <option value="pending">Mới</option>
@@ -424,7 +424,7 @@ export function ManageCandidatesPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Tìm ứng viên
             </label>
 
@@ -432,17 +432,17 @@ export function ManageCandidatesPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tên hoặc email ứng viên..."
-              className="h-10 w-full border border-slate-200 px-4 text-[13px] text-slate-700 outline-none focus:border-slate-400"
+              className="h-10 w-full border border-slate-200 px-4 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
             />
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-[1fr_380px] items-start gap-6">
-        <div className="overflow-x-auto border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
+              <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
                 {[
                   "Ứng viên",
                   "CV",
@@ -452,7 +452,7 @@ export function ManageCandidatesPage() {
                 ].map((heading) => (
                   <th
                     key={heading}
-                    className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400"
+                    className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500"
                   >
                     {heading}
                   </th>
@@ -465,7 +465,7 @@ export function ManageCandidatesPage() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-8 text-center text-[13px] text-slate-400"
+                    className="px-6 py-8 text-center text-[13px] text-slate-400 dark:text-slate-500"
                   >
                     Đang tải dữ liệu...
                   </td>
@@ -476,7 +476,7 @@ export function ManageCandidatesPage() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-8 text-center text-[13px] text-slate-400"
+                    className="px-6 py-8 text-center text-[13px] text-slate-400 dark:text-slate-500"
                   >
                     Chưa có ứng viên cho tin này.
                   </td>
@@ -487,24 +487,24 @@ export function ManageCandidatesPage() {
                 filteredApplications.map((application) => (
                   <tr
                     key={application.id}
-                    className="border-b border-slate-50 hover:bg-slate-50"
+                    className="border-b border-slate-50 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
                   >
                     <td className="px-6 py-5">
-                      <p className="text-[14px] font-bold text-slate-900">
+                      <p className="text-[14px] font-bold text-slate-900 dark:text-slate-50">
                         {getCandidateName(application)}
                       </p>
 
-                      <p className="mt-1 text-[12px] text-slate-400">
+                      <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">
                         {application.candidateProfile?.user?.email ||
                           "Chưa có email"}
                       </p>
                     </td>
 
-                    <td className="px-6 py-5 text-[13px] text-slate-500">
+                    <td className="px-6 py-5 text-[13px] text-slate-500 dark:text-slate-400">
                       {application.cv?.title || "Chưa có CV"}
                     </td>
 
-                    <td className="px-6 py-5 text-[13px] text-slate-500">
+                    <td className="px-6 py-5 text-[13px] text-slate-500 dark:text-slate-400">
                       {formatDate(application.appliedAt)}
                     </td>
 
@@ -522,7 +522,7 @@ export function ManageCandidatesPage() {
                       <button
                         type="button"
                         onClick={() => void openApplication(application)}
-                        className="h-8 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
+                        className="h-8 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         Xem / xử lý
                       </button>
@@ -533,31 +533,31 @@ export function ManageCandidatesPage() {
           </table>
         </div>
 
-        <div className="min-h-80 border border-slate-200 bg-white p-5">
+        <div className="min-h-80 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
           {!selectedApplication ? (
-            <div className="py-16 text-center text-[13px] text-slate-400">
+            <div className="py-16 text-center text-[13px] text-slate-400 dark:text-slate-500">
               Chọn một ứng viên để xem chi tiết, phản hồi và đánh giá.
             </div>
           ) : (
             <div className="space-y-5">
               <div>
-                <h2 className="text-[18px] font-bold text-slate-900">
+                <h2 className="text-[18px] font-bold text-slate-900 dark:text-slate-50">
                   {getCandidateName(selectedApplication)}
                 </h2>
 
-                <p className="text-[13px] text-slate-500">
+                <p className="text-[13px] text-slate-500 dark:text-slate-400">
                   {selectedApplication.candidateProfile?.phone ||
                     "Chưa có số điện thoại"}
                 </p>
 
-                <p className="mt-1 text-[12px] text-slate-400">
+                <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">
                   {selectedApplication.candidateProfile?.user?.email ||
                     "Chưa có email"}
                 </p>
 
                 {selectedApplication.cv?.pdfUrl && (
                   <a
-                    className="mt-2 inline-block text-[13px] font-semibold text-blue-600 hover:underline"
+                    className="mt-2 inline-block text-[13px] font-semibold text-blue-600 hover:underline dark:text-blue-300"
                     href={selectedApplication.cv.pdfUrl}
                     target="_blank"
                     rel="noreferrer"
@@ -569,7 +569,7 @@ export function ManageCandidatesPage() {
                 <button
                   type="button"
                   onClick={handleOpenChat}
-                  className="mt-3 inline-flex h-8 items-center gap-2 border border-indigo-200 px-3 text-[12px] font-semibold text-indigo-700 hover:bg-indigo-50"
+                  className="mt-3 inline-flex h-8 items-center gap-2 border border-indigo-200 px-3 text-[12px] font-semibold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
                   Nhắn tin
@@ -577,25 +577,25 @@ export function ManageCandidatesPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Thư xin việc
                 </label>
 
-                <p className="whitespace-pre-wrap border border-slate-100 bg-slate-50 px-3 py-2 text-[13px] leading-6 text-slate-600">
+                <p className="whitespace-pre-wrap border border-slate-100 bg-slate-50 px-3 py-2 text-[13px] leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
                   {selectedApplication.coverLetter?.trim() ||
                     "Ứng viên không gửi thư xin việc."}
                 </p>
               </div>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Chuyển trạng thái
                 </label>
 
                 <div className="flex flex-wrap gap-2">
                   {nextStatusOptions(selectedApplication.status).length ===
                     0 && (
-                    <span className="text-[13px] text-slate-400">
+                    <span className="text-[13px] text-slate-400 dark:text-slate-500">
                       Không còn bước chuyển hợp lệ.
                     </span>
                   )}
@@ -614,14 +614,14 @@ export function ManageCandidatesPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Phản hồi cho ứng viên
                 </label>
 
                 <select
                   value={feedbackStatus}
                   onChange={(e) => setFeedbackStatus(e.target.value as FeedbackStatus)}
-                  className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700"
+                  className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                 >
                   <option value="interview">Mời phỏng vấn</option>
                   <option value="accepted">Phù hợp</option>
@@ -633,28 +633,28 @@ export function ManageCandidatesPage() {
                   onChange={(e) => setFeedback(e.target.value)}
                   rows={5}
                   placeholder="Nhập nội dung phản hồi gửi cho ứng viên..."
-                  className="w-full border border-slate-200 px-3 py-2 text-[13px] text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full border border-slate-200 px-3 py-2 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
 
                 <button
                   type="button"
                   onClick={() => void handleSaveFeedback()}
                   disabled={!feedback.trim()}
-                  className="mt-2 h-8 border border-slate-300 px-3 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="mt-2 h-8 border border-slate-300 px-3 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   Gửi phản hồi và cập nhật kết quả
                 </button>
               </div>
 
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Đánh giá nội bộ
                 </label>
 
                 <select
                   value={score}
                   onChange={(e) => setScore(Number(e.target.value))}
-                  className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700"
+                  className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                 >
                   {[1, 2, 3, 4, 5].map((item) => (
                     <option key={item} value={item}>
@@ -668,13 +668,13 @@ export function ManageCandidatesPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
                   placeholder="Ghi chú nội bộ về ứng viên..."
-                  className="w-full border border-slate-200 px-3 py-2 text-[13px] text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full border border-slate-200 px-3 py-2 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
 
                 <button
                   type="button"
                   onClick={() => void handleSaveEvaluation()}
-                  className="mt-2 h-8 border border-slate-300 px-3 text-[12px] font-semibold text-slate-700 hover:bg-slate-50"
+                  className="mt-2 h-8 border border-slate-300 px-3 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   Lưu đánh giá
                 </button>
