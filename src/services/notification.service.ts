@@ -30,7 +30,7 @@ type UnreadCountResponse = {
   };
 };
 
-let notificationsCache = new Map<string, NotificationListResponse>();
+const notificationsCache = new Map<string, NotificationListResponse>();
 let unreadCountCache: UnreadCountResponse | null = null;
 
 const cacheKey = (params: object) => JSON.stringify(params);

@@ -3,7 +3,7 @@ import { requestApi, type ApiResponse } from "./api";
 export type JobStatus = "draft" | "active" | "closed" | "deleted";
 export type JobType = "full-time" | "part-time" | "remote" | "hybrid" | "freelance" | "internship";
 export type ExperienceLevel = "entry" | "junior" | "mid" | "senior" | "lead" | "director";
-export type ApplicationStatus = "pending" | "reviewing" | "accepted" | "rejected" | "cancelled";
+export type ApplicationStatus = "pending" | "reviewing" | "interview" | "accepted" | "rejected" | "cancelled";
 
 export interface RecruiterJob {
   id: number;
@@ -76,6 +76,9 @@ export interface RecruiterApplication {
     score?: number | null;
     notes?: string | null;
   }>;
+  conversation?: {
+    id: number;
+  } | null;
 }
 
 export interface RecruiterProfile {
@@ -167,7 +170,11 @@ export async function getApplicationsByJob(params: {
   });
 }
 
-export async function updateApplicationStatus(id: number, status: "reviewing" | "accepted" | "rejected") {
+export async function getApplicationDetail(id: number) {
+  return requestApi<RecruiterApplication>({ method: "GET", url: `/applications/${id}` });
+}
+
+export async function updateApplicationStatus(id: number, status: "reviewing" | "interview" | "accepted" | "rejected") {
   return requestApi<RecruiterApplication>({
     method: "PUT",
     url: `/applications/${id}/status`,
@@ -175,8 +182,16 @@ export async function updateApplicationStatus(id: number, status: "reviewing" | 
   });
 }
 
-export async function createFeedback(applicationId: number, content: string) {
-  return requestApi({ method: "POST", url: `/applications/${applicationId}/feedback`, data: { content } });
+export async function createFeedback(
+  applicationId: number,
+  content: string,
+  status?: "interview" | "accepted" | "rejected",
+) {
+  return requestApi({
+    method: "POST",
+    url: `/applications/${applicationId}/feedback`,
+    data: { content, status },
+  });
 }
 
 export async function createEvaluation(applicationId: number, score: number, notes: string) {

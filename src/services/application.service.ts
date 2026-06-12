@@ -4,6 +4,7 @@ import type { Job } from "@/types/job.type";
 export type ApplicationStatus =
   | "pending"
   | "reviewing"
+  | "interview"
   | "accepted"
   | "rejected"
   | "cancelled";
@@ -40,7 +41,7 @@ type ApiResponse<T> = {
   };
 };
 
-let myApplicationsCache = new Map<string, ApiResponse<CandidateApplication[]>>();
+const myApplicationsCache = new Map<string, ApiResponse<CandidateApplication[]>>();
 
 const cacheKey = (params: object) => JSON.stringify(params);
 

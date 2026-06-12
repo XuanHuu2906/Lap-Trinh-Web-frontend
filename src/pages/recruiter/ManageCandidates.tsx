@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { MessageSquare } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useVisiblePolling } from "../../hooks/useVisiblePolling";
+import { supabase } from "../../utils/supabase";
 import {
   createEvaluation,
   createFeedback,
+  getApplicationDetail,
   getApplicationsByJob,
   getMyJobs,
   updateApplicationStatus,
@@ -14,6 +18,7 @@ import {
 const statusLabel: Record<ApplicationStatus, string> = {
   pending: "Mới",
   reviewing: "Đang xem xét",
+  interview: "Mời phỏng vấn",
   accepted: "Đạt",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
@@ -22,17 +27,39 @@ const statusLabel: Record<ApplicationStatus, string> = {
 const statusStyle: Record<ApplicationStatus, string> = {
   pending: "border border-blue-400 text-blue-600 bg-white",
   reviewing: "border border-orange-400 text-orange-600 bg-white",
+  interview: "border border-violet-400 text-violet-600 bg-white",
   accepted: "border border-emerald-400 text-emerald-600 bg-white",
   rejected: "border border-red-400 text-red-600 bg-white",
   cancelled: "border border-slate-300 text-slate-500 bg-white",
 };
 
+type FeedbackStatus = "interview" | "accepted" | "rejected";
+
+const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
+  if (status === "accepted" || status === "rejected" || status === "interview") {
+    return status;
+  }
+
+  return "interview";
+};
+
 const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "pending") {
-    return [{ label: "Chuyển sang đang xem xét", value: "reviewing" as const }];
+    return [
+      { label: "Chuyển sang đang xem xét", value: "reviewing" as const },
+      { label: "Mời phỏng vấn", value: "interview" as const },
+    ];
   }
 
   if (status === "reviewing") {
+    return [
+      { label: "Mời phỏng vấn", value: "interview" as const },
+      { label: "Duyệt / đạt", value: "accepted" as const },
+      { label: "Từ chối", value: "rejected" as const },
+    ];
+  }
+
+  if (status === "interview") {
     return [
       { label: "Duyệt / đạt", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
@@ -60,6 +87,7 @@ const getCandidateName = (application: RecruiterApplication) => {
 };
 
 export function ManageCandidatesPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const jobIdParam = searchParams.get("jobId");
 
@@ -73,6 +101,8 @@ export function ManageCandidatesPage() {
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
 
   const [feedback, setFeedback] = useState("");
+  const [feedbackStatus, setFeedbackStatus] =
+    useState<FeedbackStatus>("interview");
   const [score, setScore] = useState(3);
   const [notes, setNotes] = useState("");
 
@@ -126,15 +156,19 @@ export function ManageCandidatesPage() {
     }
   };
 
-  const loadApplications = async () => {
+  const loadApplications = async (
+    options: { showLoading?: boolean; updateError?: boolean } = {},
+  ) => {
+    const { showLoading = true, updateError = true } = options;
+
     if (!selectedJobId) {
       setApplications([]);
       setSelectedApplication(null);
       return;
     }
 
-    setLoading(true);
-    setError("");
+    if (showLoading) setLoading(true);
+    if (updateError) setError("");
 
     try {
       const response = await getApplicationsByJob({
@@ -154,13 +188,17 @@ export function ManageCandidatesPage() {
         setSelectedApplication(refreshed ?? null);
       }
     } catch (err) {
-      setError(
+      if (updateError) {
+        setError(
         err instanceof Error
           ? err.message
           : "Không tải được danh sách ứng viên",
       );
+      } else {
+        console.error("Loi polling danh sach ung vien:", err);
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -174,13 +212,70 @@ export function ManageCandidatesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJobId, statusFilter]);
 
-  const openApplication = (application: RecruiterApplication) => {
+  useVisiblePolling(
+    () =>
+      loadApplications({
+        showLoading: false,
+        updateError: false,
+      }),
+    {
+      enabled: Boolean(selectedJobId),
+      intervalMs: 120_000,
+    },
+  );
+
+  useEffect(() => {
+    const client = supabase;
+    if (!selectedJobId || !client) return;
+
+    const channel = client
+      .channel(`applications-job-${selectedJobId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "applications",
+          filter: `job_posting_id=eq.${selectedJobId}`,
+        },
+        () => {
+          void loadApplications({
+            showLoading: false,
+            updateError: false,
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedJobId, statusFilter]);
+
+  const hydrateApplicationForm = (application: RecruiterApplication) => {
     setSelectedApplication(application);
     setFeedback(application.feedbacks?.[0]?.content ?? "");
+    setFeedbackStatus(getFeedbackStatus(application.status));
     setScore(application.evaluations?.[0]?.score ?? 3);
     setNotes(application.evaluations?.[0]?.notes ?? "");
+  };
+
+  const openApplication = async (application: RecruiterApplication) => {
+    hydrateApplicationForm(application);
     setMessage("");
     setError("");
+
+    try {
+      const response = await getApplicationDetail(application.id);
+      hydrateApplicationForm(response.data);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Không tải được chi tiết hồ sơ ứng viên",
+      );
+    }
   };
 
   const handleSelectJob = (value: string) => {
@@ -199,7 +294,7 @@ export function ManageCandidatesPage() {
   };
 
   const handleChangeStatus = async (
-    nextStatus: "reviewing" | "accepted" | "rejected",
+    nextStatus: "reviewing" | "interview" | "accepted" | "rejected",
   ) => {
     if (!selectedApplication) return;
 
@@ -224,12 +319,22 @@ export function ManageCandidatesPage() {
     setMessage("");
 
     try {
-      await createFeedback(selectedApplication.id, feedback.trim());
+      await createFeedback(selectedApplication.id, feedback.trim(), feedbackStatus);
       setMessage("Gửi phản hồi cho ứng viên thành công");
       await loadApplications();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không gửi được phản hồi");
     }
+  };
+
+  const handleOpenChat = () => {
+    if (!selectedApplication) return;
+
+    navigate(
+      selectedApplication.conversation?.id
+        ? `/recruiter/chat?conversationId=${selectedApplication.conversation.id}`
+        : "/recruiter/chat",
+    );
   };
 
   const handleSaveEvaluation = async () => {
@@ -311,6 +416,7 @@ export function ManageCandidatesPage() {
               <option value="">Tất cả</option>
               <option value="pending">Mới</option>
               <option value="reviewing">Đang xem xét</option>
+              <option value="interview">Mời phỏng vấn</option>
               <option value="accepted">Đạt</option>
               <option value="rejected">Không phù hợp</option>
               <option value="cancelled">Đã hủy</option>
@@ -415,7 +521,7 @@ export function ManageCandidatesPage() {
                     <td className="px-6 py-5">
                       <button
                         type="button"
-                        onClick={() => openApplication(application)}
+                        onClick={() => void openApplication(application)}
                         className="h-8 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100"
                       >
                         Xem / xử lý
@@ -459,6 +565,26 @@ export function ManageCandidatesPage() {
                     Xem CV PDF
                   </a>
                 )}
+
+                <button
+                  type="button"
+                  onClick={handleOpenChat}
+                  className="mt-3 inline-flex h-8 items-center gap-2 border border-indigo-200 px-3 text-[12px] font-semibold text-indigo-700 hover:bg-indigo-50"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Nhắn tin
+                </button>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  Thư xin việc
+                </label>
+
+                <p className="whitespace-pre-wrap border border-slate-100 bg-slate-50 px-3 py-2 text-[13px] leading-6 text-slate-600">
+                  {selectedApplication.coverLetter?.trim() ||
+                    "Ứng viên không gửi thư xin việc."}
+                </p>
               </div>
 
               <div>
@@ -492,6 +618,16 @@ export function ManageCandidatesPage() {
                   Phản hồi cho ứng viên
                 </label>
 
+                <select
+                  value={feedbackStatus}
+                  onChange={(e) => setFeedbackStatus(e.target.value as FeedbackStatus)}
+                  className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700"
+                >
+                  <option value="interview">Mời phỏng vấn</option>
+                  <option value="accepted">Phù hợp</option>
+                  <option value="rejected">Không phù hợp</option>
+                </select>
+
                 <textarea
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
@@ -506,7 +642,7 @@ export function ManageCandidatesPage() {
                   disabled={!feedback.trim()}
                   className="mt-2 h-8 border border-slate-300 px-3 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                 >
-                  Gửi phản hồi
+                  Gửi phản hồi và cập nhật kết quả
                 </button>
               </div>
 

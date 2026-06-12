@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Bell,
@@ -11,7 +11,13 @@ import {
   User,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { notificationService } from "../../services/notification.service";
+import { useVisiblePolling } from "../../hooks/useVisiblePolling";
+import {
+  notificationService,
+  type NotificationItem,
+} from "../../services/notification.service";
+import { useAuth } from "../../contexts/AuthContext";
+import { supabase } from "../../utils/supabase";
 
 type DashboardRole = "candidate" | "recruiter" | "admin";
 
@@ -127,6 +133,17 @@ const formatNotificationTime = (value: string) => {
   }).format(date);
 };
 
+const mapTopbarNotifications = (
+  items: NotificationItem[],
+): TopbarNotification[] =>
+  items.map((item) => ({
+    id: String(item.id),
+    title: item.title,
+    message: item.message,
+    timeLabel: formatNotificationTime(item.createdAt),
+    isRead: item.isRead,
+  }));
+
 export function Topbar({
   role,
   pathname,
@@ -136,11 +153,13 @@ export function Topbar({
   isSidebarCollapsed = false,
 }: TopbarProps) {
   const { theme, toggleTheme } = useTheme();
+  const { user: authUser } = useAuth();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<TopbarNotification[]>([]);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const currentUser = user || fallbackUsers[role];
   const darkMode = theme === "dark";
@@ -158,9 +177,83 @@ export function Topbar({
 
   const displayedNotifications = notifications;
 
-  const hasUnreadNotifications = displayedNotifications.some(
-    (item) => !item.isRead,
+  const hasUnreadNotifications =
+    unreadNotificationCount > 0 ||
+    displayedNotifications.some((item) => !item.isRead);
+
+  const loadUnreadNotificationCount = useCallback(async () => {
+    if (role !== "recruiter") return;
+
+    const response = await notificationService.getUnreadCount(true);
+    setUnreadNotificationCount(response.data.count);
+  }, [role]);
+
+  useVisiblePolling(
+    loadUnreadNotificationCount,
+    {
+      enabled: role === "recruiter" && !isNotificationsOpen,
+      intervalMs: 120_000,
+      runImmediately: true,
+    },
   );
+
+  const loadTopbarNotifications = useCallback(async () => {
+    setIsNotificationsLoading(true);
+
+    try {
+      const response = await notificationService.getNotifications(
+        { page: 1, limit: 5 },
+        true,
+      );
+      const unreadResponse =
+        role === "recruiter"
+          ? await notificationService.getUnreadCount(true)
+          : null;
+
+      setNotifications(mapTopbarNotifications(response.data));
+      setUnreadNotificationCount(
+        unreadResponse?.data.count ??
+          response.data.filter((item) => !item.isRead).length,
+      );
+    } catch (error) {
+      console.error("Loi tai thong bao:", error);
+      setNotifications([]);
+    } finally {
+      setIsNotificationsLoading(false);
+    }
+  }, [role]);
+
+  useEffect(() => {
+    const client = supabase;
+    if (role !== "recruiter" || !authUser?.id || !client) return;
+
+    const channel = client
+      .channel(`notifications-topbar-${authUser.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${authUser.id}`,
+        },
+        () => {
+          void loadUnreadNotificationCount();
+          if (isNotificationsOpen) void loadTopbarNotifications();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [
+    authUser?.id,
+    isNotificationsOpen,
+    loadTopbarNotifications,
+    loadUnreadNotificationCount,
+    role,
+  ]);
 
   useEffect(() => {
     if (!isNotificationsOpen) return;
@@ -174,16 +267,16 @@ export function Topbar({
           { page: 1, limit: 5 },
           true,
         );
+        const unreadResponse =
+          role === "recruiter"
+            ? await notificationService.getUnreadCount(true)
+            : null;
 
         if (isMounted) {
-          setNotifications(
-            response.data.map((item) => ({
-              id: String(item.id),
-              title: item.title,
-              message: item.message,
-              timeLabel: formatNotificationTime(item.createdAt),
-              isRead: item.isRead,
-            })),
+          setNotifications(mapTopbarNotifications(response.data));
+          setUnreadNotificationCount(
+            unreadResponse?.data.count ??
+              response.data.filter((item) => !item.isRead).length,
           );
         }
       } catch (error) {

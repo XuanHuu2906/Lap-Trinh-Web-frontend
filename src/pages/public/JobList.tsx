@@ -126,11 +126,10 @@ function SearchBar({
       <button
         type="button"
         onClick={onToggleFilter}
-        className={`inline-flex h-12 items-center gap-2 border px-4 text-sm font-semibold transition ${
-          hasActiveFilter || showFilter
+        className={`inline-flex h-12 items-center gap-2 border px-4 text-sm font-semibold transition ${hasActiveFilter || showFilter
             ? "border-blue-600 bg-blue-600 text-white"
             : "border-slate-200 bg-white text-slate-600 hover:border-blue-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-        }`}
+          }`}
       >
         <SlidersHorizontal size={15} />
         Bộ lọc
@@ -194,11 +193,10 @@ function FilterPanel({
                 key={item.label}
                 type="button"
                 onClick={() => onSalaryChange(index)}
-                className={`border px-3 py-1.5 text-xs font-semibold transition ${
-                  salaryIndex === index
+                className={`border px-3 py-1.5 text-xs font-semibold transition ${salaryIndex === index
                     ? "border-blue-600 bg-blue-600 text-white"
                     : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
-                }`}
+                  }`}
               >
                 {item.label}
               </button>
@@ -232,11 +230,10 @@ function FilterChipGroup({
             key={item.label}
             type="button"
             onClick={() => onChange(item.value)}
-            className={`border px-3 py-1.5 text-xs font-semibold transition ${
-              activeValue === item.value
+            className={`border px-3 py-1.5 text-xs font-semibold transition ${activeValue === item.value
                 ? "border-blue-600 bg-blue-600 text-white"
                 : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
-            }`}
+              }`}
           >
             {item.label}
           </button>
@@ -301,11 +298,10 @@ function JobCard({
             type="button"
             onClick={onToggleSave}
             title={isSaved ? "Bỏ lưu" : "Lưu việc làm"}
-            className={`cursor-pointer p-1.5 transition-colors ${
-              isSaved
+            className={`cursor-pointer p-1.5 transition-colors ${isSaved
                 ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300"
                 : "text-slate-300 hover:bg-slate-100 hover:text-slate-500 dark:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-            }`}
+              }`}
           >
             <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
           </button>
@@ -315,7 +311,7 @@ function JobCard({
       <div className="mt-5 grid gap-3 border-t border-slate-100 pt-4 text-sm dark:border-slate-800 sm:grid-cols-3">
         <JobMeta icon={Banknote} value={formatSalary(job)} strong />
         <JobMeta icon={MapPin} value={job.location || "Không rõ địa điểm"} />
-        <JobMeta icon={CalendarClock} value={`HSD: ${formatDate(job.expiresAt)}`} />
+        <JobMeta icon={CalendarClock} value={`Hạn nộp: ${formatDate(job.expiresAt)}`} />
       </div>
     </article>
   );
@@ -332,11 +328,10 @@ function JobMeta({
 }) {
   return (
     <div
-      className={`flex items-center gap-2 ${
-        strong
+      className={`flex items-center gap-2 ${strong
           ? "font-bold text-emerald-600 dark:text-emerald-400"
           : "text-slate-500 dark:text-slate-400"
-      }`}
+        }`}
     >
       <Icon className="h-4 w-4 shrink-0" />
       <span>{value}</span>
@@ -545,11 +540,10 @@ export default function JobList() {
                 key={pageNumber}
                 type="button"
                 onClick={() => setPage(pageNumber)}
-                className={`h-9 w-9 cursor-pointer border text-sm font-semibold transition-colors ${
-                  pageNumber === page
+                className={`h-9 w-9 cursor-pointer border text-sm font-semibold transition-colors ${pageNumber === page
                     ? "border-blue-600 bg-blue-600 text-white"
                     : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white dark:text-slate-300 dark:hover:border-slate-800 dark:hover:bg-slate-900"
-                }`}
+                  }`}
               >
                 {pageNumber}
               </button>

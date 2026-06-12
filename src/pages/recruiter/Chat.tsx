@@ -17,6 +17,7 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import {
   chatService,
   type Conversation,
@@ -26,6 +27,8 @@ import { supabase } from "../../utils/supabase";
 
 export function RecruiterChatPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const requestedConversationId = Number(searchParams.get("conversationId"));
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<
     number | null
@@ -49,6 +52,14 @@ export function RecruiterChatPage() {
       setIsLoadingConversations(true);
       const data = await chatService.getConversations();
       setConversations(data);
+      const requestedConversation = data.find(
+        (conversation) => conversation.id === requestedConversationId,
+      );
+      if (requestedConversation) {
+        setActiveConversationId(requestedConversation.id);
+        return;
+      }
+
       if (selectFirst && data.length > 0) {
         setActiveConversationId((current) => current ?? data[0].id);
       }
@@ -57,7 +68,7 @@ export function RecruiterChatPage() {
     } finally {
       setIsLoadingConversations(false);
     }
-  }, []);
+  }, [requestedConversationId]);
 
   useEffect(() => {
     loadConversations(true);

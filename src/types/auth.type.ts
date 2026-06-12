@@ -17,7 +17,10 @@ export interface RegisterRecruiterRequest {
   fullName: string;
   email: string;
   password?: string;
+  contactName?: string;
   phone?: string;
+  website?: string;
+  description?: string;
   confirmPassword?: string;
 }
 

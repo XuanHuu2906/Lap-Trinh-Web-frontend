@@ -68,6 +68,12 @@ const toDateInputValue = (value?: string | null) => {
   return date.toISOString().slice(0, 10);
 };
 
+const todayInputValue = () => {
+  const today = new Date();
+  const timezoneOffsetMs = today.getTimezoneOffset() * 60 * 1000;
+  return new Date(today.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
+};
+
 export function PostJobPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -157,7 +163,7 @@ export function PostJobPage() {
     void loadJob();
   }, [hasEditParam, isEditing, parsedJobId]);
 
-  const buildPayload = (): CreateJobPayload | null => {
+  const buildPayload = (status: SubmitStatus): CreateJobPayload | null => {
     setError("");
     setMessage("");
 
@@ -178,6 +184,16 @@ export function PostJobPage() {
 
     if (!description.trim()) {
       setError("Vui lòng nhập mô tả công việc");
+      return null;
+    }
+
+    if (status === "active" && !expiresAt) {
+      setError("Vui lòng chọn hạn nộp hồ sơ trước khi đăng tin");
+      return null;
+    }
+
+    if (expiresAt && expiresAt < todayInputValue()) {
+      setError("Hạn nộp hồ sơ không được ở quá khứ");
       return null;
     }
 
@@ -205,7 +221,7 @@ export function PostJobPage() {
   const submitJob = async (status: SubmitStatus) => {
     if (loading || initialLoading) return;
 
-    const payload = buildPayload();
+    const payload = buildPayload(status);
     if (!payload) return;
 
     setLoading(true);
@@ -395,6 +411,7 @@ export function PostJobPage() {
 
                   <input
                     type="date"
+                    min={todayInputValue()}
                     value={expiresAt}
                     onChange={(event) => setExpiresAt(event.target.value)}
                     className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400"
