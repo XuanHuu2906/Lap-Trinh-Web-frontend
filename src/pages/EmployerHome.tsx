@@ -48,7 +48,7 @@ export default function EmployerHome() {
   const postJobPath =
     isAuthenticated && user?.role === "recruiter"
       ? "/recruiter/post-job"
-      : "/register-employer";
+      : "/login";
 
   return (
     <main className="min-h-screen bg-[#111313] text-white">

@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { savePendingSaveJob } from "@/services/job-save-flow";
 import { jobService } from "@/services/job.service";
 import type { Job } from "@/types/job.type";
 
@@ -364,6 +366,7 @@ function EmptyState() {
 
 export default function JobList() {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   const [searchParams] = useSearchParams();
   const keywordFromUrl = searchParams.get("keyword") || "";
   const locationFromUrl = searchParams.get("location") || "";
@@ -437,6 +440,17 @@ export default function JobList() {
 
   const toggleSave = async (event: React.MouseEvent, id: number) => {
     event.stopPropagation();
+
+    if (!isAuthenticated) {
+      savePendingSaveJob(id);
+      navigate("/login");
+      return;
+    }
+
+    if (user?.role !== "candidate") {
+      setError("Chỉ tài khoản ứng viên mới lưu được việc làm.");
+      return;
+    }
 
     const isSaved = savedJobs.has(id);
     setSavedJobs((current) => {
