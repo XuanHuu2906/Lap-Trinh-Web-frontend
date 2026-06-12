@@ -7,6 +7,7 @@ import {
   FileText,
   Layers,
   LayoutDashboard,
+  MessageSquare,
   Search,
   X,
 } from "lucide-react";
@@ -35,6 +36,11 @@ const navItems = [
     label: "Việc đã lưu",
     path: "/candidate/saved-jobs",
     icon: Bookmark,
+  },
+  {
+    label: "Trò chuyện",
+    path: "/candidate/chat",
+    icon: MessageSquare,
   },
   {
     label: "CV của tôi",

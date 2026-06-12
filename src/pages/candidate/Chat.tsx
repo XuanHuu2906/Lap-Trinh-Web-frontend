@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -11,16 +12,14 @@ import {
   CheckCheck,
   Circle,
   Download,
+  ExternalLink,
   FileText,
-  Info,
   Loader2,
   Paperclip,
-  Phone,
   RefreshCw,
   Search,
   Send,
   Smile,
-  Video,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,8 +31,29 @@ import {
   type Message,
 } from "../../services/chat.service";
 import { supabase } from "../../utils/supabase";
+import { Link, useSearchParams } from "react-router-dom";
 
 const maxAttachmentSize = 20 * 1024 * 1024;
+
+type ChatMessage = Message & {
+  deliveryStatus?: "sending" | "error";
+};
+
+const titleAcronyms = new Set([
+  "AI",
+  "API",
+  "BA",
+  "CEO",
+  "CFO",
+  "CTO",
+  "HR",
+  "IT",
+  "QA",
+  "QC",
+  "SQL",
+  "UI",
+  "UX",
+]);
 
 function getConversationName(conversation: Conversation) {
   return (
@@ -58,10 +78,51 @@ function getLastMessageText(conversation: Conversation) {
   return lastMessage.content || "";
 }
 
+function formatJobTitle(title?: string | null) {
+  const normalized = title?.trim().replace(/\s+/g, " ");
+  if (!normalized) return "Tin tuyển dụng";
+  if (normalized !== normalized.toUpperCase()) return normalized;
+
+  return normalized
+    .toLowerCase()
+    .split(" ")
+    .map((word) => {
+      const uppercaseWord = word.toUpperCase();
+      if (titleAcronyms.has(uppercaseWord)) return uppercaseWord;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
 function formatConversationDate(value?: string) {
   if (!value) return "";
 
   return new Date(value).toLocaleDateString("vi-VN");
+}
+
+function getDateKey(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function formatMessageDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (getDateKey(value) === getDateKey(today.toISOString())) return "Hôm nay";
+  if (getDateKey(value) === getDateKey(yesterday.toISOString())) return "Hôm qua";
+
+  return new Intl.DateTimeFormat("vi-VN").format(date);
 }
 
 function formatMessageTime(value: string) {
@@ -83,6 +144,37 @@ function formatFileSize(bytes: number | null) {
 
   const megabytes = kilobytes / 1024;
   return `${megabytes.toFixed(1)} MB`;
+}
+
+function createOptimisticTextMessage({
+  id,
+  conversationId,
+  senderId,
+  content,
+}: {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  content: string;
+}): ChatMessage {
+  return {
+    id,
+    conversationId,
+    senderId,
+    content,
+    messageType: "text",
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentMime: null,
+    attachmentSize: null,
+    isRead: false,
+    sentAt: new Date().toISOString(),
+    sender: {
+      id: senderId,
+      role: "candidate",
+    },
+    deliveryStatus: "sending",
+  };
 }
 
 function ConversationSidebar({
@@ -134,31 +226,32 @@ function ConversationSidebarHeader({
 }) {
   return (
     <div className="border-b border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-100">
-        Nhắn tin tuyển dụng
-      </h2>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-100">
+          Nhắn tin tuyển dụng
+        </h2>
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800"
+          title="Tải lại cuộc trò chuyện"
+          aria-label="Tải lại cuộc trò chuyện"
+        >
+          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+        </button>
+      </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <Input
           type="text"
-          placeholder="Tìm công ty, tin tuyển dụng..."
+          placeholder="Tìm công ty, vị trí..."
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-4 text-xs outline-none transition-all placeholder:text-slate-300 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
         />
       </div>
-
-      <button
-        type="button"
-        onClick={onRefresh}
-        disabled={isLoading}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800"
-        title="Tải lại cuộc trò chuyện"
-      >
-        <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-        Tải lại cuộc trò chuyện
-      </button>
     </div>
   );
 }
@@ -243,8 +336,8 @@ function ConversationItem({
             {formatConversationDate(conversation.updatedAt)}
           </span>
         </div>
-        <p className="mt-0.5 truncate text-[10px] font-semibold uppercase text-indigo-600 dark:text-indigo-400">
-          {conversation.jobPosting?.title || "Mẫu tin tuyển dụng"}
+        <p className="mt-0.5 truncate text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
+          {formatJobTitle(conversation.jobPosting?.title)}
         </p>
         <p className="mt-1 truncate text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           {getLastMessageText(conversation)}
@@ -273,9 +366,10 @@ function ChatPanel({
   onInputChange,
   onSendMessage,
   onFileUpload,
+  onRetryMessage,
 }: {
   activeConversation: Conversation | undefined;
-  messages: Message[];
+  messages: ChatMessage[];
   inputMessage: string;
   isLoadingMessages: boolean;
   isUploading: boolean;
@@ -284,6 +378,7 @@ function ChatPanel({
   onInputChange: (value: string) => void;
   onSendMessage: (event: FormEvent) => void;
   onFileUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  onRetryMessage: (message: ChatMessage) => void;
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-white dark:bg-slate-900">
@@ -297,6 +392,7 @@ function ChatPanel({
             isUploading={isUploading}
             userId={userId}
             chatEndRef={chatEndRef}
+            onRetryMessage={onRetryMessage}
           />
 
           <ChatInput
@@ -316,62 +412,37 @@ function ChatPanel({
 function ChatHeader({ conversation }: { conversation: Conversation }) {
   return (
     <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-3xs dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-sm font-bold text-indigo-600 shadow-3xs dark:bg-indigo-950/60 dark:text-indigo-400">
           {getConversationInitials(conversation)}
         </div>
-        <div className="text-left">
+        <div className="min-w-0 text-left">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-sm font-bold leading-none text-slate-800 dark:text-slate-100">
+            <h3 className="truncate text-sm font-bold leading-none text-slate-800 dark:text-slate-100">
               {getConversationName(conversation)}
             </h3>
-            <span className="flex items-center gap-0.5 text-[9px] text-slate-400 dark:text-slate-500">
-              <Circle className="h-1.5 w-1.5 fill-emerald-500 text-emerald-500" />
-              Đang online
-            </span>
           </div>
-          <p className="mt-1 text-[11px] font-medium leading-none text-slate-500 dark:text-slate-400">
-            {conversation.jobPosting?.title}{" "}
+          <p className="mt-1 truncate text-[11px] font-medium leading-none text-slate-500 dark:text-slate-400">
+            {formatJobTitle(conversation.jobPosting?.title)}{" "}
             <strong className="text-indigo-600 dark:text-indigo-400">
-              {conversation.recruiterProfile.companyName}
+              · {conversation.recruiterProfile.companyName}
             </strong>
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <HeaderIconButton disabled title="Gọi thoại">
-          <Phone className="h-4 w-4" />
-        </HeaderIconButton>
-        <HeaderIconButton disabled title="Gọi video">
-          <Video className="h-4 w-4" />
-        </HeaderIconButton>
-        <HeaderIconButton title="Thông tin">
-          <Info className="h-4 w-4" />
-        </HeaderIconButton>
-      </div>
+      {conversation.jobPostingId ? (
+        <Link
+          to={`/candidate/jobs/${conversation.jobPostingId}`}
+          title="Xem tin tuyển dụng"
+          className="ml-4 inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+        >
+          <FileText className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Xem tin tuyển dụng</span>
+          <ExternalLink className="h-3.5 w-3.5" />
+        </Link>
+      ) : null}
     </div>
-  );
-}
-
-function HeaderIconButton({
-  children,
-  title,
-  disabled,
-}: {
-  children: React.ReactNode;
-  title: string;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      title={title}
-      className="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:cursor-not-allowed dark:hover:bg-slate-800 dark:hover:text-slate-300"
-    >
-      {children}
-    </button>
   );
 }
 
@@ -381,47 +452,96 @@ function MessageTimeline({
   isUploading,
   userId,
   chatEndRef,
+  onRetryMessage,
 }: {
-  messages: Message[];
+  messages: ChatMessage[];
   isLoading: boolean;
   isUploading: boolean;
   userId?: number;
   chatEndRef: React.RefObject<HTMLDivElement | null>;
+  onRetryMessage: (message: ChatMessage) => void;
 }) {
   return (
-    <div className="grow space-y-4 overflow-y-auto bg-slate-50/20 p-6 dark:bg-slate-950/10">
-      {isLoading ? (
-        <div className="flex h-full items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
-        </div>
-      ) : (
-        messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            isMine={message.senderId === userId}
-          />
-        ))
-      )}
+    <div className="grow overflow-y-auto bg-slate-50/20 p-6 dark:bg-slate-950/10">
+      <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col space-y-4">
+        {isLoading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+          </div>
+        ) : messages.length === 0 ? (
+          <EmptyMessagesState />
+        ) : (
+          messages.map((message, index) => {
+            const previousMessage = messages[index - 1];
+            const shouldShowDate =
+              !previousMessage ||
+              getDateKey(previousMessage.sentAt) !== getDateKey(message.sentAt);
 
-      {isUploading ? <UploadingBubble /> : null}
+            return (
+              <Fragment key={message.id}>
+                {shouldShowDate ? (
+                  <MessageDateDivider value={message.sentAt} />
+                ) : null}
+                <MessageBubble
+                  message={message}
+                  isMine={message.senderId === userId}
+                  onRetryMessage={onRetryMessage}
+                />
+              </Fragment>
+            );
+          })
+        )}
 
-      <div ref={chatEndRef} />
+        {isUploading ? <UploadingBubble /> : null}
+
+        <div ref={chatEndRef} />
+      </div>
     </div>
   );
+}
+
+function EmptyMessagesState() {
+  return (
+    <div className="flex flex-1 items-center justify-center text-center">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-white px-5 py-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        Chưa có tin nhắn. Hãy gửi lời chào đến nhà tuyển dụng.
+      </div>
+    </div>
+  );
+}
+
+function MessageDateDivider({ value }: { value: string }) {
+  return (
+    <div className="flex justify-center">
+      <span className="rounded-full bg-slate-200/70 px-3 py-1 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+        {formatMessageDate(value)}
+      </span>
+    </div>
+  );
+}
+
+function getMessageDeliveryLabel(message: ChatMessage, isMine: boolean) {
+  if (!isMine) return null;
+  if (message.deliveryStatus === "sending") return "Đang gửi...";
+  if (message.deliveryStatus === "error") return "Gửi lỗi - Thử lại";
+  return message.isRead ? "Đã xem" : "Đã gửi";
 }
 
 function MessageBubble({
   message,
   isMine,
+  onRetryMessage,
 }: {
-  message: Message;
+  message: ChatMessage;
   isMine: boolean;
+  onRetryMessage: (message: ChatMessage) => void;
 }) {
+  const deliveryLabel = getMessageDeliveryLabel(message, isMine);
+
   return (
     <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
       <div
-        className={`flex max-w-[70%] items-end gap-2 ${
+        className={`flex max-w-[75%] items-end gap-2 ${
           isMine ? "flex-row-reverse" : ""
         }`}
       >
@@ -440,11 +560,32 @@ function MessageBubble({
 
           <div
             className={`mt-1 flex items-center justify-end gap-1 text-right text-[9px] ${
-              isMine ? "text-indigo-200" : "text-slate-400 dark:text-slate-500"
+              isMine
+                ? message.deliveryStatus === "error"
+                  ? "text-red-100"
+                  : "text-indigo-200"
+                : "text-slate-400 dark:text-slate-500"
             }`}
           >
             <span>{formatMessageTime(message.sentAt)}</span>
-            {isMine ? <CheckCheck className="h-3.5 w-3.5 text-indigo-200" /> : null}
+            {deliveryLabel ? (
+              message.deliveryStatus === "error" ? (
+                <button
+                  type="button"
+                  onClick={() => onRetryMessage(message)}
+                  className="font-semibold underline-offset-2 hover:underline"
+                >
+                  {deliveryLabel}
+                </button>
+              ) : (
+                <span>{deliveryLabel}</span>
+              )
+            ) : null}
+            {isMine && message.deliveryStatus === "sending" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-200" />
+            ) : isMine && message.deliveryStatus !== "error" ? (
+              <CheckCheck className="h-3.5 w-3.5 text-indigo-200" />
+            ) : null}
           </div>
         </div>
       </div>
@@ -521,7 +662,10 @@ function ChatInput({
 }) {
   return (
     <div className="shrink-0 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <form onSubmit={onSendMessage} className="flex items-center gap-3">
+      <form
+        onSubmit={onSendMessage}
+        className="mx-auto flex w-full max-w-4xl items-center gap-3"
+      >
         <button
           type="button"
           className="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
@@ -572,11 +716,18 @@ function EmptyChatState() {
 
 export default function Chat() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedConversationIdParam = Number(searchParams.get("conversationId"));
+  const requestedConversationId =
+    Number.isInteger(requestedConversationIdParam) &&
+    requestedConversationIdParam > 0
+      ? requestedConversationIdParam
+      : null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<number | null>(
     null,
   );
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -612,6 +763,17 @@ export default function Chat() {
       const data = await chatService.getConversations();
       setConversations(data);
 
+      const requestedConversation = requestedConversationId
+        ? data.find(
+            (conversation) => conversation.id === requestedConversationId,
+          )
+        : null;
+
+      if (requestedConversation) {
+        setActiveConversationId(requestedConversation.id);
+        return;
+      }
+
       if (selectFirst && data.length > 0) {
         setActiveConversationId((current) => current ?? data[0].id);
       }
@@ -620,7 +782,7 @@ export default function Chat() {
     } finally {
       setIsLoadingConversations(false);
     }
-  }, []);
+  }, [requestedConversationId]);
 
   const loadMessages = useCallback(
     async (conversationId: number) => {
@@ -705,6 +867,28 @@ export default function Chat() {
           }
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${activeConversationId}`,
+        },
+        async () => {
+          try {
+            const response = await chatService.getMessages(
+              activeConversationId,
+              1,
+              100,
+            );
+            setMessages(response.items);
+            loadConversations();
+          } catch (error) {
+            console.error("Lỗi cập nhật trạng thái tin nhắn realtime:", error);
+          }
+        },
+      )
       .subscribe();
 
     return () => {
@@ -719,20 +903,78 @@ export default function Chat() {
   const handleSendMessage = async (event: FormEvent) => {
     event.preventDefault();
 
-    if (!inputMessage.trim() || !activeConversationId) return;
+    if (!inputMessage.trim() || !activeConversationId || !user?.id) return;
 
     const textToSend = inputMessage.trim();
+    const optimisticId = -Date.now();
     setInputMessage("");
+    setMessages((current) => [
+      ...current,
+      createOptimisticTextMessage({
+        id: optimisticId,
+        conversationId: activeConversationId,
+        senderId: user.id,
+        content: textToSend,
+      }),
+    ]);
 
     try {
       const sentMessage = await chatService.sendMessage(
         activeConversationId,
         textToSend,
       );
-      setMessages((current) => [...current, sentMessage]);
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === optimisticId ? sentMessage : message,
+        ),
+      );
       loadConversations();
     } catch (error) {
       console.error("Lỗi khi gửi tin nhắn:", error);
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === optimisticId
+            ? { ...message, deliveryStatus: "error" }
+            : message,
+        ),
+      );
+    }
+  };
+
+  const handleRetryMessage = async (message: ChatMessage) => {
+    const textToSend = message.content?.trim();
+    if (!textToSend || !user?.id) return;
+
+    setMessages((current) =>
+      current.map((item) =>
+        item.id === message.id
+          ? {
+              ...item,
+              sentAt: new Date().toISOString(),
+              deliveryStatus: "sending",
+            }
+          : item,
+      ),
+    );
+
+    try {
+      const sentMessage = await chatService.sendMessage(
+        message.conversationId,
+        textToSend,
+      );
+      setMessages((current) =>
+        current.map((item) => (item.id === message.id ? sentMessage : item)),
+      );
+      loadConversations();
+    } catch (error) {
+      console.error("Lỗi khi gửi lại tin nhắn:", error);
+      setMessages((current) =>
+        current.map((item) =>
+          item.id === message.id
+            ? { ...item, deliveryStatus: "error" }
+            : item,
+        ),
+      );
     }
   };
 
@@ -764,6 +1006,11 @@ export default function Chat() {
     }
   };
 
+  const handleSelectConversation = (conversationId: number) => {
+    setActiveConversationId(conversationId);
+    setSearchParams({ conversationId: String(conversationId) }, { replace: true });
+  };
+
   return (
     <div className="flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white font-sans shadow-3xs transition-colors duration-150 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex min-w-0 flex-1 overflow-hidden">
@@ -773,7 +1020,7 @@ export default function Chat() {
           searchQuery={searchQuery}
           isLoading={isLoadingConversations}
           onSearchChange={setSearchQuery}
-          onSelectConversation={setActiveConversationId}
+          onSelectConversation={handleSelectConversation}
           onRefresh={() => loadConversations()}
         />
 
@@ -788,6 +1035,7 @@ export default function Chat() {
           onInputChange={setInputMessage}
           onSendMessage={handleSendMessage}
           onFileUpload={handleFileUpload}
+          onRetryMessage={(message) => void handleRetryMessage(message)}
         />
       </div>
     </div>

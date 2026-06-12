@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Bell,
@@ -157,6 +157,34 @@ export function Topbar({
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isProfileOpen &&
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileOpen(false);
+      }
+      if (
+        isNotificationsOpen &&
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProfileOpen, isNotificationsOpen]);
+
   const [notifications, setNotifications] = useState<TopbarNotification[]>([]);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -340,7 +368,7 @@ export function Topbar({
           )}
         </button>
 
-        <div className="relative">
+        <div className="relative" ref={notificationsRef}>
           <button
             type="button"
             onClick={() => {
@@ -359,11 +387,6 @@ export function Topbar({
 
           {isNotificationsOpen ? (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsNotificationsOpen(false)}
-              />
-
               <div className="absolute right-0 z-50 mt-3 w-88 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                   <span className="block text-sm font-bold text-slate-900 dark:text-white">
@@ -426,7 +449,7 @@ export function Topbar({
           ) : null}
         </div>
 
-        <div className="relative">
+        <div className="relative" ref={profileRef}>
           <button
             type="button"
             onClick={() => {
@@ -465,11 +488,6 @@ export function Topbar({
 
           {isProfileOpen ? (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsProfileOpen(false)}
-              />
-
               <div className="absolute right-0 z-50 mt-3 w-60 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-md dark:border-slate-800 dark:bg-slate-900">
                 <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                   <span className="block text-xs font-bold text-slate-900 dark:text-white">

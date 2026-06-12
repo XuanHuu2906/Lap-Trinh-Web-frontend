@@ -11,6 +11,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { applicationService } from "@/services/application.service";
 import { clearCandidateDashboardCache } from "@/services/candidate-dashboard-cache";
+import { chatService } from "@/services/chat.service";
 import { cvService, type CandidateCV } from "@/services/cv.service";
 import { jobService } from "@/services/job.service";
 import { savePendingApplyJob } from "@/services/job-application-flow";
@@ -508,6 +509,21 @@ export default function JobDetail({
 
       clearCandidateDashboardCache();
       setIsApplyModalOpen(false);
+
+      const recruiterProfileId = job.recruiter?.recruiterProfile?.id;
+      if (recruiterProfileId) {
+        try {
+          const conversation = await chatService.createConversation({
+            recruiterProfileId,
+            jobPostingId: job.id,
+          });
+          navigate(`/candidate/chat?conversationId=${conversation.id}`);
+          return;
+        } catch (chatError) {
+          console.error("Khong the mo cuoc tro chuyen sau khi ung tuyen:", chatError);
+        }
+      }
+
       navigate("/candidate/applied-jobs");
     } catch (applyError: any) {
       setApplyMessage(

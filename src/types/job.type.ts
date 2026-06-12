@@ -24,6 +24,7 @@ export interface Job {
   updatedAt: string;
   recruiter?: {
     recruiterProfile?: {
+      id?: number;
       companyName: string;
       logoUrl?: string | null;
       contactName?: string | null;
