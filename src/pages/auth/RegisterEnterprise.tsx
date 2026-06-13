@@ -8,7 +8,11 @@ export function EnterpriseRegisterPage() {
   const { registerRecruiter } = useAuth();
 
   const [companyName, setCompanyName] = useState("");
+  const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -41,7 +45,11 @@ export function EnterpriseRegisterPage() {
       const res = await registerRecruiter({
         companyName,
         fullName: companyName,
+        contactName: contactName || undefined,
         email,
+        phone: phone || undefined,
+        website: website || undefined,
+        description: description || undefined,
         password,
         confirmPassword,
       });
@@ -54,7 +62,11 @@ export function EnterpriseRegisterPage() {
 
         // Reset form
         setCompanyName("");
+        setContactName("");
         setEmail("");
+        setPhone("");
+        setWebsite("");
+        setDescription("");
         setPassword("");
         setConfirmPassword("");
         setAgreeTerms(false);
@@ -80,9 +92,9 @@ export function EnterpriseRegisterPage() {
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col justify-between text-slate-800">
       {/* Vùng không gian để căn thẻ đăng ký */}
-      <main className="flex-1 flex items-start justify-center px-4 pt-12.5 pb-12.5">
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
         {/* Thẻ đăng ký nhà tuyển dụng (Card) màu trắng nổi bật */}
-        <div className="w-full  bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
+        <div className="w-full max-w-125 bg-white border border-slate-200/80 rounded-lg shadow-sm p-8 text-left">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-slate-900 leading-none tracking-tight">
               Đăng ký nhà tuyển dụng
@@ -157,6 +169,60 @@ export function EnterpriseRegisterPage() {
                   className="w-full h-11 border border-slate-200 rounded pl-10 pr-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Người liên hệ
+                </label>
+                <input
+                  type="text"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  placeholder="Tên người đại diện"
+                  className="w-full h-11 border border-slate-200 rounded px-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Số điện thoại
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="0900000000"
+                  className="w-full h-11 border border-slate-200 rounded px-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                Website công ty
+              </label>
+              <input
+                type="text"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://congty.com"
+                className="w-full h-11 border border-slate-200 rounded px-4 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                Mô tả công ty
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="Giới thiệu ngắn gọn về công ty, lĩnh vực hoạt động..."
+                className="w-full resize-y border border-slate-200 rounded px-4 py-3 text-sm outline-none focus:border-slate-800 transition-all bg-white text-slate-800 placeholder:text-slate-300"
+              />
             </div>
 
             {/* Email */}
@@ -309,6 +375,15 @@ export function EnterpriseRegisterPage() {
                   </svg>
                 </>
               )}
+            </button>
+
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => navigate("/")}
+              className="w-full h-10 border border-slate-200 text-slate-600 font-bold text-xs tracking-widest hover:bg-slate-50 transition-all rounded disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              HỦY
             </button>
           </form>
 

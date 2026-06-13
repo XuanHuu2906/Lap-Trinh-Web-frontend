@@ -111,9 +111,6 @@ export const cvService = {
     const response = await api.post<ApiResponse<CandidateCV>>(
       "/cvs/upload",
       formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      },
     );
     clearMyCVsCache();
     clearCandidateDashboardCache();

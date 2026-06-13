@@ -4,9 +4,14 @@ import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../utils/supabase";
 import Footer from "../../components/layout/Footer";
 import {
-  completePendingApplyJob,
+  clearPendingApplyJob,
   getPendingApplyJob,
 } from "@/services/job-application-flow";
+import {
+  clearPendingSaveJob,
+  completePendingSaveJob,
+  getPendingSaveJob,
+} from "@/services/job-save-flow";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -21,15 +26,27 @@ export function LoginPage() {
 
   // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
   const navigateAfterLogin = async (user: { role: string }) => {
-    if (user.role === "candidate" && getPendingApplyJob()) {
-      try {
-        await completePendingApplyJob();
-        navigate("/candidate/applied-jobs");
-        return;
-      } catch {
-        navigate("/candidate/job-search");
-        return;
-      }
+    const pendingJobId = getPendingApplyJob();
+    const pendingSaveJobId = getPendingSaveJob();
+
+    if (user.role === "candidate" && pendingSaveJobId) {
+      clearPendingApplyJob();
+      await completePendingSaveJob();
+      navigate("/candidate/saved-jobs");
+      return;
+    }
+
+    if (user.role === "candidate" && pendingJobId) {
+      clearPendingSaveJob();
+      clearPendingApplyJob();
+      navigate(`/candidate/jobs/${pendingJobId}`, {
+        state: { openApplyForm: true },
+      });
+      return;
+    }
+
+    if (pendingSaveJobId) {
+      clearPendingSaveJob();
     }
 
     if (user.role === "admin") {

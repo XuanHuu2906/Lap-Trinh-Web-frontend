@@ -8,6 +8,12 @@ import {
   getCachedCandidateProfile,
   type CandidateProfile,
 } from "@/services/candidate.service";
+import {
+  RECRUITER_PROFILE_CHANGED_EVENT,
+  getCachedRecruiterProfile,
+  getRecruiterProfile,
+  type RecruiterProfile,
+} from "@/services/recruiter.service";
 import { AdminSidebar } from "../components/Sidebar/AdminSidebar";
 import { CandidateSidebar } from "../components/Sidebar/CandidateSidebar";
 import { RecruiterSidebar } from "../components/Sidebar/RecruiterSidebar";
@@ -43,11 +49,13 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const cachedCandidateProfile = getCachedCandidateProfile();
+  const cachedRecruiterProfile = getCachedRecruiterProfile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCandidateSidebarCollapsed, setIsCandidateSidebarCollapsed] =
-    useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [candidateProfile, setCandidateProfile] =
     useState<CandidateProfile | null>(cachedCandidateProfile?.data ?? null);
+  const [recruiterProfile, setRecruiterProfile] =
+    useState<RecruiterProfile | null>(cachedRecruiterProfile?.data ?? null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -69,6 +77,27 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
     };
 
     loadCandidateProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== "recruiter") return;
+
+    let isMounted = true;
+
+    const loadRecruiterProfile = async () => {
+      try {
+        const response = await getRecruiterProfile();
+        if (isMounted) setRecruiterProfile(response.data);
+      } catch {
+        if (isMounted) setRecruiterProfile(null);
+      }
+    };
+
+    loadRecruiterProfile();
 
     return () => {
       isMounted = false;
@@ -106,6 +135,36 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
     };
   }, [role]);
 
+  useEffect(() => {
+    if (role !== "recruiter") return;
+
+    const handleRecruiterProfileChanged = (event: Event) => {
+      const { detail } = event as CustomEvent<Partial<RecruiterProfile>>;
+
+      setRecruiterProfile((current) => {
+        if (current) return { ...current, ...detail };
+
+        void getRecruiterProfile(true)
+          .then((response) => setRecruiterProfile(response.data))
+          .catch(() => setRecruiterProfile(null));
+
+        return current;
+      });
+    };
+
+    window.addEventListener(
+      RECRUITER_PROFILE_CHANGED_EVENT,
+      handleRecruiterProfileChanged,
+    );
+
+    return () => {
+      window.removeEventListener(
+        RECRUITER_PROFILE_CHANGED_EVENT,
+        handleRecruiterProfileChanged,
+      );
+    };
+  }, [role]);
+
   const dashboardUser = useMemo(() => {
     if (role === "candidate") {
       const name = candidateProfile?.fullName || user?.fullName || "Ứng viên";
@@ -134,11 +193,14 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
     return {
       name: user?.fullName || "Nguyễn Văn Recruiter",
       email: user?.email || "recruiter@hirearch.com",
-      initials: "NR",
-      roleLabel: "HR Manager",
+      initials: getInitials(
+        recruiterProfile?.companyName || user?.fullName || "NTD",
+      ),
+      avatarUrl: getAssetUrl(recruiterProfile?.logoUrl),
+      roleLabel: recruiterProfile?.contactName || "HR Manager",
       profilePath: "/recruiter/settings",
     };
-  }, [candidateProfile, role, user]);
+  }, [candidateProfile, recruiterProfile, role, user]);
 
   const handleLogout = async () => {
     if (role === "admin") {
@@ -161,18 +223,12 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
       onLogout: handleLogout,
       onCloseMobile: () => setIsSidebarOpen(false),
       isMobile: isMobileView,
+      isCollapsed: isSidebarCollapsed,
+      onToggleCollapse: () => setIsSidebarCollapsed((current) => !current),
     };
 
     if (role === "candidate") {
-      return (
-        <CandidateSidebar
-          {...props}
-          isCollapsed={isCandidateSidebarCollapsed}
-          onToggleCollapse={() =>
-            setIsCandidateSidebarCollapsed((current) => !current)
-          }
-        />
-      );
+      return <CandidateSidebar {...props} />;
     }
 
     if (role === "recruiter") {
@@ -198,9 +254,7 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
 
       <div
         className={`flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 ${
-          role === "candidate" && isCandidateSidebarCollapsed
-            ? "lg:pl-20"
-            : "lg:pl-65"
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-65"
         }`}
       >
         <Topbar
@@ -209,9 +263,10 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
           onOpenMobileSidebar={() => setIsSidebarOpen(true)}
           onLogout={handleLogout}
           user={dashboardUser}
+          isSidebarCollapsed={isSidebarCollapsed}
         />
 
-        <main className="flex-1 overflow-y-auto px-6 py-8 sm:px-8">
+        <main className="flex-1 overflow-y-auto px-6 pb-8 pt-25 sm:px-8">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>

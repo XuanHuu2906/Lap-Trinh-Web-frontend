@@ -87,7 +87,9 @@ const getStatusLabel = (status: RecruiterApplication["status"]) => {
     case "pending":
       return "Chờ xử lý";
     case "reviewing":
-      return "Đã xem";
+      return "Đang đánh giá";
+    case "interview":
+      return "Mời phỏng vấn";
     case "accepted":
       return "Phù hợp";
     case "rejected":
@@ -102,17 +104,19 @@ const getStatusLabel = (status: RecruiterApplication["status"]) => {
 const getStatusColor = (status: RecruiterApplication["status"]) => {
   switch (status) {
     case "pending":
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-300";
     case "reviewing":
-      return "bg-blue-100 text-blue-700";
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300";
+    case "interview":
+      return "bg-violet-100 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300";
     case "accepted":
-      return "bg-emerald-100 text-emerald-700";
+      return "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300";
     case "rejected":
-      return "bg-red-100 text-red-600";
+      return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
     case "cancelled":
-      return "bg-slate-100 text-slate-500";
+      return "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
     default:
-      return "bg-slate-100 text-slate-600";
+      return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
   }
 };
 
@@ -329,15 +333,6 @@ export function RecruiterOverviewPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => void loadOverview()}
-            disabled={loading}
-            className="h-10 border border-slate-200 px-5 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-          >
-            LÀM MỚI
-          </button>
-
           <Link
             to="/recruiter/post-job"
             className="flex h-10 items-center gap-2 bg-[#0f1f3d] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1a2f52]"
@@ -348,29 +343,26 @@ export function RecruiterOverviewPage() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="border border-slate-200 bg-white p-10 text-center text-sm font-semibold text-slate-500">
+        <div className="border border-slate-200 bg-white p-10 text-center text-sm font-semibold text-slate-500 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-400">
           Đang tải dữ liệu tổng quan...
         </div>
       ) : (
         <>
           <div className="mb-8 grid grid-cols-4 gap-4">
-            <Link
-              to="/recruiter/manage-jobs"
-              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
-            >
+            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Tổng số tin
                 </p>
 
                 <svg
-                  className="h-5 w-5 text-slate-300"
+                  className="h-5 w-5 text-slate-300 dark:text-slate-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -385,33 +377,20 @@ export function RecruiterOverviewPage() {
               </div>
 
               <div className="flex items-end gap-3">
-                <span className="text-[36px] font-black leading-none text-slate-900">
+                <span className="text-[36px] font-black leading-none text-slate-900 dark:text-slate-50">
                   {stats.totalJobs}
                 </span>
-
-                <div className="mb-1 flex flex-col items-start">
-                  <div className="h-8 w-16">
-                    <Sparkline data={sparklineData} />
-                  </div>
-
-                  <span className="text-[11px] font-semibold text-emerald-600">
-                    7 ngày gần đây
-                  </span>
-                </div>
               </div>
             </Link>
 
-            <Link
-              to="/recruiter/manage-jobs?status=active"
-              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
-            >
+            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Tin đang mở
                 </p>
 
                 <svg
-                  className="h-5 w-5 text-slate-300"
+                  className="h-5 w-5 text-slate-300 dark:text-slate-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -425,22 +404,19 @@ export function RecruiterOverviewPage() {
                 </svg>
               </div>
 
-              <span className="text-[36px] font-black leading-none text-slate-900">
+              <span className="text-[36px] font-black leading-none text-slate-900 dark:text-slate-50">
                 {stats.activeJobs}
               </span>
             </Link>
 
-            <Link
-              to="/recruiter/candidates"
-              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
-            >
+            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Ứng viên mới
                 </p>
 
                 <svg
-                  className="h-5 w-5 text-slate-300"
+                  className="h-5 w-5 text-slate-300 dark:text-slate-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -455,27 +431,20 @@ export function RecruiterOverviewPage() {
               </div>
 
               <div className="flex items-end gap-2">
-                <span className="text-[36px] font-black leading-none text-slate-900">
-                  {stats.totalApplications}
-                </span>
-
-                <span className="mb-1 text-[11px] font-semibold text-emerald-600">
-                  / {stats.pendingApplications} chờ xử lý
+                <span className="text-[36px] font-black leading-none text-slate-900 dark:text-slate-50">
+                  {stats.newApplications}
                 </span>
               </div>
             </Link>
 
-            <Link
-              to="/recruiter/candidates"
-              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
-            >
+            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  Hồ sơ chờ xử lý
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  Phản hồi đã gửi
                 </p>
 
                 <svg
-                  className="h-5 w-5 text-slate-300"
+                  className="h-5 w-5 text-slate-300 dark:text-slate-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -490,27 +459,23 @@ export function RecruiterOverviewPage() {
               </div>
 
               <div className="flex items-end gap-2">
-                <span className="text-[36px] font-black leading-none text-slate-900">
-                  {stats.pendingApplications}
-                </span>
-
-                <span className="mb-1 text-[11px] font-semibold text-slate-400">
-                  hồ sơ / {stats.totalApplications} tổng
+                <span className="text-[36px] font-black leading-none text-slate-900 dark:text-slate-50">
+                  {stats.feedbackSent}
                 </span>
               </div>
             </Link>
           </div>
 
           <div className="grid grid-cols-[1fr_280px] gap-6">
-            <div className="border border-slate-200 bg-white">
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h2 className="text-[15px] font-bold text-slate-800">
+            <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+                <h2 className="text-[15px] font-bold text-slate-800 dark:text-slate-50">
                   Danh sách ứng viên mới
                 </h2>
 
                 <Link
                   to="/recruiter/candidates"
-                  className="flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline"
+                  className="flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline dark:text-blue-300"
                 >
                   XEM TẤT CẢ →
                 </Link>
@@ -518,7 +483,7 @@ export function RecruiterOverviewPage() {
 
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-100 dark:border-slate-800">
                     {[
                       "Họ tên",
                       "Vị trí ứng tuyển",
@@ -528,7 +493,7 @@ export function RecruiterOverviewPage() {
                     ].map((heading) => (
                       <th
                         key={heading}
-                        className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400"
+                        className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500"
                       >
                         {heading}
                       </th>
@@ -541,7 +506,7 @@ export function RecruiterOverviewPage() {
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-6 py-8 text-center text-[13px] text-slate-400"
+                        className="px-6 py-10 text-center text-[13px] text-slate-400 dark:text-slate-500"
                       >
                         Chưa có ứng viên mới.
                         <br />
@@ -560,7 +525,7 @@ export function RecruiterOverviewPage() {
                       return (
                         <tr
                           key={application.id}
-                          className="border-b border-slate-50 transition-colors hover:bg-slate-50"
+                          className="border-b border-slate-50 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
@@ -570,13 +535,13 @@ export function RecruiterOverviewPage() {
                                 </span>
                               </div>
 
-                              <span className="text-[13px] font-semibold text-slate-800">
+                              <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
                                 {candidateName}
                               </span>
                             </div>
                           </td>
 
-                          <td className="px-6 py-4 text-[13px] text-slate-600">
+                          <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
                             {application.jobPosting?.title || "Không rõ"}
                           </td>
 
@@ -590,25 +555,17 @@ export function RecruiterOverviewPage() {
                             </span>
                           </td>
 
-                          <td className="px-6 py-4 text-[13px] text-slate-400">
+                          <td className="px-6 py-4 text-[13px] text-slate-400 dark:text-slate-500">
                             {formatTime(application.appliedAt)}
                           </td>
 
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-1.5">
-                              <Link
-                                to="/recruiter/candidates"
-                                className="h-7 border border-slate-200 px-2.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-100"
-                              >
-                                Xem hồ sơ
-                              </Link>
-                              <Link
-                                to="/recruiter/chat"
-                                className="h-7 border border-slate-200 px-2.5 text-[11px] text-slate-400 transition-colors hover:bg-slate-100"
-                              >
-                                Chat
-                              </Link>
-                            </div>
+                            <Link
+                              to="/recruiter/candidates"
+                              className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                              Xem
+                            </Link>
                           </td>
                         </tr>
                       );
@@ -619,58 +576,42 @@ export function RecruiterOverviewPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="flex-1 border border-slate-200 bg-white p-5">
-                <h3 className="mb-4 text-[14px] font-bold text-slate-800">
+              <div className="flex-1 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+                <h3 className="mb-4 text-[14px] font-bold text-slate-800 dark:text-slate-50">
                   Cần xử lý gấp
                 </h3>
 
-                {urgentTasks.length === 0 ? (
-                  <p className="text-[13px] text-slate-400">
-                    Hiện chưa có tác vụ tuyển dụng cần xử lý gấp.
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {urgentTasks.map((task, index) => (
-                      <div key={`${task.text}-${index}`} className="flex items-start gap-3">
-                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                <div className="space-y-4">
+                  {urgentTasks.map((task, index) => (
+                    <div key={`${task.text}-${index}`} className="flex items-start gap-3">
+                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
 
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] leading-snug text-slate-700">
-                            {task.text}
-                          </p>
+                      <div>
+                        <p className="text-[13px] leading-snug text-slate-700 dark:text-slate-300">
+                          {task.text}
+                        </p>
 
-                          <p className="mt-0.5 text-[11px] text-slate-400">
-                            {task.deadline}
-                          </p>
-
-                          {task.actions && task.actions.length > 0 && (
-                            <div className="mt-2 flex gap-2">
-                              {task.actions.map((action) => (
-                                <Link
-                                  key={action.label}
-                                  to={action.to}
-                                  className="text-[11px] font-semibold text-blue-600 hover:underline"
-                                >
-                                  {action.label}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                        <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                          {task.deadline}
+                        </p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="border border-slate-200 bg-white p-5">
-                <h3 className="mb-3 text-[14px] font-bold text-slate-800">
+              <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+                <h3 className="mb-3 text-[14px] font-bold text-slate-800 dark:text-slate-50">
                   Gợi ý nhanh
                 </h3>
 
-                {insights.length === 0 ? (
-                  <p className="text-[13px] text-slate-400">
-                    Mọi thứ đang hoạt động tốt. Không có gợi ý nào.
+                <div className="space-y-3 text-[13px] text-slate-500 dark:text-slate-400">
+                  <p>
+                    Thường xuyên cập nhật trạng thái hồ sơ để ứng viên nhận được phản hồi kịp thời.
+                  </p>
+
+                  <p>
+                    Tin tuyển dụng có mô tả rõ ràng sẽ giúp tăng tỷ lệ ứng tuyển phù hợp.
                   </p>
                 ) : (
                   <div className="space-y-3">

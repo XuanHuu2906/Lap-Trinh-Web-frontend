@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Bell,
@@ -6,11 +7,13 @@ import {
   FileText,
   MapPin,
   RefreshCw,
+  type LucideIcon,
 } from "lucide-react";
 import {
   applicationService,
   type CandidateApplication,
 } from "@/services/application.service";
+import { CompanyLogo } from "@/components/company/CompanyLogo";
 import {
   getCandidateDashboardCache,
   setCandidateDashboardCache,
@@ -21,7 +24,21 @@ import { jobService } from "@/services/job.service";
 import { notificationService } from "@/services/notification.service";
 import type { Job } from "@/types/job.type";
 
-const statusLabels: Record<string, { label: string; className: string }> = {
+type StatusDisplay = {
+  label: string;
+  className: string;
+};
+
+type StatCardInfo = {
+  label: string;
+  value: string;
+  note: string;
+  action: string;
+  link: string;
+  icon: LucideIcon;
+};
+
+const statusDisplays: Record<string, StatusDisplay> = {
   pending: {
     label: "Đang chờ",
     className:
@@ -48,53 +65,356 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   },
 };
 
-const formatDate = (value?: string) => {
-  if (!value) return "Không rõ";
-  return new Intl.DateTimeFormat("vi-VN").format(new Date(value));
+const emptyDashboardData: CandidateDashboardCacheData = {
+  applications: [],
+  applicationTotal: 0,
+  suggestedJobs: [],
+  cvCount: 0,
+  unreadNotificationCount: 0,
+  loadedAt: 0,
 };
 
-const companyName = (job?: Job) =>
-  job?.recruiter?.recruiterProfile?.companyName || "Không rõ công ty";
+function formatDate(value?: string) {
+  if (!value) return "Không rõ";
 
-const logoText = (job?: Job) => companyName(job).charAt(0).toUpperCase() || "H";
+  return new Intl.DateTimeFormat("vi-VN").format(new Date(value));
+}
 
-const formatSalary = (job: Job) => {
-  if (job.salaryUnit === "negotiable") return "Thỏa thuận";
-  if (!job.salaryMin && !job.salaryMax) return "Thỏa thuận";
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("vi-VN").format(value);
+}
 
-  const format = (value: number) =>
-    new Intl.NumberFormat("vi-VN").format(value);
+function formatStatNumber(value: number) {
+  return String(value).padStart(2, "0");
+}
 
-  if (job.salaryMin && job.salaryMax) {
-    return `${format(job.salaryMin)} - ${format(job.salaryMax)}`;
+function getCompanyName(job?: Job) {
+  return job?.recruiter?.recruiterProfile?.companyName || "Không rõ công ty";
+}
+
+function formatSalary(job: Job) {
+  if (job.salaryUnit === "negotiable") {
+    return "Thỏa thuận";
   }
 
-  if (job.salaryMin) return `Từ ${format(job.salaryMin)}`;
-  return `Đến ${format(job.salaryMax || 0)}`;
-};
+  if (!job.salaryMin && !job.salaryMax) {
+    return "Thỏa thuận";
+  }
+
+  if (job.salaryMin && job.salaryMax) {
+    return `${formatNumber(job.salaryMin)} - ${formatNumber(job.salaryMax)}`;
+  }
+
+  if (job.salaryMin) {
+    return `Từ ${formatNumber(job.salaryMin)}`;
+  }
+
+  return `Đến ${formatNumber(job.salaryMax || 0)}`;
+}
+
+function getStatusDisplay(status: string) {
+  return statusDisplays[status] || statusDisplays.pending;
+}
+
+function PageHeader() {
+  return (
+    <div className="mb-8 flex items-start justify-between gap-4">
+      <div>
+        <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
+          Tổng quan ứng viên
+        </h1>
+        <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
+          Theo dõi hồ sơ, tiến độ ứng tuyển và các cơ hội phù hợp với bạn.
+        </p>
+      </div>
+
+      <Link
+        to="/candidate/job-search"
+        className="flex h-10 shrink-0 items-center gap-2 bg-[#0f1f3d] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1a2f52] dark:bg-indigo-600 dark:hover:bg-indigo-500"
+      >
+        TÌM VIỆC NGAY <ArrowRight className="h-4 w-4" />
+      </Link>
+    </div>
+  );
+}
+
+function ErrorAlert({ message }: { message: string }) {
+  return (
+    <div className="mb-5 border border-red-900/40 bg-red-950/30 px-4 py-3 text-sm text-red-300">
+      {message}
+    </div>
+  );
+}
+
+function StatCard({
+  item,
+  isLoading,
+}: {
+  item: StatCardInfo;
+  isLoading: boolean;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-3 flex items-start justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          {item.label}
+        </p>
+        <Icon className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+      </div>
+
+      <div className="flex items-end gap-3">
+        <span className="text-[36px] font-black leading-none text-slate-900 dark:text-white">
+          {isLoading ? "--" : item.value}
+        </span>
+        <span className="mb-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+          {item.note}
+        </span>
+      </div>
+
+      <Link
+        to={item.link}
+        className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-blue-600 hover:underline dark:text-indigo-400"
+      >
+        {item.action} <ArrowRight className="h-3 w-3" />
+      </Link>
+    </div>
+  );
+}
+
+function StatsGrid({
+  stats,
+  isLoading,
+}: {
+  stats: StatCardInfo[];
+  isLoading: boolean;
+}) {
+  return (
+    <div className="mb-8 grid gap-4 md:grid-cols-3">
+      {stats.map((item) => (
+        <StatCard key={item.label} item={item} isLoading={isLoading} />
+      ))}
+    </div>
+  );
+}
+
+function ApplicationsTable({
+  applications,
+  isLoading,
+}: {
+  applications: CandidateApplication[];
+  isLoading: boolean;
+}) {
+  return (
+    <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+        <h2 className="text-[15px] font-bold text-slate-800 dark:text-white">
+          Hoạt động ứng tuyển gần đây
+        </h2>
+        <Link
+          to="/candidate/applied-jobs"
+          className="flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline dark:text-indigo-400"
+        >
+          Xem tất cả <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-slate-100 dark:border-slate-800">
+            {[
+              "Vị trí ứng tuyển",
+              "Công ty",
+              "Ngày nộp",
+              "Trạng thái",
+              "Thao tác",
+            ].map((heading) => (
+              <th
+                key={heading}
+                className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500"
+              >
+                {heading}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {isLoading ? (
+            <tr>
+              <td colSpan={5} className="px-6 py-8 text-sm text-slate-500">
+                Đang tải dữ liệu ứng tuyển...
+              </td>
+            </tr>
+          ) : applications.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="px-6 py-8 text-sm text-slate-500">
+                Bạn chưa có đơn ứng tuyển nào.
+              </td>
+            </tr>
+          ) : (
+            applications.map((application) => (
+              <ApplicationRow key={application.id} application={application} />
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ApplicationRow({
+  application,
+}: {
+  application: CandidateApplication;
+}) {
+  const status = getStatusDisplay(application.status);
+
+  return (
+    <tr className="border-b border-slate-50 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+      <td className="px-6 py-4 text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+        {application.jobPosting?.title || "Không rõ vị trí"}
+      </td>
+      <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
+        {application.jobPosting ? (
+          <Link
+            to={`/candidate/companies/${application.jobPosting.recruiterId}`}
+            className="font-semibold transition hover:text-blue-600 hover:underline dark:hover:text-indigo-400"
+          >
+            {getCompanyName(application.jobPosting)}
+          </Link>
+        ) : (
+          getCompanyName(application.jobPosting)
+        )}
+      </td>
+      <td className="px-6 py-4 text-[13px] text-slate-400">
+        {formatDate(application.appliedAt)}
+      </td>
+      <td className="px-6 py-4">
+        <span
+          className={`inline-block rounded-sm px-2 py-1 text-[11px] font-semibold ${status.className}`}
+        >
+          {status.label}
+        </span>
+      </td>
+      <td className="px-6 py-4">
+        <Link
+          to="/candidate/applied-jobs"
+          className="inline-block border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          Xem
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+function SuggestedJobsPanel({
+  jobs,
+  isLoading,
+  onRefresh,
+}: {
+  jobs: Job[];
+  isLoading: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+        <h2 className="text-[15px] font-bold text-slate-800 dark:text-white">
+          Việc làm phù hợp
+        </h2>
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="text-slate-400 transition-colors hover:text-blue-600 dark:hover:text-indigo-400"
+          aria-label="Tải lại việc làm phù hợp"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div>
+        {isLoading ? (
+          <p className="px-6 py-8 text-sm text-slate-500">
+            Đang tải việc làm phù hợp...
+          </p>
+        ) : jobs.length === 0 ? (
+          <p className="px-6 py-8 text-sm text-slate-500">
+            Chưa có việc làm đề xuất.
+          </p>
+        ) : (
+          jobs.map((job) => <SuggestedJobItem key={job.id} job={job} />)
+        )}
+      </div>
+
+      <div className="px-6 py-3 text-center">
+        <Link
+          to="/candidate/job-search"
+          className="inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline dark:text-indigo-400"
+        >
+          Xem thêm đề xuất <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SuggestedJobItem({ job }: { job: Job }) {
+  return (
+    <div className="border-b border-slate-100 px-6 py-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+      <div className="flex items-start gap-3">
+        <Link
+          to={`/candidate/companies/${job.recruiterId}`}
+          title={`Xem hồ sơ ${getCompanyName(job)}`}
+          className="rounded-xl shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-blue-400 dark:ring-slate-700"
+        >
+          <CompanyLogo
+            name={getCompanyName(job)}
+            logoUrl={job.recruiter?.recruiterProfile?.logoUrl}
+            className="h-10 w-10 rounded-xl text-sm"
+            imageClassName="p-1"
+          />
+        </Link>
+
+        <div className="min-w-0">
+          <Link
+            to={`/candidate/jobs/${job.id}`}
+            className="block truncate text-[13px] font-bold text-slate-800 transition hover:text-blue-600 dark:text-slate-100 dark:hover:text-indigo-400"
+          >
+            {job.title}
+          </Link>
+          <Link
+            to={`/candidate/companies/${job.recruiterId}`}
+            className="text-[12px] text-slate-500 transition hover:text-blue-600 hover:underline dark:text-slate-400 dark:hover:text-indigo-400"
+          >
+            {getCompanyName(job)}
+          </Link>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              {job.location || "Không rõ"}
+            </span>
+            <span>{formatSalary(job)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Overview() {
-  const [applications, setApplications] = useState<CandidateApplication[]>([]);
-  const [applicationTotal, setApplicationTotal] = useState(0);
-  const [suggestedJobs, setSuggestedJobs] = useState<Job[]>([]);
-  const [cvCount, setCvCount] = useState(0);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [dashboardData, setDashboardData] =
+    useState<CandidateDashboardCacheData>(emptyDashboardData);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const applyDashboardData = (data: CandidateDashboardCacheData) => {
-    setApplications(data.applications);
-    setApplicationTotal(data.applicationTotal);
-    setSuggestedJobs(data.suggestedJobs);
-    setCvCount(data.cvCount);
-    setUnreadNotificationCount(data.unreadNotificationCount);
-  };
 
   const loadDashboard = async (forceRefresh = false) => {
     const cachedDashboard = forceRefresh ? null : getCandidateDashboardCache();
 
     if (cachedDashboard) {
-      applyDashboardData(cachedDashboard);
+      setDashboardData(cachedDashboard);
       setIsLoading(false);
       return;
     }
@@ -111,7 +431,7 @@ export default function Overview() {
           notificationService.getUnreadCount(),
         ]);
 
-      const nextCache: CandidateDashboardCacheData = {
+      const nextDashboardData: CandidateDashboardCacheData = {
         applications: applicationResponse.data,
         applicationTotal:
           applicationResponse.meta?.total ?? applicationResponse.data.length,
@@ -121,8 +441,8 @@ export default function Overview() {
         loadedAt: Date.now(),
       };
 
-      setCandidateDashboardCache(nextCache);
-      applyDashboardData(nextCache);
+      setCandidateDashboardCache(nextDashboardData);
+      setDashboardData(nextDashboardData);
     } catch {
       setErrorMessage("Không thể tải dữ liệu tổng quan.");
     } finally {
@@ -132,14 +452,13 @@ export default function Overview() {
 
   useEffect(() => {
     loadDashboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const stats = useMemo(
+  const stats: StatCardInfo[] = useMemo(
     () => [
       {
         label: "CV đã tạo",
-        value: String(cvCount).padStart(2, "0"),
+        value: formatStatNumber(dashboardData.cvCount),
         note: "Từ API CV",
         action: "Quản lý CV",
         icon: FileText,
@@ -147,7 +466,7 @@ export default function Overview() {
       },
       {
         label: "Công việc đã ứng tuyển",
-        value: String(applicationTotal).padStart(2, "0"),
+        value: formatStatNumber(dashboardData.applicationTotal),
         note: "Từ API ứng tuyển",
         action: "Xem danh sách",
         icon: BriefcaseBusiness,
@@ -155,218 +474,39 @@ export default function Overview() {
       },
       {
         label: "Phản hồi mới",
-        value: String(unreadNotificationCount).padStart(2, "0"),
+        value: formatStatNumber(dashboardData.unreadNotificationCount),
         note: "Từ API thông báo",
         action: "Xem thông báo",
         icon: Bell,
         link: "/candidate/notifications",
       },
     ],
-    [applicationTotal, cvCount, unreadNotificationCount],
+    [
+      dashboardData.applicationTotal,
+      dashboardData.cvCount,
+      dashboardData.unreadNotificationCount,
+    ],
   );
 
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
-            Tổng quan ứng viên
-          </h1>
-          <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
-            Theo dõi hồ sơ, tiến độ ứng tuyển và các cơ hội phù hợp với bạn.
-          </p>
-        </div>
+      <PageHeader />
 
-        <a
-          href="/candidate/job-search"
-          className="flex h-10 items-center gap-2 bg-[#0f1f3d] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1a2f52] dark:bg-indigo-600 dark:hover:bg-indigo-500"
-        >
-          TÌM VIỆC NGAY <ArrowRight className="h-4 w-4" />
-        </a>
-      </div>
+      {errorMessage && <ErrorAlert message={errorMessage} />}
 
-      {errorMessage && (
-        <div className="mb-5 border border-red-900/40 bg-red-950/30 px-4 py-3 text-sm text-red-300">
-          {errorMessage}
-        </div>
-      )}
-
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
-        {stats.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <div
-              key={item.label}
-              className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="mb-3 flex items-start justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                  {item.label}
-                </p>
-                <Icon className="h-5 w-5 text-slate-300 dark:text-slate-600" />
-              </div>
-
-              <div className="flex items-end gap-3">
-                <span className="text-[36px] font-black leading-none text-slate-900 dark:text-white">
-                  {isLoading ? "--" : item.value}
-                </span>
-                <span className="mb-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  {item.note}
-                </span>
-              </div>
-
-              <a
-                href={item.link}
-                className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-blue-600 hover:underline dark:text-indigo-400"
-              >
-                {item.action} <ArrowRight className="h-3 w-3" />
-              </a>
-            </div>
-          );
-        })}
-      </div>
+      <StatsGrid stats={stats} isLoading={isLoading} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-            <h2 className="text-[15px] font-bold text-slate-800 dark:text-white">
-              Hoạt động ứng tuyển gần đây
-            </h2>
-            <a
-              href="/candidate/applied-jobs"
-              className="flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline dark:text-indigo-400"
-            >
-              Xem tất cả <ArrowRight className="h-3 w-3" />
-            </a>
-          </div>
+        <ApplicationsTable
+          applications={dashboardData.applications}
+          isLoading={isLoading}
+        />
 
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800">
-                {[
-                  "Vị trí ứng tuyển",
-                  "Công ty",
-                  "Ngày nộp",
-                  "Trạng thái",
-                  "Thao tác",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500"
-                  >
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-sm text-slate-500">
-                    Đang tải dữ liệu ứng tuyển...
-                  </td>
-                </tr>
-              ) : applications.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-sm text-slate-500">
-                    Bạn chưa có đơn ứng tuyển nào.
-                  </td>
-                </tr>
-              ) : (
-                applications.map((row) => {
-                  const status =
-                    statusLabels[row.status] || statusLabels.pending;
-
-                  return (
-                    <tr
-                      key={row.id}
-                      className="border-b border-slate-50 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                    >
-                      <td className="px-6 py-4 text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                        {row.jobPosting?.title || "Không rõ vị trí"}
-                      </td>
-                      <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
-                        {companyName(row.jobPosting)}
-                      </td>
-                      <td className="px-6 py-4 text-[13px] text-slate-400">
-                        {formatDate(row.appliedAt)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-block rounded-sm px-2 py-1 text-[11px] font-semibold ${status.className}`}
-                        >
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
-                          Xem
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-            <h2 className="text-[15px] font-bold text-slate-800 dark:text-white">
-              Việc làm phù hợp
-            </h2>
-            <button
-              type="button"
-              onClick={() => loadDashboard(true)}
-              className="text-slate-400 transition-colors hover:text-blue-600 dark:hover:text-indigo-400"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div>
-            {suggestedJobs.map((job) => (
-              <a
-                key={job.id}
-                href={`/jobs/${job.id}`}
-                className="block border-b border-slate-100 px-6 py-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
-                    {logoText(job)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-bold text-slate-800 dark:text-slate-100">
-                      {job.title}
-                    </p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400">
-                      {companyName(job)}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {job.location || "Không rõ"}
-                      </span>
-                      <span>{formatSalary(job)}</span>
-                    </div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          <div className="px-6 py-3 text-center">
-            <a
-              href="/candidate/job-search"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline dark:text-indigo-400"
-            >
-              Xem thêm đề xuất <ArrowRight className="h-3 w-3" />
-            </a>
-          </div>
-        </div>
+        <SuggestedJobsPanel
+          jobs={dashboardData.suggestedJobs}
+          isLoading={isLoading}
+          onRefresh={() => loadDashboard(true)}
+        />
       </div>
     </div>
   );

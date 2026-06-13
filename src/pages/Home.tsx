@@ -75,6 +75,10 @@ export default function Home() {
     <main className="bg-white">
       <HeroSection
         onSearch={handleHeroSearch}
+        onSelectJob={(job) => navigate(`/jobs/${job.id}`)}
+        onApplyJob={(job) =>
+          navigate(`/jobs/${job.id}`, { state: { openApplyForm: true } })
+        }
         featuredJobs={featuredJobs}
         isLoadingFeaturedJobs={isLoadingFeaturedJobs}
         systemStats={systemStats}

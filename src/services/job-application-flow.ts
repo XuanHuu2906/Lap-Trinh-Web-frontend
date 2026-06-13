@@ -3,8 +3,10 @@ import { clearCandidateDashboardCache } from "@/services/candidate-dashboard-cac
 import { cvService } from "@/services/cv.service";
 
 const PENDING_JOB_KEY = "pendingApplyJobId";
+const PENDING_SAVE_JOB_KEY = "pendingSaveJobId";
 
 export const savePendingApplyJob = (jobId: number) => {
+  localStorage.removeItem(PENDING_SAVE_JOB_KEY);
   localStorage.setItem(PENDING_JOB_KEY, String(jobId));
 };
 

@@ -4,28 +4,441 @@ import {
   Search,
   CheckCheck,
   Smile,
-  Phone,
-  Video,
   Info,
   Circle,
-  Paperclip,
-  FileText,
-  Download,
   Loader2,
+  X,
 } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import {
   chatService,
   type Conversation,
   type Message,
 } from "../../services/chat.service";
 import { supabase } from "../../utils/supabase";
+import { decodeMojibakeInText } from "../../utils/encoding";
+import {
+  createEvaluation,
+  createFeedback,
+  getApplicationDetail,
+  updateApplicationStatus,
+  type ApplicationStatus,
+  type RecruiterApplication,
+} from "../../services/recruiter.service";
+
+type FeedbackStatus = "interview" | "accepted" | "rejected";
+
+const statusLabel: Record<ApplicationStatus, string> = {
+  pending: "Mới",
+  reviewing: "Đang xem xét",
+  interview: "Mời phỏng vấn",
+  accepted: "Đạt",
+  rejected: "Không phù hợp",
+  cancelled: "Đã hủy",
+};
+
+const statusStyle: Record<ApplicationStatus, string> = {
+  pending: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
+  reviewing: "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
+  interview: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
+  accepted: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+  rejected: "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+  cancelled: "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300",
+};
+
+const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
+  if (status === "accepted" || status === "rejected" || status === "interview") {
+    return status;
+  }
+
+  return "interview";
+};
+
+const nextStatusOptions = (status: ApplicationStatus) => {
+  if (status === "pending") {
+    return [
+      { label: "Đang xem xét", value: "reviewing" as const },
+      { label: "Mời phỏng vấn", value: "interview" as const },
+    ];
+  }
+
+  if (status === "reviewing") {
+    return [
+      { label: "Mời phỏng vấn", value: "interview" as const },
+      { label: "Đạt", value: "accepted" as const },
+      { label: "Từ chối", value: "rejected" as const },
+    ];
+  }
+
+  if (status === "interview") {
+    return [
+      { label: "Đạt", value: "accepted" as const },
+      { label: "Từ chối", value: "rejected" as const },
+    ];
+  }
+
+  return [];
+};
+
+const formatApplicationDate = (value?: string | null) => {
+  if (!value) return "--";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+
+  return date.toLocaleDateString("vi-VN");
+};
+
+const normalizeAttachmentName = (value: string | null) =>
+  value ? decodeMojibakeInText(value) : value;
+
+const normalizeMessage = (message: Message): Message => ({
+  ...message,
+  attachmentName: normalizeAttachmentName(message.attachmentName),
+});
+
+const sortMessagesByTime = <T extends Message>(items: T[]) =>
+  [...items].sort((a, b) => {
+    const timeDiff = new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return a.id - b.id;
+  });
+
+const normalizeMessages = (items: Message[]) =>
+  sortMessagesByTime(items.map(normalizeMessage));
+
+const getCandidateName = (application: RecruiterApplication) =>
+  application.candidateProfile?.fullName ||
+  application.candidateProfile?.user?.email ||
+  "Ứng viên chưa cập nhật tên";
+
+type NextApplicationStatus = "reviewing" | "interview" | "accepted" | "rejected";
+
+function ApplicationPanel({
+  conversation,
+  selectedApplication,
+  relatedApplications,
+  isLoading,
+  isSaving,
+  error,
+  message,
+  feedback,
+  feedbackStatus,
+  score,
+  notes,
+  onClose,
+  onSelectApplication,
+  onChangeStatus,
+  onFeedbackChange,
+  onFeedbackStatusChange,
+  onScoreChange,
+  onNotesChange,
+  onSaveFeedback,
+  onSaveEvaluation,
+}: {
+  conversation: Conversation;
+  selectedApplication: RecruiterApplication | null;
+  relatedApplications: RecruiterApplication[];
+  isLoading: boolean;
+  isSaving: boolean;
+  error: string;
+  message: string;
+  feedback: string;
+  feedbackStatus: FeedbackStatus;
+  score: number;
+  notes: string;
+  onClose: () => void;
+  onSelectApplication: (applicationId: number) => void;
+  onChangeStatus: (status: NextApplicationStatus) => void;
+  onFeedbackChange: (value: string) => void;
+  onFeedbackStatusChange: (value: FeedbackStatus) => void;
+  onScoreChange: (value: number) => void;
+  onNotesChange: (value: string) => void;
+  onSaveFeedback: () => void;
+  onSaveEvaluation: () => void;
+}) {
+  const candidateName = selectedApplication
+    ? getCandidateName(selectedApplication)
+    : conversation.candidateProfile.fullName;
+  const jobTitle =
+    selectedApplication?.jobPosting?.title ||
+    conversation.jobPosting?.title ||
+    "Tin ứng tuyển";
+  const cvTitle = selectedApplication?.cv?.title || "Chưa có CV";
+  const cvUrl = selectedApplication?.cv?.pdfUrl;
+  const status = selectedApplication?.status;
+  const transitions = status ? nextStatusOptions(status) : [];
+
+  return (
+    <aside className="w-96 max-w-[42vw] min-w-80 shrink-0 border-l border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+            Hồ sơ ứng tuyển
+          </h3>
+          <p className="mt-1 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            {candidateName}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          aria-label="Đóng hồ sơ ứng tuyển"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="h-[calc(100%-4rem)] overflow-y-auto p-5">
+        {isLoading ? (
+          <div className="flex h-40 items-center justify-center gap-2 text-xs font-semibold text-slate-400">
+            <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+            Đang tải hồ sơ...
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {error && (
+              <div className="border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div className="border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+                {message}
+              </div>
+            )}
+
+            <section className="space-y-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Ứng viên
+                </p>
+                <p className="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">
+                  {candidateName}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Tin ứng tuyển
+                </p>
+                <p className="mt-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                  {jobTitle}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Ngày ứng tuyển
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    {formatApplicationDate(selectedApplication?.appliedAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Trạng thái
+                  </p>
+                  {status ? (
+                    <span
+                      className={`mt-1 inline-flex border px-2 py-1 text-[11px] font-bold ${
+                        statusStyle[status]
+                      }`}
+                    >
+                      {statusLabel[status]}
+                    </span>
+                  ) : (
+                    <p className="mt-1 text-xs font-semibold text-slate-400">
+                      Chưa xác định
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                CV đã gửi
+              </p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">
+                    {cvTitle}
+                  </p>
+                  <p className="mt-0.5 text-[10px] font-medium text-slate-400">
+                    {selectedApplication?.cv?.cvType || "Không rõ loại CV"}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {cvUrl ? (
+                    <>
+                      <a
+                        href={cvUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        Xem CV
+                      </a>
+                      <a
+                        href={cvUrl}
+                        download={cvTitle}
+                        className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        Tải CV
+                      </a>
+                    </>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      Chưa có file
+                    </span>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Cover letter
+              </p>
+              <p className="mt-2 whitespace-pre-wrap border border-slate-100 bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                {selectedApplication?.coverLetter?.trim() ||
+                  "Ứng viên không gửi cover letter."}
+              </p>
+            </section>
+
+            <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Chuyển trạng thái
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {transitions.length === 0 ? (
+                  <span className="text-xs font-medium text-slate-400">
+                    Không còn bước chuyển hợp lệ.
+                  </span>
+                ) : (
+                  transitions.map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => onChangeStatus(item.value)}
+                      disabled={isSaving}
+                      className="h-8 bg-slate-900 px-3 text-[11px] font-bold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                    >
+                      {item.label}
+                    </button>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Phản hồi ứng viên
+              </p>
+              <select
+                value={feedbackStatus}
+                onChange={(event) =>
+                  onFeedbackStatusChange(event.target.value as FeedbackStatus)
+                }
+                className="mt-2 h-9 w-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              >
+                <option value="interview">Mời phỏng vấn</option>
+                <option value="accepted">Phù hợp</option>
+                <option value="rejected">Không phù hợp</option>
+              </select>
+              <textarea
+                value={feedback}
+                onChange={(event) => onFeedbackChange(event.target.value)}
+                rows={4}
+                placeholder="Nhập phản hồi gửi cho ứng viên..."
+                className="mt-2 w-full border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              />
+              <button
+                type="button"
+                onClick={onSaveFeedback}
+                disabled={!feedback.trim() || isSaving || !selectedApplication}
+                className="mt-2 h-8 border border-indigo-200 px-3 text-[11px] font-bold text-indigo-700 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+              >
+                Phản hồi ứng viên
+              </button>
+            </section>
+
+            <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Đánh giá ứng viên
+              </p>
+              <select
+                value={score}
+                onChange={(event) => onScoreChange(Number(event.target.value))}
+                className="mt-2 h-9 w-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              >
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <option key={item} value={item}>
+                    {item} sao
+                  </option>
+                ))}
+              </select>
+              <textarea
+                value={notes}
+                onChange={(event) => onNotesChange(event.target.value)}
+                rows={3}
+                placeholder="Ghi chú nội bộ về ứng viên..."
+                className="mt-2 w-full border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              />
+              <button
+                type="button"
+                onClick={onSaveEvaluation}
+                disabled={isSaving || !selectedApplication}
+                className="mt-2 h-8 border border-slate-300 px-3 text-[11px] font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Đánh giá ứng viên
+              </button>
+            </section>
+
+            {relatedApplications.length > 1 && (
+              <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Các tin ứng tuyển của ứng viên này tại công ty bạn
+                </p>
+                <div className="mt-2 space-y-2">
+                  {relatedApplications.map((application) => (
+                    <button
+                      key={application.id}
+                      type="button"
+                      onClick={() => onSelectApplication(application.id)}
+                      className={`w-full border px-3 py-2 text-left transition-colors ${
+                        selectedApplication?.id === application.id
+                          ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-950/30"
+                          : "border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">
+                        {application.jobPosting?.title || "Tin tuyển dụng"}
+                      </p>
+                      <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Trạng thái: {statusLabel[application.status]}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
 
 export function RecruiterChatPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const requestedConversationId = Number(searchParams.get("conversationId"));
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<
     number | null
@@ -36,11 +449,80 @@ export function RecruiterChatPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isApplicationPanelOpen, setIsApplicationPanelOpen] = useState(false);
+  const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+  const [selectedApplication, setSelectedApplication] =
+    useState<RecruiterApplication | null>(null);
+  const [relatedApplications, setRelatedApplications] = useState<
+    RecruiterApplication[]
+  >([]);
+  const [applicationError, setApplicationError] = useState("");
+  const [applicationMessage, setApplicationMessage] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [feedbackStatus, setFeedbackStatus] =
+    useState<FeedbackStatus>("interview");
+  const [score, setScore] = useState(3);
+  const [notes, setNotes] = useState("");
+  const [isSavingApplication, setIsSavingApplication] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId,
+  );
+
+  const hydrateApplicationForm = useCallback((application: RecruiterApplication) => {
+    setSelectedApplication(application);
+    setFeedback(application.feedbacks?.[0]?.content ?? "");
+    setFeedbackStatus(getFeedbackStatus(application.status));
+    setScore(application.evaluations?.[0]?.score ?? 3);
+    setNotes(application.evaluations?.[0]?.notes ?? "");
+  }, []);
+
+  const loadApplicationPanel = useCallback(
+    async (preferredApplicationId?: number) => {
+      if (!activeConversation) return;
+
+      setIsLoadingApplication(true);
+      setApplicationError("");
+      setApplicationMessage("");
+
+      try {
+        const applications = await chatService.getConversationApplications(
+          activeConversation.id,
+        );
+        setRelatedApplications(applications);
+
+        const currentApplicationId =
+          preferredApplicationId ??
+          activeConversation.application?.id ??
+          applications.find(
+            (application) =>
+              application.jobPostingId === activeConversation.jobPostingId,
+          )?.id ??
+          applications[0]?.id;
+
+        if (!currentApplicationId) {
+          setSelectedApplication(null);
+          setApplicationError("Không tìm thấy hồ sơ ứng tuyển cho cuộc trò chuyện này.");
+          return;
+        }
+
+        const response = await getApplicationDetail(currentApplicationId);
+        hydrateApplicationForm(response.data);
+      } catch (err) {
+        setSelectedApplication(null);
+        setRelatedApplications([]);
+        setApplicationError(
+          err instanceof Error
+            ? err.message
+            : "Không tải được hồ sơ ứng tuyển",
+        );
+      } finally {
+        setIsLoadingApplication(false);
+      }
+    },
+    [activeConversation, hydrateApplicationForm],
   );
 
   // 1. Tải danh sách các cuộc hội thoại
@@ -49,6 +531,14 @@ export function RecruiterChatPage() {
       setIsLoadingConversations(true);
       const data = await chatService.getConversations();
       setConversations(data);
+      const requestedConversation = data.find(
+        (conversation) => conversation.id === requestedConversationId,
+      );
+      if (requestedConversation) {
+        setActiveConversationId(requestedConversation.id);
+        return;
+      }
+
       if (selectFirst && data.length > 0) {
         setActiveConversationId((current) => current ?? data[0].id);
       }
@@ -57,7 +547,21 @@ export function RecruiterChatPage() {
     } finally {
       setIsLoadingConversations(false);
     }
-  }, []);
+  }, [requestedConversationId]);
+
+  const refreshSelectedApplication = useCallback(
+    async (applicationId: number) => {
+      const response = await getApplicationDetail(applicationId);
+      hydrateApplicationForm(response.data);
+      setRelatedApplications((current) =>
+        current.map((application) =>
+          application.id === response.data.id ? response.data : application,
+        ),
+      );
+      await loadConversations();
+    },
+    [hydrateApplicationForm, loadConversations],
+  );
 
   useEffect(() => {
     loadConversations(true);
@@ -69,7 +573,7 @@ export function RecruiterChatPage() {
       try {
         setIsLoadingMessages(true);
         const res = await chatService.getMessages(conversationId, 1, 100);
-        setMessages(res.items);
+        setMessages(normalizeMessages(res.items));
 
         // Đánh dấu đã đọc cho các tin nhắn chưa đọc từ candidate gửi
         const unreadMsgs = res.items.filter(
@@ -125,7 +629,7 @@ export function RecruiterChatPage() {
               1,
               100,
             );
-            setMessages(res.items);
+            setMessages(normalizeMessages(res.items));
 
             // Đánh dấu đã đọc các tin nhắn mới
             const unreadNewMsgs = res.items.filter(
@@ -156,6 +660,18 @@ export function RecruiterChatPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    setSelectedApplication(null);
+    setRelatedApplications([]);
+    setApplicationError("");
+    setApplicationMessage("");
+
+    if (isApplicationPanelOpen && activeConversation) {
+      void loadApplicationPanel();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversationId]);
+
   // Gửi tin nhắn văn bản
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +686,9 @@ export function RecruiterChatPage() {
         textToSend,
       );
       // Append tin nhắn mới gửi thành công
-      setMessages((prev) => [...prev, sentMsg]);
+      setMessages((prev) =>
+        sortMessagesByTime([...prev, normalizeMessage(sentMsg)]),
+      );
       // Cập nhật lại sidebar
       loadConversations();
     } catch (err) {
@@ -196,7 +714,9 @@ export function RecruiterChatPage() {
         activeConversationId,
         file,
       );
-      setMessages((prev) => [...prev, sentMsg]);
+      setMessages((prev) =>
+        sortMessagesByTime([...prev, normalizeMessage(sentMsg)]),
+      );
       loadConversations();
     } catch (err) {
       console.error("Lỗi khi tải lên tệp đính kèm:", err);
@@ -207,6 +727,81 @@ export function RecruiterChatPage() {
       setIsUploading(false);
       // Reset input file
       e.target.value = "";
+    }
+  };
+
+  const handleOpenApplicationPanel = () => {
+    setIsApplicationPanelOpen(true);
+    void loadApplicationPanel();
+  };
+
+  const handleSelectApplication = (applicationId: number) => {
+    void loadApplicationPanel(applicationId);
+  };
+
+  const handleChangeStatus = async (
+    nextStatus: "reviewing" | "interview" | "accepted" | "rejected",
+  ) => {
+    if (!selectedApplication) return;
+
+    setIsSavingApplication(true);
+    setApplicationError("");
+    setApplicationMessage("");
+
+    try {
+      await updateApplicationStatus(selectedApplication.id, nextStatus);
+      await refreshSelectedApplication(selectedApplication.id);
+      setApplicationMessage("Đã cập nhật trạng thái hồ sơ.");
+    } catch (err) {
+      setApplicationError(
+        err instanceof Error ? err.message : "Không cập nhật được trạng thái",
+      );
+    } finally {
+      setIsSavingApplication(false);
+    }
+  };
+
+  const handleSaveFeedback = async () => {
+    if (!selectedApplication || !feedback.trim()) return;
+
+    setIsSavingApplication(true);
+    setApplicationError("");
+    setApplicationMessage("");
+
+    try {
+      await createFeedback(
+        selectedApplication.id,
+        feedback.trim(),
+        feedbackStatus,
+      );
+      await refreshSelectedApplication(selectedApplication.id);
+      setApplicationMessage("Đã gửi phản hồi cho ứng viên.");
+    } catch (err) {
+      setApplicationError(
+        err instanceof Error ? err.message : "Không gửi được phản hồi",
+      );
+    } finally {
+      setIsSavingApplication(false);
+    }
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!selectedApplication) return;
+
+    setIsSavingApplication(true);
+    setApplicationError("");
+    setApplicationMessage("");
+
+    try {
+      await createEvaluation(selectedApplication.id, score, notes);
+      await refreshSelectedApplication(selectedApplication.id);
+      setApplicationMessage("Đã lưu đánh giá nội bộ.");
+    } catch (err) {
+      setApplicationError(
+        err instanceof Error ? err.message : "Không lưu được đánh giá",
+      );
+    } finally {
+      setIsSavingApplication(false);
     }
   };
 
@@ -281,7 +876,7 @@ export function RecruiterChatPage() {
                 if (lastMsgObj) {
                   lastMsgText =
                     lastMsgObj.messageType === "file"
-                      ? `📎 File: ${lastMsgObj.attachmentName}`
+                      ? `File: ${normalizeAttachmentName(lastMsgObj.attachmentName) || "Tệp đính kèm"}`
                       : lastMsgObj.content || "";
                 }
 
@@ -367,13 +962,20 @@ export function RecruiterChatPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-not-allowed">
-                    <Phone className="w-4 h-4" />
+                  <button
+                    type="button"
+                    onClick={handleOpenApplicationPanel}
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-indigo-200 px-3 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+                  >
+                    <span className="hidden sm:inline">Xem hồ sơ ứng tuyển</span>
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-not-allowed">
-                    <Video className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={handleOpenApplicationPanel}
+                    title="Xem hồ sơ ứng tuyển"
+                    aria-label="Xem hồ sơ ứng tuyển"
+                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                  >
                     <Info className="w-4 h-4" />
                   </button>
                 </div>
@@ -417,12 +1019,11 @@ export function RecruiterChatPage() {
                                     <img
                                       src={msg.attachmentUrl}
                                       alt={msg.attachmentName || "Ảnh"}
-                                      className="max-w-50 max-h-37.5 rounded-lg border object-contain cursor-zoom-in bg-slate-50"
+                                      className="max-w-50 max-h-37.5 rounded-lg border object-contain cursor-zoom-in bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
                                     />
                                   </a>
                                 ) : (
                                   <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-200/50">
-                                    <FileText className="w-8 h-8 text-indigo-500 shrink-0" />
                                     <div className="min-w-0 flex-1">
                                       <p
                                         className="font-bold truncate text-[11px]"
@@ -440,9 +1041,9 @@ export function RecruiterChatPage() {
                                         target="_blank"
                                         rel="noreferrer"
                                         download={msg.attachmentName || ""}
-                                        className="p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 text-slate-600 dark:text-slate-300 hover:text-indigo-500 rounded-md transition-colors shrink-0"
+                                        className="h-7 px-2 inline-flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-500 rounded-md transition-colors shrink-0"
                                       >
-                                        <Download className="w-3.5 h-3.5" />
+                                        Tải xuống
                                       </a>
                                     )}
                                   </div>
@@ -500,8 +1101,8 @@ export function RecruiterChatPage() {
                     <Smile className="w-5 h-5" />
                   </button>
 
-                  <label className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
-                    <Paperclip className="w-5 h-5" />
+                  <label className="h-9 px-3 inline-flex items-center text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                    Đính kèm
                     <input
                       type="file"
                       onChange={handleFileUpload}
@@ -536,6 +1137,31 @@ export function RecruiterChatPage() {
             </div>
           )}
         </div>
+
+        {isApplicationPanelOpen && activeConversation ? (
+          <ApplicationPanel
+            conversation={activeConversation}
+            selectedApplication={selectedApplication}
+            relatedApplications={relatedApplications}
+            isLoading={isLoadingApplication}
+            isSaving={isSavingApplication}
+            error={applicationError}
+            message={applicationMessage}
+            feedback={feedback}
+            feedbackStatus={feedbackStatus}
+            score={score}
+            notes={notes}
+            onClose={() => setIsApplicationPanelOpen(false)}
+            onSelectApplication={handleSelectApplication}
+            onChangeStatus={(status) => void handleChangeStatus(status)}
+            onFeedbackChange={setFeedback}
+            onFeedbackStatusChange={setFeedbackStatus}
+            onScoreChange={setScore}
+            onNotesChange={setNotes}
+            onSaveFeedback={() => void handleSaveFeedback()}
+            onSaveEvaluation={() => void handleSaveEvaluation()}
+          />
+        ) : null}
       </div>
     </div>
   );

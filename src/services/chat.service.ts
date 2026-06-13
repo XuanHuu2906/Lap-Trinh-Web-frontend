@@ -1,4 +1,5 @@
 import { get, post, put } from './api-client';
+import type { RecruiterApplication } from './recruiter.service';
 
 export interface Message {
   id: number;
@@ -38,6 +39,7 @@ export interface Conversation {
   jobPosting: {
     title: string;
   } | null;
+  application?: RecruiterApplication | null;
   messages: Message[];
   _count?: {
     messages: number;
@@ -63,6 +65,11 @@ export const chatService = {
   async getMessages(conversationId: number, page = 1, limit = 50): Promise<{ items: Message[] }> {
     const res = await get<{ success: boolean; data: Message[] }>(`/chat/conversations/${conversationId}/messages?page=${page}&limit=${limit}`);
     return { items: res.data };
+  },
+
+  async getConversationApplications(conversationId: number): Promise<RecruiterApplication[]> {
+    const res = await get<{ success: boolean; data: RecruiterApplication[] }>(`/chat/conversations/${conversationId}/applications`);
+    return res.data;
   },
 
   async sendMessage(conversationId: number, content: string): Promise<Message> {

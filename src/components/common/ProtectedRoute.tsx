@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import type { UserRole } from '../../types/user.type';
 
@@ -24,6 +24,7 @@ const getRoleHomePath = (role?: UserRole) => {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -43,7 +44,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    const adminLoginPath = `/admin/login?redirect=${encodeURIComponent(
+      `${location.pathname}${location.search}`,
+    )}`;
+
+    return (
+      <Navigate
+        to={allowedRoles?.includes('admin') ? adminLoginPath : '/login'}
+        replace
+      />
+    );
   }
 
   // 1. Nếu tài khoản chưa onboarding (role === 'pending') mà truy cập route khác
