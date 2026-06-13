@@ -85,15 +85,15 @@ const formatDate = (value?: string | null) => {
 const getStatusLabel = (status: RecruiterApplication["status"]) => {
   switch (status) {
     case "pending":
-      return "Chưa xem";
+      return "Chờ xử lý";
     case "reviewing":
       return "Đang đánh giá";
     case "interview":
       return "Mời phỏng vấn";
     case "accepted":
-      return "Đã duyệt";
+      return "Phù hợp";
     case "rejected":
-      return "Từ chối";
+      return "Không phù hợp";
     case "cancelled":
       return "Đã hủy";
     default:
@@ -183,19 +183,15 @@ export function RecruiterOverviewPage() {
   const stats = useMemo(() => {
     const totalJobs = jobs.filter((job) => job.status !== "deleted").length;
     const activeJobs = jobs.filter((job) => job.status === "active").length;
-    const newApplications = applications.filter(
+    const pendingApplications = applications.filter(
       (application) => application.status === "pending",
-    ).length;
-    const feedbackSent = applications.filter(
-      (application) => (application.feedbacks?.length ?? 0) > 0,
     ).length;
 
     return {
       totalJobs,
       activeJobs,
-      newApplications,
       totalApplications: applications.length,
-      feedbackSent,
+      pendingApplications,
     };
   }, [jobs, applications]);
 
@@ -229,55 +225,98 @@ export function RecruiterOverviewPage() {
   }, [applications]);
 
   const urgentTasks = useMemo(() => {
-    const tasks: Array<{ text: string; deadline: string }> = [];
+    const tasks: Array<{ text: string; deadline: string; actions?: Array<{ label: string; to: string }> }> = [];
 
     const pendingCount = applications.filter(
       (application) => application.status === "pending",
     ).length;
 
-    const reviewingCount = applications.filter(
-      (application) => application.status === "reviewing",
-    ).length;
+    if (pendingCount > 0) {
+      tasks.push({
+        text: `Có ${pendingCount} hồ sơ đang chờ xử lý.`,
+        deadline: "Cần xử lý sớm",
+        actions: [{ label: "Xem hồ sơ →", to: "/recruiter/candidates" }],
+      });
+    }
 
     const sevenDaysLater = new Date();
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
     const expiringJobs = jobs.filter((job) => {
       if (!job.expiresAt || job.status !== "active") return false;
-
       const expiresAt = new Date(job.expiresAt);
       return expiresAt.getTime() <= sevenDaysLater.getTime();
     });
 
-    if (pendingCount > 0) {
-      tasks.push({
-        text: `Có ${pendingCount} ứng viên mới đang chờ xem xét.`,
-        deadline: "Cần xử lý sớm",
-      });
-    }
-
-    if (reviewingCount > 0) {
-      tasks.push({
-        text: `Có ${reviewingCount} hồ sơ đang trong trạng thái đánh giá.`,
-        deadline: "Theo dõi tiến độ",
-      });
-    }
-
     expiringJobs.slice(0, 3).forEach((job) => {
+      const actions: Array<{ label: string; to: string }> = [
+        { label: "Xem tin", to: `/recruiter/manage-jobs` },
+        { label: "Đóng tin", to: "#" },
+      ];
       tasks.push({
-        text: `Tin tuyển dụng "${job.title}" sắp hết hạn.`,
+        text: `Tin "${job.title}" sắp hết hạn.`,
         deadline: `Hạn: ${formatDate(job.expiresAt)}`,
+        actions,
       });
     });
 
-    if (tasks.length === 0) {
-      tasks.push({
-        text: "Hiện chưa có tác vụ tuyển dụng cần xử lý gấp.",
-        deadline: "Mọi thứ đang ổn định",
+    return tasks.slice(0, 5);
+  }, [jobs, applications]);
+
+  const insights = useMemo(() => {
+    const result: Array<{ icon: string; text: string }> = [];
+
+    const now = new Date();
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+
+    const expiringSoon = jobs.filter((job) => {
+      if (!job.expiresAt || job.status !== "active") return false;
+      const expiresAt = new Date(job.expiresAt);
+      return expiresAt.getTime() <= threeDaysLater.getTime() && expiresAt.getTime() > now.getTime();
+    });
+
+    if (expiringSoon.length > 0) {
+      result.push({
+        icon: "⚠️",
+        text: `${expiringSoon.length} tin sắp hết hạn trong 3 ngày tới.`,
       });
     }
 
-    return tasks.slice(0, 5);
+    const pendingCount = applications.filter(
+      (application) => application.status === "pending",
+    ).length;
+
+    if (pendingCount > 0) {
+      result.push({
+        icon: "📋",
+        text: `${pendingCount} hồ sơ chờ xử lý, hãy xem xét và cập nhật trạng thái.`,
+      });
+    }
+
+    const noSalaryJobs = jobs.filter(
+      (job) => job.status === "active" && !job.salaryMin && !job.salaryMax,
+    );
+
+    if (noSalaryJobs.length > 0) {
+      result.push({
+        icon: "💰",
+        text: `${noSalaryJobs.length} tin chưa có mức lương, thêm lương để thu hút ứng viên.`,
+      });
+    }
+
+    const noApplicantJobs = jobs.filter((job) => {
+      return job.status === "active" && (job._count?.applications ?? 0) === 0;
+    });
+
+    if (noApplicantJobs.length > 0) {
+      result.push({
+        icon: "📢",
+        text: `${noApplicantJobs.length} tin chưa có ứng viên, hãy kiểm tra lại nội dung tin.`,
+      });
+    }
+
+    return result;
   }, [jobs, applications]);
 
   return (
@@ -342,7 +381,7 @@ export function RecruiterOverviewPage() {
                   {stats.totalJobs}
                 </span>
               </div>
-            </div>
+            </Link>
 
             <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
@@ -368,7 +407,7 @@ export function RecruiterOverviewPage() {
               <span className="text-[36px] font-black leading-none text-slate-900 dark:text-slate-50">
                 {stats.activeJobs}
               </span>
-            </div>
+            </Link>
 
             <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
@@ -396,7 +435,7 @@ export function RecruiterOverviewPage() {
                   {stats.newApplications}
                 </span>
               </div>
-            </div>
+            </Link>
 
             <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
               <div className="mb-3 flex items-start justify-between">
@@ -414,7 +453,7 @@ export function RecruiterOverviewPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="1.5"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
@@ -424,7 +463,7 @@ export function RecruiterOverviewPage() {
                   {stats.feedbackSent}
                 </span>
               </div>
-            </div>
+            </Link>
           </div>
 
           <div className="grid grid-cols-[1fr_280px] gap-6">
@@ -469,7 +508,11 @@ export function RecruiterOverviewPage() {
                         colSpan={5}
                         className="px-6 py-10 text-center text-[13px] text-slate-400 dark:text-slate-500"
                       >
-                        Chưa có ứng viên nào ứng tuyển vào các tin của bạn.
+                        Chưa có ứng viên mới.
+                        <br />
+                        <span className="text-[12px]">
+                          Khi có ứng viên ứng tuyển, hồ sơ sẽ hiển thị tại đây.
+                        </span>
                       </td>
                     </tr>
                   ) : (
@@ -552,9 +595,9 @@ export function RecruiterOverviewPage() {
                           {task.deadline}
                         </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
@@ -570,7 +613,18 @@ export function RecruiterOverviewPage() {
                   <p>
                     Tin tuyển dụng có mô tả rõ ràng sẽ giúp tăng tỷ lệ ứng tuyển phù hợp.
                   </p>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    {insights.map((insight, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="mt-0.5 text-[13px]">{insight.icon}</span>
+                        <p className="text-[13px] leading-snug text-slate-500">
+                          {insight.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
