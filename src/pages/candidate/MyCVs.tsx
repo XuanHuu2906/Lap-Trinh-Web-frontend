@@ -55,9 +55,18 @@ function getPreviewText(cv: CandidateCV) {
   return getCVTitle(cv).slice(0, 2).toUpperCase();
 }
 
-function getApiErrorMessage(error: any, fallback: string) {
-  const status = error?.response?.status;
-  const backendMessage = error?.response?.data?.message;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  const response = isRecord(error) && isRecord(error.response)
+    ? error.response
+    : null;
+  const data = response && isRecord(response.data) ? response.data : null;
+  const status = typeof response?.status === "number" ? response.status : null;
+  const backendMessage =
+    typeof data?.message === "string" ? data.message : "";
 
   if (backendMessage) return backendMessage;
   if (status === 401) {
@@ -451,7 +460,7 @@ export default function MyCVs() {
 
       const response = await cvService.getMyCVs(forceRefresh);
       setCvs(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrorMessage(getApiErrorMessage(error, "Không thể tải danh sách CV."));
     } finally {
       setIsLoading(false);
@@ -485,7 +494,7 @@ export default function MyCVs() {
 
       const response = await cvService.uploadPdf(file);
       setCvs((currentCVs) => [response.data, ...currentCVs]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrorMessage(
         getApiErrorMessage(error, "Không thể upload CV. Vui lòng thử lại."),
       );
@@ -540,7 +549,7 @@ export default function MyCVs() {
 
       await cvService.delete(id);
       setCvs((currentCVs) => currentCVs.filter((cv) => cv.id !== id));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrorMessage(getApiErrorMessage(error, "Không thể xóa CV."));
     } finally {
       setDeletingId(null);
@@ -560,7 +569,7 @@ export default function MyCVs() {
             : { ...cv, status: cv.status === "active" ? "draft" : cv.status },
         ),
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrorMessage(
         getApiErrorMessage(error, "Không thể đặt CV làm hồ sơ chính."),
       );

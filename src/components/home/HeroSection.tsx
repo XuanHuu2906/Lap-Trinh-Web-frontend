@@ -10,6 +10,7 @@ import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { WORK_LOCATION_OPTIONS } from "../../constants/locations";
 import type { SystemStats } from "../../services/home.service";
 import type { Job } from "../../types/job.type";
+import { formatJobTypeLabel } from "../../utils/job-type-labels";
 
 interface HeroSectionProps {
   onSearch?: (keyword: string, location: string) => void;
@@ -26,14 +27,6 @@ const POPULAR_SEARCHES = [
   "Data Analyst",
   "Product Manager",
 ];
-
-const jobTypeLabels: Record<string, string> = {
-  full_time: "Toàn thời gian",
-  part_time: "Bán thời gian",
-  remote: "Remote",
-  internship: "Thực tập",
-  contract: "Hợp đồng",
-};
 
 function getCompanyName(job?: Job) {
   return job?.recruiter?.recruiterProfile?.companyName || "Đang cập nhật";
@@ -113,7 +106,7 @@ function JobPreviewCard({
   onSelect?: (job: Job) => void;
   onApply?: (job: Job) => void;
 }) {
-  const jobType = jobTypeLabels[job.jobType] || job.jobType || "Chưa cập nhật";
+  const jobType = formatJobTypeLabel(job.jobType);
   const category = job.category?.name || "Chưa phân loại";
   const textColor = featured
     ? "text-slate-950"

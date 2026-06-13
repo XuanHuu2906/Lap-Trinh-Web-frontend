@@ -22,6 +22,7 @@ import { Card, CardTitle, CardDescription } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { getAdminJobs, updateJobStatus, forceDeleteJob } from "../../services/admin.service";
 import { useToast } from "../../components/common/toast";
+import { formatJobTypeLabel } from "../../utils/job-type-labels";
 
 interface AdminJob extends Job {
   companyName: string;
@@ -312,22 +313,8 @@ export const AdminJobs: React.FC = () => {
     }
   };
 
-  // Dịch tên loại hình công việc
   const translateJobType = (type: JobType) => {
-    switch (type) {
-      case "full_time":
-        return "Full-time";
-      case "part_time":
-        return "Part-time";
-      case "remote":
-        return "Từ xa (Remote)";
-      case "internship":
-        return "Thực tập";
-      case "contract":
-        return "Hợp đồng";
-      default:
-        return type;
-    }
+    return formatJobTypeLabel(type);
   };
 
   // Tính toán tổng số trang

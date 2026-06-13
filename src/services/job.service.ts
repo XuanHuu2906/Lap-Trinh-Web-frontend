@@ -52,6 +52,13 @@ export const jobService = {
     return response.data;
   },
 
+  async getSkills() {
+    const response = await api.get<
+      JobsApiResponse<Array<{ id: number; name: string }>>
+    >("/jobs/skills");
+    return response.data;
+  },
+
   async searchJobs(params: JobQuery = {}) {
     const response = await api.get<JobsApiResponse<Job[]>>("/jobs/search", {
       params: cleanParams(params),

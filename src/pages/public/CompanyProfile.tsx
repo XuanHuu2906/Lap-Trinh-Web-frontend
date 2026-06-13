@@ -24,16 +24,9 @@ import { CompanyLogo } from "@/components/company/CompanyLogo";
 import { companyService } from "@/services/company.service";
 import type { CompanyProfileData } from "@/types/company.type";
 import type { Job } from "@/types/job.type";
+import { formatJobTypeLabel } from "@/utils/job-type-labels";
 
 type CompanyProfileVariant = "public" | "candidate";
-
-const jobTypeLabels: Record<string, string> = {
-  full_time: "Toàn thời gian",
-  part_time: "Bán thời gian",
-  remote: "Làm từ xa",
-  internship: "Thực tập",
-  contract: "Hợp đồng",
-};
 
 const formatSalary = (job: Job) => {
   if (job.salaryUnit === "negotiable" || (!job.salaryMin && !job.salaryMax)) {
@@ -375,7 +368,7 @@ function CompanyJobCard({
                   {job.category?.name || "Chưa phân loại"}
                 </span>
                 <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                  {jobTypeLabels[job.jobType] || job.jobType}
+                  {formatJobTypeLabel(job.jobType)}
                 </span>
               </div>
               <h3 className="text-lg font-bold text-slate-950 transition group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">

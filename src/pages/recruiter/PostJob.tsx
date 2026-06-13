@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { jobService } from "../../services/job.service";
 import {
   createJob,
@@ -22,15 +22,26 @@ type FlatCategoryOption = {
   label: string;
 };
 
+type SkillOption = {
+  id: number;
+  name: string;
+};
+
+type WorkMode = "onsite" | "remote" | "hybrid";
+
 type SubmitStatus = "active" | "draft";
 
-const jobTypeOptions: Array<{ label: string; value: JobType }> = [
+const employmentTypeOptions: Array<{ label: string; value: JobType }> = [
   { label: "Toàn thời gian", value: "full-time" },
   { label: "Bán thời gian", value: "part-time" },
-  { label: "Remote", value: "remote" },
-  { label: "Hybrid", value: "hybrid" },
   { label: "Freelance", value: "freelance" },
   { label: "Thực tập", value: "internship" },
+];
+
+const workModeOptions: Array<{ label: string; value: WorkMode }> = [
+  { label: "Onsite", value: "onsite" },
+  { label: "Remote", value: "remote" },
+  { label: "Hybrid", value: "hybrid" },
 ];
 
 const experienceOptions: Array<{ label: string; value: ExperienceLevel }> = [
@@ -52,11 +63,19 @@ const flattenCategories = (categories: CategoryOption[]): FlatCategoryOption[] =
     })),
   ]);
 
-const toOptionalNumber = (value: string) => {
-  if (!value.trim()) return null;
+const parseSalaryInput = (value: string, label: string) => {
+  if (!value.trim()) return { value: null };
 
   const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : null;
+  if (!Number.isFinite(numberValue)) {
+    return { value: null, error: `${label} phải là số hợp lệ` };
+  }
+
+  if (numberValue <= 0) {
+    return { value: null, error: `${label} phải là số dương` };
+  }
+
+  return { value: numberValue };
 };
 
 const toDateInputValue = (value?: string | null) => {
@@ -77,11 +96,21 @@ const todayInputValue = () => {
 export function PostJobPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const parsedJobId = id ? Number(id) : NaN;
   const hasEditParam = id !== undefined;
   const isEditing = hasEditParam && Number.isInteger(parsedJobId) && parsedJobId > 0;
+  const duplicateFromParam = searchParams.get("duplicateFrom");
+  const parsedDuplicateJobId = duplicateFromParam ? Number(duplicateFromParam) : NaN;
+  const isDuplicating =
+    !hasEditParam &&
+    Number.isInteger(parsedDuplicateJobId) &&
+    parsedDuplicateJobId > 0;
+  const focusField = searchParams.get("focus");
+  const expiresAtInputRef = useRef<HTMLInputElement>(null);
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [skills, setSkills] = useState<SkillOption[]>([]);
   const categoryOptions = useMemo(
     () => flattenCategories(categories),
     [categories],
@@ -97,10 +126,13 @@ export function PostJobPage() {
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
   const [salaryUnit, setSalaryUnit] = useState<"VND" | "USD">("VND");
+  const [salaryNegotiable, setSalaryNegotiable] = useState(false);
+  const [workMode, setWorkMode] = useState<WorkMode>("onsite");
   const [expiresAt, setExpiresAt] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
   const [benefits, setBenefits] = useState("");
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
 
   const [initialLoading, setInitialLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -126,11 +158,34 @@ export function PostJobPage() {
   }, []);
 
   useEffect(() => {
-    const loadJob = async () => {
-      if (!hasEditParam) return;
+    const loadSkills = async () => {
+      try {
+        const response = await jobService.getSkills();
+        setSkills(response.data ?? []);
+      } catch (err) {
+        console.error("Khong tai duoc danh sach ky nang:", err);
+      }
+    };
 
-      if (!isEditing) {
-        setError("ID tin tuyển dụng không hợp lệ");
+    void loadSkills();
+  }, []);
+
+  useEffect(() => {
+    const loadJob = async () => {
+      const sourceJobId = isEditing
+        ? parsedJobId
+        : isDuplicating
+          ? parsedDuplicateJobId
+          : NaN;
+
+      if (!hasEditParam && !isDuplicating) return;
+
+      if (!Number.isInteger(sourceJobId) || sourceJobId <= 0) {
+        setError(
+          isDuplicating
+            ? "ID tin cần nhân bản không hợp lệ"
+            : "ID tin tuyển dụng không hợp lệ",
+        );
         return;
       }
 
@@ -138,21 +193,34 @@ export function PostJobPage() {
       setError("");
 
       try {
-        const response = await getMyJobDetail(parsedJobId);
+        const response = await getMyJobDetail(sourceJobId);
         const job = response.data;
+        const sourceExpiresAt = toDateInputValue(job.expiresAt);
+        const nextExpiresAt =
+          isDuplicating && sourceExpiresAt < todayInputValue() ? "" : sourceExpiresAt;
 
-        setTitle(job.title);
+        setTitle(isDuplicating ? `${job.title} (bản sao)` : job.title);
         setCategoryId(job.categoryId ? String(job.categoryId) : "");
         setJobType(job.jobType);
+        setWorkMode(job.jobType === "remote" || job.jobType === "hybrid" ? job.jobType : "onsite");
         setExperienceLevel(job.experienceLevel || "");
         setLocation(job.location || "");
         setSalaryMin(job.salaryMin == null ? "" : String(job.salaryMin));
         setSalaryMax(job.salaryMax == null ? "" : String(job.salaryMax));
+        setSalaryNegotiable(job.salaryMin == null && job.salaryMax == null);
         setSalaryUnit(job.salaryUnit || "VND");
-        setExpiresAt(toDateInputValue(job.expiresAt));
+        setExpiresAt(nextExpiresAt);
         setDescription(job.description);
         setRequirements(job.requirements || "");
         setBenefits(job.benefits || "");
+        setSelectedSkillIds(
+          job.skills?.map((item) => item.skill.id).filter((skillId) => Number.isInteger(skillId)) ?? [],
+        );
+        setMessage(
+          isDuplicating
+            ? "Đã sao chép thông tin tin tuyển dụng. Kiểm tra lại hạn nộp trước khi đăng."
+            : "",
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Không tải được tin tuyển dụng");
       } finally {
@@ -161,7 +229,46 @@ export function PostJobPage() {
     };
 
     void loadJob();
-  }, [hasEditParam, isEditing, parsedJobId]);
+  }, [
+    hasEditParam,
+    isDuplicating,
+    isEditing,
+    parsedDuplicateJobId,
+    parsedJobId,
+  ]);
+
+  useEffect(() => {
+    if (initialLoading || focusField !== "expiresAt") return;
+
+    expiresAtInputRef.current?.focus();
+  }, [focusField, initialLoading]);
+
+  const handleSalaryNegotiableChange = (checked: boolean) => {
+    setSalaryNegotiable(checked);
+
+    if (checked) {
+      setSalaryMin("");
+      setSalaryMax("");
+    }
+  };
+
+  const handleWorkModeChange = (nextWorkMode: WorkMode) => {
+    setWorkMode(nextWorkMode);
+
+    if (nextWorkMode === "remote" || nextWorkMode === "hybrid") {
+      setJobType(nextWorkMode);
+    } else if (jobType === "remote" || jobType === "hybrid") {
+      setJobType("");
+    }
+  };
+
+  const toggleSkill = (skillId: number) => {
+    setSelectedSkillIds((current) =>
+      current.includes(skillId)
+        ? current.filter((id) => id !== skillId)
+        : [...current, skillId],
+    );
+  };
 
   const buildPayload = (status: SubmitStatus): CreateJobPayload | null => {
     setError("");
@@ -197,7 +304,23 @@ export function PostJobPage() {
       return null;
     }
 
-    if (salaryMin && salaryMax && Number(salaryMin) > Number(salaryMax)) {
+    const parsedSalaryMin = salaryNegotiable
+      ? { value: null }
+      : parseSalaryInput(salaryMin, "Lương tối thiểu");
+    const parsedSalaryMax = salaryNegotiable
+      ? { value: null }
+      : parseSalaryInput(salaryMax, "Lương tối đa");
+
+    if (parsedSalaryMin.error || parsedSalaryMax.error) {
+      setError(parsedSalaryMin.error || parsedSalaryMax.error || "");
+      return null;
+    }
+
+    if (
+      parsedSalaryMin.value != null &&
+      parsedSalaryMax.value != null &&
+      parsedSalaryMin.value > parsedSalaryMax.value
+    ) {
       setError("Lương tối thiểu không được lớn hơn lương tối đa");
       return null;
     }
@@ -208,13 +331,14 @@ export function PostJobPage() {
       requirements: requirements.trim() || null,
       benefits: benefits.trim() || null,
       location: location.trim() || null,
-      salaryMin: toOptionalNumber(salaryMin),
-      salaryMax: toOptionalNumber(salaryMax),
+      salaryMin: parsedSalaryMin.value,
+      salaryMax: parsedSalaryMax.value,
       salaryUnit,
       jobType,
       experienceLevel: experienceLevel || null,
       categoryId: categoryId ? Number(categoryId) : null,
       expiresAt: expiresAt || null,
+      skillIds: selectedSkillIds,
     };
   };
 
@@ -270,12 +394,18 @@ export function PostJobPage() {
     <div className="flex-1 p-8">
       <div className="mb-6">
         <h1 className="text-[26px] font-bold leading-tight text-slate-900 dark:text-white">
-          {isEditing ? "Chỉnh sửa tin tuyển dụng" : "Đăng tin tuyển dụng"}
+          {isEditing
+            ? "Chỉnh sửa tin tuyển dụng"
+            : isDuplicating
+              ? "Nhân bản tin tuyển dụng"
+              : "Đăng tin tuyển dụng"}
         </h1>
 
         <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-300">
           {isEditing
             ? "Cập nhật thông tin vị trí, yêu cầu và quyền lợi trước khi hiển thị cho ứng viên."
+            : isDuplicating
+              ? "Tạo tin mới từ dữ liệu đã có, kiểm tra lại thông tin trước khi xuất bản."
             : "Tạo tin tuyển dụng mới với đầy đủ thông tin vị trí, yêu cầu và quyền lợi."}
         </p>
       </div>
@@ -350,15 +480,16 @@ export function PostJobPage() {
                   </label>
 
                   <select
-                    required
-                    value={jobType}
+                    required={workMode === "onsite"}
+                    disabled={workMode !== "onsite"}
+                    value={workMode === "onsite" ? jobType : ""}
                     onChange={(event) =>
                       setJobType(event.target.value as JobType | "")
                     }
-                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900 dark:disabled:text-slate-600"
                   >
                     <option value="">Chọn loại hình...</option>
-                    {jobTypeOptions.map((item) => (
+                    {employmentTypeOptions.map((item) => (
                       <option key={item.value} value={item.value}>
                         {item.label}
                       </option>
@@ -390,7 +521,7 @@ export function PostJobPage() {
                 </div>
               </div>
 
-              <div className="mb-4 grid gap-4 md:grid-cols-2">
+              <div className="mb-4 grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Địa điểm
@@ -406,11 +537,33 @@ export function PostJobPage() {
 
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                    Hình thức làm việc *
+                  </label>
+
+                  <select
+                    required
+                    value={workMode}
+                    onChange={(event) =>
+                      handleWorkModeChange(event.target.value as WorkMode)
+                    }
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                  >
+                    {workModeOptions.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Hạn nộp
                   </label>
 
                   <input
                     type="date"
+                    ref={expiresAtInputRef}
                     min={todayInputValue()}
                     value={expiresAt}
                     onChange={(event) => setExpiresAt(event.target.value)}
@@ -418,6 +571,18 @@ export function PostJobPage() {
                   />
                 </div>
               </div>
+
+              <label className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={salaryNegotiable}
+                  onChange={(event) =>
+                    handleSalaryNegotiableChange(event.target.checked)
+                  }
+                  className="h-4 w-4 border-slate-300 text-[#0f1f3d] focus:ring-[#0f1f3d]"
+                />
+                Lương thỏa thuận
+              </label>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
@@ -427,11 +592,12 @@ export function PostJobPage() {
 
                   <input
                     type="number"
-                    min="0"
+                    min="1"
+                    disabled={salaryNegotiable}
                     value={salaryMin}
                     onChange={(event) => setSalaryMin(event.target.value)}
                     placeholder="VD: 10000000"
-                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
+                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600 dark:disabled:bg-slate-900 dark:disabled:text-slate-600"
                   />
                 </div>
 
@@ -442,11 +608,12 @@ export function PostJobPage() {
 
                   <input
                     type="number"
-                    min="0"
+                    min="1"
+                    disabled={salaryNegotiable}
                     value={salaryMax}
                     onChange={(event) => setSalaryMax(event.target.value)}
                     placeholder="VD: 20000000"
-                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
+                    className="h-11 w-full border border-slate-200 px-4 text-[14px] text-slate-700 outline-none focus:border-slate-400 disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600 dark:disabled:bg-slate-900 dark:disabled:text-slate-600"
                   />
                 </div>
 
@@ -457,15 +624,52 @@ export function PostJobPage() {
 
                   <select
                     value={salaryUnit}
+                    disabled={salaryNegotiable}
                     onChange={(event) =>
                       setSalaryUnit(event.target.value as "VND" | "USD")
                     }
-                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                    className="h-11 w-full border border-slate-200 bg-white px-4 text-[14px] text-slate-600 outline-none disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900 dark:disabled:text-slate-600"
                   >
                     <option value="VND">VND</option>
                     <option value="USD">USD</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="mt-5">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  Kỹ năng yêu cầu
+                </label>
+
+                {skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => {
+                      const selected = selectedSkillIds.includes(skill.id);
+
+                      return (
+                        <button
+                          key={skill.id}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => toggleSkill(skill.id)}
+                          className={`border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                            selected
+                              ? "border-[#0f1f3d] bg-[#0f1f3d] text-white"
+                              : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                          }`}
+                        >
+                          {skill.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <input
+                    disabled
+                    placeholder="React, Node.js, PostgreSQL, TypeScript"
+                    className="h-11 w-full border border-slate-200 bg-slate-50 px-4 text-[14px] text-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600"
+                  />
+                )}
               </div>
             </div>
 
@@ -484,7 +688,11 @@ export function PostJobPage() {
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={6}
-                  placeholder="Mô tả nhiệm vụ, trách nhiệm và mục tiêu của vị trí..."
+                  placeholder={[
+                    "- Tham gia phát triển API cho hệ thống tuyển dụng",
+                    "- Phối hợp với frontend để tích hợp chức năng",
+                    "- Tối ưu hiệu năng truy vấn dữ liệu",
+                  ].join("\n")}
                   className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>
@@ -498,7 +706,11 @@ export function PostJobPage() {
                   value={requirements}
                   onChange={(event) => setRequirements(event.target.value)}
                   rows={4}
-                  placeholder="Nhập kỹ năng, kinh nghiệm, bằng cấp hoặc yêu cầu cần có..."
+                  placeholder={[
+                    "- Có kinh nghiệm với React, Node.js hoặc hệ sinh thái liên quan",
+                    "- Nắm vững TypeScript và thiết kế REST API",
+                    "- Chủ động trao đổi, phối hợp tốt trong nhóm",
+                  ].join("\n")}
                   className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>
@@ -512,7 +724,11 @@ export function PostJobPage() {
                   value={benefits}
                   onChange={(event) => setBenefits(event.target.value)}
                   rows={4}
-                  placeholder="Nhập chế độ đãi ngộ, phúc lợi, môi trường làm việc..."
+                  placeholder={[
+                    "- Lương thưởng cạnh tranh theo năng lực",
+                    "- Bảo hiểm và ngày nghỉ theo quy định",
+                    "- Môi trường làm việc rõ ràng, hỗ trợ phát triển chuyên môn",
+                  ].join("\n")}
                   className="w-full resize-y border border-slate-200 px-4 py-3 text-[14px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
                 />
               </div>

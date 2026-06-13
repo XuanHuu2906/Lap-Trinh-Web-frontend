@@ -81,9 +81,14 @@ function getString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-function getApiErrorMessage(error: any, fallback: string) {
-  const status = error?.response?.status;
-  const backendMessage = error?.response?.data?.message;
+function getApiErrorMessage(error: unknown, fallback: string) {
+  const response = isRecord(error) && isRecord(error.response)
+    ? error.response
+    : null;
+  const data = response && isRecord(response.data) ? response.data : null;
+  const status = typeof response?.status === "number" ? response.status : null;
+  const backendMessage =
+    typeof data?.message === "string" ? data.message : "";
 
   if (backendMessage) return backendMessage;
   if (status === 401) {
@@ -811,7 +816,7 @@ export default function CVBuilder() {
         setData(mapCVToFormData(response.data));
         setCurrentCvId(response.data.id);
         setLastSavedAt(response.data.updatedAt);
-      } catch (error: any) {
+      } catch (error: unknown) {
         setErrorMessage(
           getApiErrorMessage(error, "Không thể tải CV từ database."),
         );
@@ -909,7 +914,7 @@ export default function CVBuilder() {
           replace: true,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrorMessage(
         getApiErrorMessage(error, "Không thể lưu CV vào database."),
       );

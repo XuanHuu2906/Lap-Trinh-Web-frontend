@@ -16,10 +16,10 @@ import {
 } from "../../services/recruiter.service";
 
 const statusLabel: Record<ApplicationStatus, string> = {
-  pending: "Mới",
-  reviewing: "Đang xem xét",
+  pending: "Chưa xem",
+  reviewing: "Đã xem",
   interview: "Mời phỏng vấn",
-  accepted: "Đạt",
+  accepted: "Phù hợp",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
 };
@@ -35,6 +35,21 @@ const statusStyle: Record<ApplicationStatus, string> = {
 
 type FeedbackStatus = "interview" | "accepted" | "rejected";
 
+const getStatusFilterFromParam = (value: string | null): ApplicationStatus | "" => {
+  if (
+    value === "pending" ||
+    value === "reviewing" ||
+    value === "interview" ||
+    value === "accepted" ||
+    value === "rejected" ||
+    value === "cancelled"
+  ) {
+    return value;
+  }
+
+  return "";
+};
+
 const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
   if (status === "accepted" || status === "rejected" || status === "interview") {
     return status;
@@ -46,7 +61,7 @@ const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
 const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "pending") {
     return [
-      { label: "Chuyển sang đang xem xét", value: "reviewing" as const },
+      { label: "Đánh dấu đã xem", value: "reviewing" as const },
       { label: "Mời phỏng vấn", value: "interview" as const },
     ];
   }
@@ -54,14 +69,14 @@ const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "reviewing") {
     return [
       { label: "Mời phỏng vấn", value: "interview" as const },
-      { label: "Duyệt / đạt", value: "accepted" as const },
+      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
 
   if (status === "interview") {
     return [
-      { label: "Duyệt / đạt", value: "accepted" as const },
+      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
@@ -86,10 +101,24 @@ const getCandidateName = (application: RecruiterApplication) => {
   );
 };
 
+const getApplicationJobTitle = (
+  application: RecruiterApplication,
+  jobs: RecruiterJob[],
+) => {
+  return (
+    application.jobPosting?.title ||
+    jobs.find((job) => job.id === application.jobPostingId)?.title ||
+    "Chưa rõ tin ứng tuyển"
+  );
+};
+
 export function ManageCandidatesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const jobIdParam = searchParams.get("jobId");
+  const statusParam = getStatusFilterFromParam(searchParams.get("status"));
+  const applicationIdParam = searchParams.get("applicationId");
+  const hasDashboardTarget = Boolean(statusParam || applicationIdParam);
 
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | "">("");
@@ -98,7 +127,9 @@ export function ManageCandidatesPage() {
     useState<RecruiterApplication | null>(null);
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">(
+    () => statusParam,
+  );
 
   const [feedback, setFeedback] = useState("");
   const [feedbackStatus, setFeedbackStatus] =
@@ -110,6 +141,8 @@ export function ManageCandidatesPage() {
   const [jobsLoading, setJobsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const showJobColumn = selectedJobId === "";
+  const tableColumnCount = showJobColumn ? 6 : 5;
 
   const filteredApplications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -142,6 +175,8 @@ export function ManageCandidatesPage() {
         myJobs.some((job) => job.id === requestedJobId)
       ) {
         setSelectedJobId(requestedJobId);
+      } else if (hasDashboardTarget) {
+        setSelectedJobId("");
       } else if (!selectedJobId && myJobs.length > 0) {
         setSelectedJobId(myJobs[0].id);
       }
@@ -161,7 +196,9 @@ export function ManageCandidatesPage() {
   ) => {
     const { showLoading = true, updateError = true } = options;
 
-    if (!selectedJobId) {
+    const jobIds = selectedJobId ? [selectedJobId] : jobs.map((job) => job.id);
+
+    if (jobIds.length === 0) {
       setApplications([]);
       setSelectedApplication(null);
       return;
@@ -171,17 +208,30 @@ export function ManageCandidatesPage() {
     if (updateError) setError("");
 
     try {
-      const response = await getApplicationsByJob({
-        jobId: selectedJobId,
-        page: 1,
-        limit: 50,
-        status: statusFilter,
+      const results = await Promise.allSettled(
+        jobIds.map((jobId) =>
+          getApplicationsByJob({
+            jobId,
+            page: 1,
+            limit: 50,
+            status: statusFilter,
+          }),
+        ),
+      );
+
+      const responseData = results.flatMap((result) => {
+        if (result.status !== "fulfilled") return [];
+        return result.value.data ?? [];
       });
 
-      setApplications(response.data ?? []);
+      const uniqueApplications = Array.from(
+        new Map(responseData.map((application) => [application.id, application])).values(),
+      );
+
+      setApplications(uniqueApplications);
 
       if (selectedApplication) {
-        const refreshed = response.data?.find(
+        const refreshed = uniqueApplications.find(
           (item) => item.id === selectedApplication.id,
         );
 
@@ -205,12 +255,16 @@ export function ManageCandidatesPage() {
   useEffect(() => {
     void loadJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobIdParam]);
+  }, [jobIdParam, hasDashboardTarget]);
+
+  useEffect(() => {
+    setStatusFilter((current) => (current === statusParam ? current : statusParam));
+  }, [statusParam]);
 
   useEffect(() => {
     void loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedJobId, statusFilter]);
+  }, [selectedJobId, statusFilter, jobs]);
 
   useVisiblePolling(
     () =>
@@ -278,6 +332,21 @@ export function ManageCandidatesPage() {
     }
   };
 
+  useEffect(() => {
+    const requestedApplicationId = applicationIdParam ? Number(applicationIdParam) : null;
+    if (
+      !requestedApplicationId ||
+      !Number.isInteger(requestedApplicationId) ||
+      selectedApplication?.id === requestedApplicationId
+    ) {
+      return;
+    }
+
+    const application = applications.find((item) => item.id === requestedApplicationId);
+    if (application) void openApplication(application);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationIdParam, applications, selectedApplication?.id]);
+
   const handleSelectJob = (value: string) => {
     const nextJobId = value ? Number(value) : "";
     setSelectedJobId(nextJobId);
@@ -289,6 +358,22 @@ export function ManageCandidatesPage() {
     } else {
       nextParams.delete("jobId");
     }
+    nextParams.delete("applicationId");
+
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const handleStatusFilterChange = (nextStatus: ApplicationStatus | "") => {
+    setStatusFilter(nextStatus);
+    setSelectedApplication(null);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextStatus) {
+      nextParams.set("status", nextStatus);
+    } else {
+      nextParams.delete("status");
+    }
+    nextParams.delete("applicationId");
 
     setSearchParams(nextParams, { replace: true });
   };
@@ -390,7 +475,7 @@ export function ManageCandidatesPage() {
               className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             >
               <option value="">
-                {jobsLoading ? "Đang tải..." : "Chọn tin tuyển dụng"}
+                {jobsLoading ? "Đang tải..." : "Tất cả tin tuyển dụng"}
               </option>
 
               {jobs.map((job) => (
@@ -409,15 +494,15 @@ export function ManageCandidatesPage() {
             <select
               value={statusFilter}
               onChange={(e) =>
-                setStatusFilter(e.target.value as ApplicationStatus | "")
+                handleStatusFilterChange(e.target.value as ApplicationStatus | "")
               }
               className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             >
               <option value="">Tất cả</option>
-              <option value="pending">Mới</option>
-              <option value="reviewing">Đang xem xét</option>
+              <option value="pending">Chưa xem</option>
+              <option value="reviewing">Đã xem</option>
               <option value="interview">Mời phỏng vấn</option>
-              <option value="accepted">Đạt</option>
+              <option value="accepted">Phù hợp</option>
               <option value="rejected">Không phù hợp</option>
               <option value="cancelled">Đã hủy</option>
             </select>
@@ -440,11 +525,12 @@ export function ManageCandidatesPage() {
 
       <div className="grid grid-cols-[1fr_380px] items-start gap-6">
         <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
-          <table className="w-full">
+          <table className={showJobColumn ? "w-full min-w-[900px]" : "w-full min-w-[760px]"}>
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
                 {[
                   "Ứng viên",
+                  ...(showJobColumn ? ["Tin ứng tuyển"] : []),
                   "CV",
                   "Ngày ứng tuyển",
                   "Trạng thái",
@@ -464,7 +550,7 @@ export function ManageCandidatesPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={tableColumnCount}
                     className="px-6 py-8 text-center text-[13px] text-slate-400 dark:text-slate-500"
                   >
                     Đang tải dữ liệu...
@@ -475,7 +561,7 @@ export function ManageCandidatesPage() {
               {!loading && filteredApplications.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={tableColumnCount}
                     className="px-6 py-8 text-center text-[13px] text-slate-400 dark:text-slate-500"
                   >
                     Chưa có ứng viên cho tin này.
@@ -500,6 +586,12 @@ export function ManageCandidatesPage() {
                       </p>
                     </td>
 
+                    {showJobColumn && (
+                      <td className="px-6 py-5 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
+                        {getApplicationJobTitle(application, jobs)}
+                      </td>
+                    )}
+
                     <td className="px-6 py-5 text-[13px] text-slate-500 dark:text-slate-400">
                       {application.cv?.title || "Chưa có CV"}
                     </td>
@@ -516,6 +608,11 @@ export function ManageCandidatesPage() {
                       >
                         {statusLabel[application.status]}
                       </span>
+                      {(application.feedbacks?.length ?? 0) > 0 && (
+                        <p className="mt-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
+                          Đã phản hồi
+                        </p>
+                      )}
                     </td>
 
                     <td className="px-6 py-5">
@@ -524,7 +621,7 @@ export function ManageCandidatesPage() {
                         onClick={() => void openApplication(application)}
                         className="h-8 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
-                        Xem / xử lý
+                        Xử lý hồ sơ
                       </button>
                     </td>
                   </tr>
