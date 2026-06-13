@@ -11,16 +11,16 @@ import {
 } from "../../services/recruiter.service";
 
 const statusLabel: Record<ApplicationStatus, string> = {
-  pending: "Mới",
-  reviewing: "Đang xem xét",
-  accepted: "Đạt",
+  pending: "Chờ xử lý",
+  reviewing: "Đã xem",
+  accepted: "Phù hợp",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
 };
 
 const statusStyle: Record<ApplicationStatus, string> = {
-  pending: "border border-blue-400 text-blue-600 bg-white",
-  reviewing: "border border-orange-400 text-orange-600 bg-white",
+  pending: "border border-yellow-400 text-yellow-700 bg-white",
+  reviewing: "border border-blue-400 text-blue-600 bg-white",
   accepted: "border border-emerald-400 text-emerald-600 bg-white",
   rejected: "border border-red-400 text-red-600 bg-white",
   cancelled: "border border-slate-300 text-slate-500 bg-white",
@@ -28,13 +28,13 @@ const statusStyle: Record<ApplicationStatus, string> = {
 
 const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "pending") {
-    return [{ label: "Chuyển sang đang xem xét", value: "reviewing" as const }];
+    return [{ label: "Đã xem", value: "reviewing" as const }];
   }
 
   if (status === "reviewing") {
     return [
-      { label: "Duyệt / đạt", value: "accepted" as const },
-      { label: "Từ chối", value: "rejected" as const },
+      { label: "Phù hợp", value: "accepted" as const },
+      { label: "Không phù hợp", value: "rejected" as const },
     ];
   }
 
@@ -285,9 +285,9 @@ export function ManageCandidatesPage() {
               className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none"
             >
               <option value="">Tất cả</option>
-              <option value="pending">Mới</option>
-              <option value="reviewing">Đang xem xét</option>
-              <option value="accepted">Đạt</option>
+              <option value="pending">Chờ xử lý</option>
+              <option value="reviewing">Đã xem</option>
+              <option value="accepted">Phù hợp</option>
               <option value="rejected">Không phù hợp</option>
               <option value="cancelled">Đã hủy</option>
             </select>

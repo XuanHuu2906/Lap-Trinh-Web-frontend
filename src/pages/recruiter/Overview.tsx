@@ -85,13 +85,13 @@ const formatDate = (value?: string | null) => {
 const getStatusLabel = (status: RecruiterApplication["status"]) => {
   switch (status) {
     case "pending":
-      return "Chưa xem";
+      return "Chờ xử lý";
     case "reviewing":
-      return "Đang đánh giá";
+      return "Đã xem";
     case "accepted":
-      return "Đã duyệt";
+      return "Phù hợp";
     case "rejected":
-      return "Từ chối";
+      return "Không phù hợp";
     case "cancelled":
       return "Đã hủy";
     default:
@@ -102,13 +102,13 @@ const getStatusLabel = (status: RecruiterApplication["status"]) => {
 const getStatusColor = (status: RecruiterApplication["status"]) => {
   switch (status) {
     case "pending":
-      return "bg-red-100 text-red-600";
-    case "reviewing":
       return "bg-yellow-100 text-yellow-700";
+    case "reviewing":
+      return "bg-blue-100 text-blue-700";
     case "accepted":
-      return "bg-green-100 text-green-700";
+      return "bg-emerald-100 text-emerald-700";
     case "rejected":
-      return "bg-slate-100 text-slate-600";
+      return "bg-red-100 text-red-600";
     case "cancelled":
       return "bg-slate-100 text-slate-500";
     default:
@@ -179,19 +179,15 @@ export function RecruiterOverviewPage() {
   const stats = useMemo(() => {
     const totalJobs = jobs.filter((job) => job.status !== "deleted").length;
     const activeJobs = jobs.filter((job) => job.status === "active").length;
-    const newApplications = applications.filter(
+    const pendingApplications = applications.filter(
       (application) => application.status === "pending",
-    ).length;
-    const feedbackSent = applications.filter(
-      (application) => (application.feedbacks?.length ?? 0) > 0,
     ).length;
 
     return {
       totalJobs,
       activeJobs,
-      newApplications,
       totalApplications: applications.length,
-      feedbackSent,
+      pendingApplications,
     };
   }, [jobs, applications]);
 
@@ -225,55 +221,98 @@ export function RecruiterOverviewPage() {
   }, [applications]);
 
   const urgentTasks = useMemo(() => {
-    const tasks: Array<{ text: string; deadline: string }> = [];
+    const tasks: Array<{ text: string; deadline: string; actions?: Array<{ label: string; to: string }> }> = [];
 
     const pendingCount = applications.filter(
       (application) => application.status === "pending",
     ).length;
 
-    const reviewingCount = applications.filter(
-      (application) => application.status === "reviewing",
-    ).length;
+    if (pendingCount > 0) {
+      tasks.push({
+        text: `Có ${pendingCount} hồ sơ đang chờ xử lý.`,
+        deadline: "Cần xử lý sớm",
+        actions: [{ label: "Xem hồ sơ →", to: "/recruiter/candidates" }],
+      });
+    }
 
     const sevenDaysLater = new Date();
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
     const expiringJobs = jobs.filter((job) => {
       if (!job.expiresAt || job.status !== "active") return false;
-
       const expiresAt = new Date(job.expiresAt);
       return expiresAt.getTime() <= sevenDaysLater.getTime();
     });
 
-    if (pendingCount > 0) {
-      tasks.push({
-        text: `Có ${pendingCount} ứng viên mới đang chờ xem xét.`,
-        deadline: "Cần xử lý sớm",
-      });
-    }
-
-    if (reviewingCount > 0) {
-      tasks.push({
-        text: `Có ${reviewingCount} hồ sơ đang trong trạng thái đánh giá.`,
-        deadline: "Theo dõi tiến độ",
-      });
-    }
-
     expiringJobs.slice(0, 3).forEach((job) => {
+      const actions: Array<{ label: string; to: string }> = [
+        { label: "Xem tin", to: `/recruiter/manage-jobs` },
+        { label: "Đóng tin", to: "#" },
+      ];
       tasks.push({
-        text: `Tin tuyển dụng "${job.title}" sắp hết hạn.`,
+        text: `Tin "${job.title}" sắp hết hạn.`,
         deadline: `Hạn: ${formatDate(job.expiresAt)}`,
+        actions,
       });
     });
 
-    if (tasks.length === 0) {
-      tasks.push({
-        text: "Hiện chưa có tác vụ tuyển dụng cần xử lý gấp.",
-        deadline: "Mọi thứ đang ổn định",
+    return tasks.slice(0, 5);
+  }, [jobs, applications]);
+
+  const insights = useMemo(() => {
+    const result: Array<{ icon: string; text: string }> = [];
+
+    const now = new Date();
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+
+    const expiringSoon = jobs.filter((job) => {
+      if (!job.expiresAt || job.status !== "active") return false;
+      const expiresAt = new Date(job.expiresAt);
+      return expiresAt.getTime() <= threeDaysLater.getTime() && expiresAt.getTime() > now.getTime();
+    });
+
+    if (expiringSoon.length > 0) {
+      result.push({
+        icon: "⚠️",
+        text: `${expiringSoon.length} tin sắp hết hạn trong 3 ngày tới.`,
       });
     }
 
-    return tasks.slice(0, 5);
+    const pendingCount = applications.filter(
+      (application) => application.status === "pending",
+    ).length;
+
+    if (pendingCount > 0) {
+      result.push({
+        icon: "📋",
+        text: `${pendingCount} hồ sơ chờ xử lý, hãy xem xét và cập nhật trạng thái.`,
+      });
+    }
+
+    const noSalaryJobs = jobs.filter(
+      (job) => job.status === "active" && !job.salaryMin && !job.salaryMax,
+    );
+
+    if (noSalaryJobs.length > 0) {
+      result.push({
+        icon: "💰",
+        text: `${noSalaryJobs.length} tin chưa có mức lương, thêm lương để thu hút ứng viên.`,
+      });
+    }
+
+    const noApplicantJobs = jobs.filter((job) => {
+      return job.status === "active" && (job._count?.applications ?? 0) === 0;
+    });
+
+    if (noApplicantJobs.length > 0) {
+      result.push({
+        icon: "📢",
+        text: `${noApplicantJobs.length} tin chưa có ứng viên, hãy kiểm tra lại nội dung tin.`,
+      });
+    }
+
+    return result;
   }, [jobs, applications]);
 
   return (
@@ -321,7 +360,10 @@ export function RecruiterOverviewPage() {
       ) : (
         <>
           <div className="mb-8 grid grid-cols-4 gap-4">
-            <div className="border border-slate-200 bg-white p-5">
+            <Link
+              to="/recruiter/manage-jobs"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   Tổng số tin
@@ -357,9 +399,12 @@ export function RecruiterOverviewPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="border border-slate-200 bg-white p-5">
+            <Link
+              to="/recruiter/manage-jobs?status=active"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   Tin đang mở
@@ -383,9 +428,12 @@ export function RecruiterOverviewPage() {
               <span className="text-[36px] font-black leading-none text-slate-900">
                 {stats.activeJobs}
               </span>
-            </div>
+            </Link>
 
-            <div className="border border-slate-200 bg-white p-5">
+            <Link
+              to="/recruiter/candidates"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   Ứng viên mới
@@ -408,19 +456,22 @@ export function RecruiterOverviewPage() {
 
               <div className="flex items-end gap-2">
                 <span className="text-[36px] font-black leading-none text-slate-900">
-                  {stats.newApplications}
+                  {stats.totalApplications}
                 </span>
 
                 <span className="mb-1 text-[11px] font-semibold text-emerald-600">
-                  / {stats.totalApplications} tổng hồ sơ
+                  / {stats.pendingApplications} chờ xử lý
                 </span>
               </div>
-            </div>
+            </Link>
 
-            <div className="border border-slate-200 bg-white p-5">
+            <Link
+              to="/recruiter/candidates"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:bg-slate-50"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  Phản hồi đã gửi
+                  Hồ sơ chờ xử lý
                 </p>
 
                 <svg
@@ -433,21 +484,21 @@ export function RecruiterOverviewPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="1.5"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
 
               <div className="flex items-end gap-2">
                 <span className="text-[36px] font-black leading-none text-slate-900">
-                  {stats.feedbackSent}
+                  {stats.pendingApplications}
                 </span>
 
                 <span className="mb-1 text-[11px] font-semibold text-slate-400">
-                  hồ sơ đã phản hồi
+                  hồ sơ / {stats.totalApplications} tổng
                 </span>
               </div>
-            </div>
+            </Link>
           </div>
 
           <div className="grid grid-cols-[1fr_280px] gap-6">
@@ -490,9 +541,13 @@ export function RecruiterOverviewPage() {
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-6 py-10 text-center text-[13px] text-slate-400"
+                        className="px-6 py-8 text-center text-[13px] text-slate-400"
                       >
-                        Chưa có ứng viên nào ứng tuyển vào các tin của bạn.
+                        Chưa có ứng viên mới.
+                        <br />
+                        <span className="text-[12px]">
+                          Khi có ứng viên ứng tuyển, hồ sơ sẽ hiển thị tại đây.
+                        </span>
                       </td>
                     </tr>
                   ) : (
@@ -540,12 +595,20 @@ export function RecruiterOverviewPage() {
                           </td>
 
                           <td className="px-6 py-4">
-                            <Link
-                              to="/recruiter/candidates"
-                              className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100"
-                            >
-                              Xem
-                            </Link>
+                            <div className="flex items-center gap-1.5">
+                              <Link
+                                to="/recruiter/candidates"
+                                className="h-7 border border-slate-200 px-2.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+                              >
+                                Xem hồ sơ
+                              </Link>
+                              <Link
+                                to="/recruiter/chat"
+                                className="h-7 border border-slate-200 px-2.5 text-[11px] text-slate-400 transition-colors hover:bg-slate-100"
+                              >
+                                Chat
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -561,23 +624,43 @@ export function RecruiterOverviewPage() {
                   Cần xử lý gấp
                 </h3>
 
-                <div className="space-y-4">
-                  {urgentTasks.map((task, index) => (
-                    <div key={`${task.text}-${index}`} className="flex items-start gap-3">
-                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                {urgentTasks.length === 0 ? (
+                  <p className="text-[13px] text-slate-400">
+                    Hiện chưa có tác vụ tuyển dụng cần xử lý gấp.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {urgentTasks.map((task, index) => (
+                      <div key={`${task.text}-${index}`} className="flex items-start gap-3">
+                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
 
-                      <div>
-                        <p className="text-[13px] leading-snug text-slate-700">
-                          {task.text}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] leading-snug text-slate-700">
+                            {task.text}
+                          </p>
 
-                        <p className="mt-0.5 text-[11px] text-slate-400">
-                          {task.deadline}
-                        </p>
+                          <p className="mt-0.5 text-[11px] text-slate-400">
+                            {task.deadline}
+                          </p>
+
+                          {task.actions && task.actions.length > 0 && (
+                            <div className="mt-2 flex gap-2">
+                              {task.actions.map((action) => (
+                                <Link
+                                  key={action.label}
+                                  to={action.to}
+                                  className="text-[11px] font-semibold text-blue-600 hover:underline"
+                                >
+                                  {action.label}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="border border-slate-200 bg-white p-5">
@@ -585,15 +668,22 @@ export function RecruiterOverviewPage() {
                   Gợi ý nhanh
                 </h3>
 
-                <div className="space-y-3 text-[13px] text-slate-500">
-                  <p>
-                    Thường xuyên cập nhật trạng thái hồ sơ để ứng viên nhận được phản hồi kịp thời.
+                {insights.length === 0 ? (
+                  <p className="text-[13px] text-slate-400">
+                    Mọi thứ đang hoạt động tốt. Không có gợi ý nào.
                   </p>
-
-                  <p>
-                    Tin tuyển dụng có mô tả rõ ràng sẽ giúp tăng tỷ lệ ứng tuyển phù hợp.
-                  </p>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    {insights.map((insight, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="mt-0.5 text-[13px]">{insight.icon}</span>
+                        <p className="text-[13px] leading-snug text-slate-500">
+                          {insight.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
