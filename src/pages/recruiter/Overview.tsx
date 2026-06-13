@@ -3,39 +3,19 @@ import { Link } from "react-router-dom";
 import {
   getApplicationsByJob,
   getMyJobs,
+  updateJobStatus,
   type RecruiterApplication,
   type RecruiterJob,
 } from "../../services/recruiter.service";
 
-function Sparkline({ data }: { data: number[] }) {
-  const safeData = data.length > 1 ? data : [0, data[0] ?? 0];
-  const min = Math.min(...safeData);
-  const max = Math.max(...safeData);
-  const w = 64;
-  const h = 32;
-  const range = max - min || 1;
-
-  const points = safeData
-    .map((v, i) => {
-      const x = (i / (safeData.length - 1)) * w;
-      const y = h - ((v - min) / range) * h;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-      <polyline
-        points={points}
-        fill="none"
-        stroke="#10b981"
-        strokeWidth="2"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+type UrgentTask = {
+  text: string;
+  deadline: string;
+  actions?: Array<
+    | { label: string; to: string }
+    | { label: string; action: "closeJob"; jobId: number }
+  >;
+};
 
 const getInitials = (name?: string | null) => {
   if (!name) return "UV";
@@ -87,7 +67,7 @@ const getStatusLabel = (status: RecruiterApplication["status"]) => {
     case "pending":
       return "Chờ xử lý";
     case "reviewing":
-      return "Đang đánh giá";
+      return "Đã xem";
     case "interview":
       return "Mời phỏng vấn";
     case "accepted":
@@ -180,43 +160,48 @@ export function RecruiterOverviewPage() {
     void loadOverview();
   }, []);
 
+  const handleCloseJob = async (jobId: number) => {
+    try {
+      setError("");
+      await updateJobStatus(jobId, "closed");
+      await loadOverview();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không đóng được tin tuyển dụng");
+    }
+  };
+
   const stats = useMemo(() => {
     const totalJobs = jobs.filter((job) => job.status !== "deleted").length;
     const activeJobs = jobs.filter((job) => job.status === "active").length;
-    const pendingApplications = applications.filter(
+    const newApplications = applications.filter(
       (application) => application.status === "pending",
+    ).length;
+    const pendingApplications = newApplications;
+    const feedbackSent = applications.filter(
+      (application) =>
+        (application.feedbacks?.length ?? 0) > 0 ||
+        application.status === "reviewing" ||
+        application.status === "interview" ||
+        application.status === "accepted" ||
+        application.status === "rejected",
     ).length;
 
     return {
       totalJobs,
       activeJobs,
-      totalApplications: applications.length,
+      newApplications,
       pendingApplications,
+      feedbackSent,
     };
   }, [jobs, applications]);
 
-  const sparklineData = useMemo(() => {
-    const countsByDay = new Map<string, number>();
-
-    for (let i = 6; i >= 0; i -= 1) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      countsByDay.set(date.toISOString().slice(0, 10), 0);
-    }
-
-    jobs.forEach((job) => {
-      const key = new Date(job.createdAt).toISOString().slice(0, 10);
-
-      if (countsByDay.has(key)) {
-        countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
-      }
-    });
-
-    return Array.from(countsByDay.values());
+  const jobTitleById = useMemo(() => {
+    return new Map(jobs.map((job) => [job.id, job.title]));
   }, [jobs]);
 
   const recentApplicants = useMemo(() => {
     return [...applications]
+      .filter((application) => application.status === "pending")
       .sort(
         (a, b) =>
           new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime(),
@@ -224,8 +209,29 @@ export function RecruiterOverviewPage() {
       .slice(0, 5);
   }, [applications]);
 
+  const getApplicationJobTitle = (application: RecruiterApplication) => {
+    return (
+      application.jobPosting?.title ||
+      (application.jobPostingId ? jobTitleById.get(application.jobPostingId) : undefined) ||
+      "Chưa xác định vị trí"
+    );
+  };
+
+  const getApplicationDetailPath = (application: RecruiterApplication) => {
+    const params = new URLSearchParams({
+      status: "pending",
+      applicationId: String(application.id),
+    });
+
+    if (application.jobPostingId) {
+      params.set("jobId", String(application.jobPostingId));
+    }
+
+    return `/recruiter/candidates?${params.toString()}`;
+  };
+
   const urgentTasks = useMemo(() => {
-    const tasks: Array<{ text: string; deadline: string; actions?: Array<{ label: string; to: string }> }> = [];
+    const tasks: UrgentTask[] = [];
 
     const pendingCount = applications.filter(
       (application) => application.status === "pending",
@@ -235,7 +241,7 @@ export function RecruiterOverviewPage() {
       tasks.push({
         text: `Có ${pendingCount} hồ sơ đang chờ xử lý.`,
         deadline: "Cần xử lý sớm",
-        actions: [{ label: "Xem hồ sơ →", to: "/recruiter/candidates" }],
+        actions: [{ label: "Xem hồ sơ", to: "/recruiter/candidates?status=pending" }],
       });
     }
 
@@ -249,9 +255,9 @@ export function RecruiterOverviewPage() {
     });
 
     expiringJobs.slice(0, 3).forEach((job) => {
-      const actions: Array<{ label: string; to: string }> = [
-        { label: "Xem tin", to: `/recruiter/manage-jobs` },
-        { label: "Đóng tin", to: "#" },
+      const actions: UrgentTask["actions"] = [
+        { label: "Xem tin", to: `/recruiter/manage-jobs/${job.id}` },
+        { label: "Đóng tin", action: "closeJob", jobId: job.id },
       ];
       tasks.push({
         text: `Tin "${job.title}" sắp hết hạn.`,
@@ -316,8 +322,15 @@ export function RecruiterOverviewPage() {
       });
     }
 
+    if (stats.feedbackSent > 0) {
+      result.push({
+        icon: "✉️",
+        text: `Đã gửi phản hồi cho ${stats.feedbackSent} hồ sơ ứng viên.`,
+      });
+    }
+
     return result;
-  }, [jobs, applications]);
+  }, [jobs, applications, stats.feedbackSent]);
 
   return (
     <div className="flex-1 p-8">
@@ -355,7 +368,10 @@ export function RecruiterOverviewPage() {
       ) : (
         <>
           <div className="mb-8 grid grid-cols-4 gap-4">
-            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+            <Link
+              to="/recruiter/manage-jobs"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Tổng số tin
@@ -383,7 +399,10 @@ export function RecruiterOverviewPage() {
               </div>
             </Link>
 
-            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+            <Link
+              to="/recruiter/manage-jobs?status=active"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Tin đang mở
@@ -409,7 +428,10 @@ export function RecruiterOverviewPage() {
               </span>
             </Link>
 
-            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+            <Link
+              to="/recruiter/candidates?status=pending"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Ứng viên mới
@@ -437,10 +459,13 @@ export function RecruiterOverviewPage() {
               </div>
             </Link>
 
-            <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+            <Link
+              to="/recruiter/candidates?status=pending"
+              className="block border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                  Phản hồi đã gửi
+                  Hồ sơ chờ xử lý
                 </p>
 
                 <svg
@@ -460,7 +485,7 @@ export function RecruiterOverviewPage() {
 
               <div className="flex items-end gap-2">
                 <span className="text-[36px] font-black leading-none text-slate-900 dark:text-slate-50">
-                  {stats.feedbackSent}
+                  {stats.pendingApplications}
                 </span>
               </div>
             </Link>
@@ -474,7 +499,7 @@ export function RecruiterOverviewPage() {
                 </h2>
 
                 <Link
-                  to="/recruiter/candidates"
+                  to="/recruiter/candidates?status=pending"
                   className="flex items-center gap-1 text-[13px] font-semibold text-blue-600 hover:underline dark:text-blue-300"
                 >
                   XEM TẤT CẢ →
@@ -521,6 +546,11 @@ export function RecruiterOverviewPage() {
                         application.candidateProfile?.fullName ||
                         application.candidateProfile?.user?.email ||
                         "Ứng viên";
+                      const jobTitle = getApplicationJobTitle(application);
+                      const detailPath = getApplicationDetailPath(application);
+                      const chatPath = application.conversation?.id
+                        ? `/recruiter/chat?conversationId=${application.conversation.id}`
+                        : "/recruiter/chat";
 
                       return (
                         <tr
@@ -542,7 +572,7 @@ export function RecruiterOverviewPage() {
                           </td>
 
                           <td className="px-6 py-4 text-[13px] text-slate-600 dark:text-slate-300">
-                            {application.jobPosting?.title || "Không rõ"}
+                            {jobTitle}
                           </td>
 
                           <td className="px-6 py-4">
@@ -560,12 +590,21 @@ export function RecruiterOverviewPage() {
                           </td>
 
                           <td className="px-6 py-4">
-                            <Link
-                              to="/recruiter/candidates"
-                              className="border border-slate-200 px-3 py-1 text-[12px] text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                            >
-                              Xem
-                            </Link>
+                            <div className="flex flex-wrap gap-2">
+                              <Link
+                                to={detailPath}
+                                className="border border-slate-200 px-3 py-1 text-[12px] font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                              >
+                                Xem hồ sơ
+                              </Link>
+
+                              <Link
+                                to={chatPath}
+                                className="border border-indigo-200 px-3 py-1 text-[12px] font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+                              >
+                                Chat
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -582,22 +621,53 @@ export function RecruiterOverviewPage() {
                 </h3>
 
                 <div className="space-y-4">
-                  {urgentTasks.map((task, index) => (
-                    <div key={`${task.text}-${index}`} className="flex items-start gap-3">
-                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                  {urgentTasks.length === 0 ? (
+                    <p className="text-[13px] leading-snug text-slate-500 dark:text-slate-400">
+                      Không có tác vụ gấp cần xử lý.
+                    </p>
+                  ) : (
+                    urgentTasks.map((task, index) => (
+                      <div key={`${task.text}-${index}`} className="flex items-start gap-3">
+                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
 
-                      <div>
-                        <p className="text-[13px] leading-snug text-slate-700 dark:text-slate-300">
-                          {task.text}
-                        </p>
+                        <div>
+                          <p className="text-[13px] leading-snug text-slate-700 dark:text-slate-300">
+                            {task.text}
+                          </p>
 
-                        <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
-                          {task.deadline}
-                        </p>
+                          <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                            {task.deadline}
+                          </p>
+
+                          {task.actions && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {task.actions.map((action) =>
+                                "to" in action ? (
+                                  <Link
+                                    key={`${task.text}-${action.label}`}
+                                    to={action.to}
+                                    className="text-[12px] font-semibold text-blue-600 hover:underline dark:text-blue-300"
+                                  >
+                                    {action.label}
+                                  </Link>
+                                ) : (
+                                  <button
+                                    key={`${task.text}-${action.label}`}
+                                    type="button"
+                                    onClick={() => void handleCloseJob(action.jobId)}
+                                    className="text-[12px] font-semibold text-red-600 hover:underline dark:text-red-300"
+                                  >
+                                    {action.label}
+                                  </button>
+                                ),
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    ))
+                  )}
+                </div>
               </div>
 
               <div className="border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
@@ -605,20 +675,18 @@ export function RecruiterOverviewPage() {
                   Gợi ý nhanh
                 </h3>
 
-                <div className="space-y-3 text-[13px] text-slate-500 dark:text-slate-400">
-                  <p>
-                    Thường xuyên cập nhật trạng thái hồ sơ để ứng viên nhận được phản hồi kịp thời.
-                  </p>
-
-                  <p>
-                    Tin tuyển dụng có mô tả rõ ràng sẽ giúp tăng tỷ lệ ứng tuyển phù hợp.
-                  </p>
+                {insights.length === 0 ? (
+                  <div className="space-y-3 text-[13px] text-slate-500 dark:text-slate-400">
+                    <p>
+                      Không có insight cần chú ý lúc này.
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {insights.map((insight, index) => (
                       <div key={index} className="flex items-start gap-2">
                         <span className="mt-0.5 text-[13px]">{insight.icon}</span>
-                        <p className="text-[13px] leading-snug text-slate-500">
+                        <p className="text-[13px] leading-snug text-slate-500 dark:text-slate-400">
                           {insight.text}
                         </p>
                       </div>

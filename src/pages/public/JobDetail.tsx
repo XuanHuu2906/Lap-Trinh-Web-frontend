@@ -17,6 +17,7 @@ import { cvService, type CandidateCV } from "@/services/cv.service";
 import { jobService } from "@/services/job.service";
 import { savePendingApplyJob } from "@/services/job-application-flow";
 import type { Job } from "@/types/job.type";
+import { formatJobTypeLabel } from "@/utils/job-type-labels";
 
 type LocationState = {
   openApplyForm?: boolean;
@@ -551,7 +552,7 @@ export default function JobDetail({
     return [
       { label: "Mức lương", value: formatSalary(job) },
       { label: "Địa điểm", value: job.location || "Chưa cập nhật" },
-      { label: "Hình thức", value: job.jobType },
+      { label: "Hình thức", value: formatJobTypeLabel(job.jobType) },
       {
         label: "Kinh nghiệm",
         value: job.experienceLevel || "Chưa cập nhật",

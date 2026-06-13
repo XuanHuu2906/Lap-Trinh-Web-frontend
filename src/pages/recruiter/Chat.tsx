@@ -33,10 +33,10 @@ import {
 type FeedbackStatus = "interview" | "accepted" | "rejected";
 
 const statusLabel: Record<ApplicationStatus, string> = {
-  pending: "Mới",
-  reviewing: "Đang xem xét",
+  pending: "Chờ xử lý",
+  reviewing: "Đã xem",
   interview: "Mời phỏng vấn",
-  accepted: "Đạt",
+  accepted: "Phù hợp",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
 };
@@ -61,7 +61,7 @@ const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
 const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "pending") {
     return [
-      { label: "Đang xem xét", value: "reviewing" as const },
+      { label: "Đánh dấu đã xem", value: "reviewing" as const },
       { label: "Mời phỏng vấn", value: "interview" as const },
     ];
   }
@@ -69,14 +69,14 @@ const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "reviewing") {
     return [
       { label: "Mời phỏng vấn", value: "interview" as const },
-      { label: "Đạt", value: "accepted" as const },
+      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
 
   if (status === "interview") {
     return [
-      { label: "Đạt", value: "accepted" as const },
+      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }

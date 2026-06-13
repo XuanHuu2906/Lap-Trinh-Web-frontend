@@ -1,5 +1,6 @@
 import { ArrowRight, BriefcaseBusiness, MapPin } from "lucide-react";
 import type { Job } from "@/types/job.type";
+import { formatJobTypeLabel } from "@/utils/job-type-labels";
 
 interface FeaturedJobsProps {
   jobs: Job[];
@@ -8,14 +9,6 @@ interface FeaturedJobsProps {
   onViewAll?: () => void;
   onSelectJob?: (job: Job) => void;
 }
-
-const jobTypeLabels: Record<string, string> = {
-  full_time: "Toàn thời gian",
-  part_time: "Bán thời gian",
-  remote: "Làm từ xa",
-  internship: "Thực tập",
-  contract: "Hợp đồng",
-};
 
 const experienceLabels: Record<string, string> = {
   no_exp: "Không yêu cầu kinh nghiệm",
@@ -59,7 +52,7 @@ function formatSalary(job: Job) {
 
 function getTags(job: Job) {
   return [
-    jobTypeLabels[job.jobType] || job.jobType,
+    formatJobTypeLabel(job.jobType),
     job.experienceLevel
       ? experienceLabels[job.experienceLevel] || job.experienceLevel
       : null,

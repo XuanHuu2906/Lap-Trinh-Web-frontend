@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { savePendingSaveJob } from "@/services/job-save-flow";
 import { jobService } from "@/services/job.service";
 import type { Job } from "@/types/job.type";
+import { formatJobTypeLabel } from "@/utils/job-type-labels";
 
 type FilterOption = {
   label: string;
@@ -289,7 +290,7 @@ function JobCard({
                 </span>
               ))}
               <span className="bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:bg-blue-950/40 dark:text-blue-300">
-                {job.jobType}
+                {formatJobTypeLabel(job.jobType)}
               </span>
             </div>
           </div>

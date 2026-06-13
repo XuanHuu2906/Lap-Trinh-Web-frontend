@@ -24,6 +24,7 @@ export interface RecruiterJob {
   createdAt: string;
   updatedAt: string;
   category?: { name?: string } | null;
+  skills?: Array<{ skill: { id: number; name: string } }>;
   _count?: { applications?: number };
 }
 

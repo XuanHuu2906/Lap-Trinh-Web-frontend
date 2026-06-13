@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  CalendarPlus,
+  Copy,
   Eye,
   Lock,
   MoreHorizontal,
   Pencil,
   Trash2,
   Unlock,
-  UsersRound,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   deleteJob,
   getMyJobs,
@@ -16,8 +17,22 @@ import {
   type PaginationMeta,
   type RecruiterJob,
 } from "../../services/recruiter.service";
+import { formatJobTypeLabel } from "../../utils/job-type-labels";
 
 type JobStatusFilter = "" | "active" | "draft" | "closed";
+type JobSortOption =
+  | "newest"
+  | "deadline"
+  | "applications-desc"
+  | "applications-asc";
+
+const deadlineWarningDays = 3;
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+const getStatusFilterFromParam = (value: string | null): JobStatusFilter => {
+  if (value === "active" || value === "draft" || value === "closed") return value;
+  return "";
+};
 
 const statusLabel: Record<string, string> = {
   active: "Đang mở",
@@ -68,10 +83,77 @@ const formatSalary = (
   return `Đến ${formatter.format(maxNumber ?? 0)} VND`;
 };
 
+const normalizeText = (value?: string | null) =>
+  value?.trim().toLowerCase() ?? "";
+
+const getStartOfDayTime = (value: Date) => {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+};
+
+const getDateTime = (value?: string | null) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.getTime();
+};
+
+const getDeadlineInfo = (value?: string | null) => {
+  const deadlineTime = getDateTime(value);
+  if (deadlineTime === null) return null;
+
+  const daysLeft = Math.ceil(
+    (getStartOfDayTime(new Date(deadlineTime)) - getStartOfDayTime(new Date())) /
+      millisecondsPerDay,
+  );
+
+  if (daysLeft < 0) {
+    return {
+      label: "Hết hạn",
+      className:
+        "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+    };
+  }
+
+  if (daysLeft <= deadlineWarningDays) {
+    return {
+      label: "Sắp hết hạn",
+      className:
+        "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
+    };
+  }
+
+  return null;
+};
+
+const getCategoryFilterValue = (job: RecruiterJob) =>
+  String(job.categoryId ?? job.category?.name ?? "");
+
+const getApplicationCount = (job: RecruiterJob) =>
+  job._count?.applications ?? 0;
+
+const formatJobMeta = (job: RecruiterJob) => {
+  const location = job.location?.trim() || "Chưa cập nhật địa điểm";
+  const typeLabel =
+    job.jobType === "remote" && normalizeText(location) === "remote"
+      ? "Làm từ xa"
+      : formatJobTypeLabel(job.jobType);
+
+  return `${location} • ${typeLabel}`;
+};
+
 export function ManageJobsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<JobStatusFilter>("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [sortOption, setSortOption] = useState<JobSortOption>("newest");
+  const [statusFilter, setStatusFilter] = useState<JobStatusFilter>(() =>
+    getStatusFilterFromParam(searchParams.get("status")),
+  );
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [openMenuJobId, setOpenMenuJobId] = useState<number | null>(null);
@@ -109,6 +191,12 @@ export function ManageJobsPage() {
   }, [statusFilter, page]);
 
   useEffect(() => {
+    const nextStatus = getStatusFilterFromParam(searchParams.get("status"));
+    setStatusFilter((current) => (current === nextStatus ? current : nextStatus));
+    setPage(1);
+  }, [searchParams]);
+
+  useEffect(() => {
     const closeMenu = () => setOpenMenuJobId(null);
     const closeMenuOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeMenu();
@@ -126,21 +214,65 @@ export function ManageJobsPage() {
   const handleStatusFilterChange = (nextStatus: JobStatusFilter) => {
     setStatusFilter(nextStatus);
     setPage(1);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextStatus) {
+      nextParams.set("status", nextStatus);
+    } else {
+      nextParams.delete("status");
+    }
+
+    setSearchParams(nextParams, { replace: true });
   };
+
+  const categoryOptions = useMemo(() => {
+    const categories = new Map<string, string>();
+
+    jobs.forEach((job) => {
+      const value = getCategoryFilterValue(job);
+      const label = job.category?.name?.trim();
+
+      if (value && label) categories.set(value, label);
+    });
+
+    return Array.from(categories, ([value, label]) => ({ value, label })).sort(
+      (first, second) => first.label.localeCompare(second.label, "vi"),
+    );
+  }, [jobs]);
 
   const filteredJobs = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    if (!keyword) return jobs;
-
-    return jobs.filter((job) => {
-      return (
+    const nextJobs = jobs.filter((job) => {
+      const matchesKeyword =
+        !keyword ||
         job.title.toLowerCase().includes(keyword) ||
         job.location?.toLowerCase().includes(keyword) ||
-        job.category?.name?.toLowerCase().includes(keyword)
-      );
+        job.category?.name?.toLowerCase().includes(keyword);
+      const matchesCategory =
+        !categoryFilter || getCategoryFilterValue(job) === categoryFilter;
+
+      return matchesKeyword && matchesCategory;
     });
-  }, [jobs, search]);
+
+    return nextJobs.sort((first, second) => {
+      if (sortOption === "deadline") {
+        const firstTime = getDateTime(first.expiresAt) ?? Number.MAX_SAFE_INTEGER;
+        const secondTime = getDateTime(second.expiresAt) ?? Number.MAX_SAFE_INTEGER;
+        return firstTime - secondTime;
+      }
+
+      if (sortOption === "applications-desc") {
+        return getApplicationCount(second) - getApplicationCount(first);
+      }
+
+      if (sortOption === "applications-asc") {
+        return getApplicationCount(first) - getApplicationCount(second);
+      }
+
+      return (getDateTime(second.createdAt) ?? 0) - (getDateTime(first.createdAt) ?? 0);
+    });
+  }, [categoryFilter, jobs, search, sortOption]);
 
   const totalJobs = jobs.filter((job) => job.status !== "deleted").length;
   const activeJobs = jobs.filter((job) => job.status === "active").length;
@@ -167,9 +299,12 @@ export function ManageJobsPage() {
     }
   };
 
-  const handleDeleteJob = async (jobId: number) => {
+  const handleDeleteJob = async (job: RecruiterJob) => {
+    const applicationCount = getApplicationCount(job);
     const confirmed = window.confirm(
-      "Bạn có chắc muốn xóa tin tuyển dụng này không?",
+      applicationCount > 0
+        ? `Tin này đã có ${applicationCount} ứng viên. Bạn nên đóng tin thay vì xóa để giữ lịch sử ứng tuyển. Bạn vẫn muốn xóa tin này?`
+        : "Bạn có chắc muốn xóa tin tuyển dụng này không?",
     );
 
     if (!confirmed) return;
@@ -178,7 +313,7 @@ export function ManageJobsPage() {
     setMessage("");
 
     try {
-      await deleteJob(jobId);
+      await deleteJob(job.id);
       setMessage("Xóa tin tuyển dụng thành công");
       await loadJobs();
     } catch (err) {
@@ -293,12 +428,12 @@ export function ManageJobsPage() {
         </button>
       </div>
 
-      <div className="mb-5 flex items-center gap-3 border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80">
+      <div className="mb-5 grid gap-3 border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 lg:grid-cols-[minmax(220px,1fr)_180px_180px_190px_auto]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Tìm theo tiêu đề, địa điểm hoặc danh mục..."
-          className="h-10 flex-1 border border-slate-200 px-4 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
+          className="h-10 w-full border border-slate-200 px-4 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-600"
         />
 
         <select
@@ -306,7 +441,7 @@ export function ManageJobsPage() {
           onChange={(e) =>
             handleStatusFilterChange(e.target.value as JobStatusFilter)
           }
-          className="h-10 w-48 border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+          className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="active">Đang mở</option>
@@ -314,18 +449,42 @@ export function ManageJobsPage() {
           <option value="closed">Đã đóng</option>
         </select>
 
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+        >
+          <option value="">Tất cả danh mục</option>
+          {categoryOptions.map((category) => (
+            <option key={category.value} value={category.value}>
+              {category.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value as JobSortOption)}
+          className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+        >
+          <option value="newest">Mới nhất</option>
+          <option value="deadline">Sắp hết hạn</option>
+          <option value="applications-desc">Nhiều ứng viên nhất</option>
+          <option value="applications-asc">Ít ứng viên nhất</option>
+        </select>
+
         <button
           type="button"
           onClick={() => void loadJobs()}
           disabled={loading}
-          className="h-10 border border-slate-300 px-5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="h-10 whitespace-nowrap border border-slate-300 px-5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           Làm mới
         </button>
       </div>
 
       <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
-        <table className="w-full">
+        <table className="w-full min-w-[1120px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
               {[
@@ -366,14 +525,20 @@ export function ManageJobsPage() {
                   colSpan={8}
                   className="px-6 py-10 text-center text-[13px] text-slate-400 dark:text-slate-500"
                 >
-                  Chưa có tin tuyển dụng nào phù hợp.
+                  <p className="font-semibold text-slate-500 dark:text-slate-300">
+                    Không tìm thấy tin tuyển dụng phù hợp.
+                  </p>
+                  <p className="mt-1 text-slate-400 dark:text-slate-500">
+                    Thử đổi từ khóa hoặc bộ lọc.
+                  </p>
                 </td>
               </tr>
             )}
 
             {!loading &&
               filteredJobs.map((job) => {
-                const applicationCount = job._count?.applications ?? 0;
+                const applicationCount = getApplicationCount(job);
+                const deadlineInfo = getDeadlineInfo(job.expiresAt);
                 const menuOpen = openMenuJobId === job.id;
 
                 return (
@@ -387,8 +552,7 @@ export function ManageJobsPage() {
                       </p>
 
                       <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">
-                        {job.location || "Chưa cập nhật địa điểm"} •{" "}
-                        {job.jobType || "Không rõ hình thức"}
+                        {formatJobMeta(job)}
                       </p>
                     </td>
 
@@ -416,7 +580,16 @@ export function ManageJobsPage() {
                     </td>
 
                     <td className="px-5 py-4 text-[13px] text-slate-500 dark:text-slate-400">
-                      {formatDate(job.expiresAt)}
+                      <div className="space-y-1">
+                        <p>{formatDate(job.expiresAt)}</p>
+                        {deadlineInfo && (
+                          <span
+                            className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${deadlineInfo.className}`}
+                          >
+                            {deadlineInfo.label}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="px-5 py-4 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
@@ -429,7 +602,7 @@ export function ManageJobsPage() {
                     </td>
 
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
                         <Link
                           to={`/recruiter/manage-jobs/${job.id}`}
                           className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -439,11 +612,11 @@ export function ManageJobsPage() {
                         </Link>
 
                         <Link
-                          to={`/recruiter/candidates?jobId=${job.id}`}
+                          to={`/recruiter/manage-jobs/${job.id}/edit`}
                           className="inline-flex h-8 items-center gap-1.5 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
-                          <UsersRound className="h-3.5 w-3.5" />
-                          Ứng viên
+                          <Pencil className="h-3.5 w-3.5" />
+                          Sửa
                         </Link>
 
                         <div
@@ -465,7 +638,7 @@ export function ManageJobsPage() {
                           {menuOpen && (
                             <div
                               role="menu"
-                              className="absolute right-0 top-9 z-20 w-40 border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                              className="absolute right-0 top-9 z-20 w-48 border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-900"
                             >
                               <Link
                                 to={`/recruiter/manage-jobs/${job.id}/edit`}
@@ -474,6 +647,24 @@ export function ManageJobsPage() {
                               >
                                 <Pencil className="h-3.5 w-3.5" />
                                 Sửa tin
+                              </Link>
+
+                              <Link
+                                to={`/recruiter/manage-jobs/${job.id}/edit?focus=expiresAt`}
+                                role="menuitem"
+                                className="flex h-9 items-center gap-2 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                              >
+                                <CalendarPlus className="h-3.5 w-3.5" />
+                                Gia hạn tin
+                              </Link>
+
+                              <Link
+                                to={`/recruiter/post-job?duplicateFrom=${job.id}`}
+                                role="menuitem"
+                                className="flex h-9 items-center gap-2 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                                Nhân bản tin
                               </Link>
 
                               {job.status !== "active" &&
@@ -513,7 +704,7 @@ export function ManageJobsPage() {
                                   role="menuitem"
                                   onClick={() => {
                                     setOpenMenuJobId(null);
-                                    void handleDeleteJob(job.id);
+                                    void handleDeleteJob(job);
                                   }}
                                   className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30"
                                 >

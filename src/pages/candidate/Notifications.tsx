@@ -6,7 +6,6 @@ import {
   Mail,
   Megaphone,
   ShieldCheck,
-  type LucideIcon,
 } from "lucide-react";
 import {
   getCachedNotifications,
@@ -30,15 +29,21 @@ const notificationTabs: TabItem[] = [
 
 const notificationParams = { page: 1, limit: 50 };
 
-function getNotificationIcon(type: string): LucideIcon {
+function NotificationTypeIcon({
+  type,
+  className,
+}: {
+  type: string;
+  className?: string;
+}) {
   if (type.includes("applicant") || type.includes("application")) {
-    return BriefcaseBusiness;
+    return <BriefcaseBusiness className={className} />;
   }
 
-  if (type.includes("feedback")) return Mail;
-  if (type.includes("system")) return ShieldCheck;
+  if (type.includes("feedback")) return <Mail className={className} />;
+  if (type.includes("system")) return <ShieldCheck className={className} />;
 
-  return Megaphone;
+  return <Megaphone className={className} />;
 }
 
 function isRecruitmentType(type: string) {
@@ -204,7 +209,6 @@ function NotificationRow({
   notification: NotificationItem;
   onMarkRead: (id: number) => void;
 }) {
-  const Icon = getNotificationIcon(notification.type);
   const recruitment = isRecruitmentType(notification.type);
 
   return (
@@ -222,7 +226,10 @@ function NotificationRow({
             : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
         }`}
       >
-        <Icon className="h-5 w-5" />
+        <NotificationTypeIcon
+          type={notification.type}
+          className="h-5 w-5"
+        />
       </div>
 
       <div className="min-w-0 flex-1">
