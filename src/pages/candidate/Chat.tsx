@@ -19,7 +19,6 @@ import {
   RefreshCw,
   Search,
   Send,
-  Smile,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ import {
   type Message,
 } from "../../services/chat.service";
 import { supabase } from "../../utils/supabase";
+import { decodeMojibakeInText } from "../../utils/encoding";
 import { Link, useSearchParams } from "react-router-dom";
 
 const maxAttachmentSize = 20 * 1024 * 1024;
@@ -38,6 +38,25 @@ const maxAttachmentSize = 20 * 1024 * 1024;
 type ChatMessage = Message & {
   deliveryStatus?: "sending" | "error";
 };
+
+const normalizeAttachmentName = (value: string | null) =>
+  value ? decodeMojibakeInText(value) : value;
+
+const normalizeMessage = <T extends Message>(message: T): T =>
+  ({
+    ...message,
+    attachmentName: normalizeAttachmentName(message.attachmentName),
+  }) as T;
+
+const sortMessagesByTime = <T extends Message>(items: T[]) =>
+  [...items].sort((a, b) => {
+    const timeDiff = new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return a.id - b.id;
+  });
+
+const normalizeMessages = <T extends Message>(items: T[]) =>
+  sortMessagesByTime(items.map(normalizeMessage));
 
 const titleAcronyms = new Set([
   "AI",
@@ -72,7 +91,7 @@ function getLastMessageText(conversation: Conversation) {
   if (!lastMessage) return "Chưa có tin nhắn";
 
   if (lastMessage.messageType === "file") {
-    return `File: ${lastMessage.attachmentName}`;
+    return `File: ${normalizeAttachmentName(lastMessage.attachmentName) || "Tệp đính kèm"}`;
   }
 
   return lastMessage.content || "";
@@ -314,11 +333,10 @@ function ConversationItem({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full gap-3 p-4 text-left transition-all ${
-        isActive
+      className={`flex w-full gap-3 p-4 text-left transition-all ${isActive
           ? "border-l-4 border-indigo-500 bg-white font-medium shadow-3xs dark:bg-slate-950"
           : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
-      }`}
+        }`}
     >
       <div className="relative shrink-0">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-sm font-bold text-indigo-600 shadow-3xs dark:bg-indigo-950/60 dark:text-indigo-400">
@@ -541,16 +559,14 @@ function MessageBubble({
   return (
     <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
       <div
-        className={`flex max-w-[75%] items-end gap-2 ${
-          isMine ? "flex-row-reverse" : ""
-        }`}
+        className={`flex max-w-[75%] items-end gap-2 ${isMine ? "flex-row-reverse" : ""
+          }`}
       >
         <div
-          className={`rounded-2xl px-4 py-2.5 text-xs font-medium leading-relaxed shadow-3xs ${
-            isMine
+          className={`rounded-2xl px-4 py-2.5 text-xs font-medium leading-relaxed shadow-3xs ${isMine
               ? "rounded-br-none bg-indigo-600 text-white"
               : "rounded-bl-none border border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-          }`}
+            }`}
         >
           {message.messageType === "file" ? (
             <FileMessage message={message} />
@@ -559,13 +575,12 @@ function MessageBubble({
           )}
 
           <div
-            className={`mt-1 flex items-center justify-end gap-1 text-right text-[9px] ${
-              isMine
+            className={`mt-1 flex items-center justify-end gap-1 text-right text-[9px] ${isMine
                 ? message.deliveryStatus === "error"
                   ? "text-red-100"
                   : "text-indigo-200"
                 : "text-slate-400 dark:text-slate-500"
-            }`}
+              }`}
           >
             <span>{formatMessageTime(message.sentAt)}</span>
             {deliveryLabel ? (
@@ -595,6 +610,7 @@ function MessageBubble({
 
 function FileMessage({ message }: { message: Message }) {
   const isImage = message.attachmentMime?.startsWith("image/");
+  const attachmentName = normalizeAttachmentName(message.attachmentName);
 
   return (
     <div className="space-y-2">
@@ -602,7 +618,7 @@ function FileMessage({ message }: { message: Message }) {
         <a href={message.attachmentUrl} target="_blank" rel="noreferrer">
           <img
             src={message.attachmentUrl}
-            alt={message.attachmentName || "Ảnh"}
+            alt={attachmentName || "Ảnh"}
             className="max-h-37.5 max-w-50 cursor-zoom-in rounded-lg border bg-slate-50 object-contain"
           />
         </a>
@@ -610,8 +626,8 @@ function FileMessage({ message }: { message: Message }) {
         <div className="flex items-center gap-3 rounded-lg border border-slate-200/50 bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
           <FileText className="h-8 w-8 shrink-0 text-indigo-500" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-bold" title={message.attachmentName || ""}>
-              {message.attachmentName}
+            <p className="truncate text-[11px] font-bold" title={attachmentName || ""}>
+              {attachmentName}
             </p>
             <p className="mt-0.5 text-[9px] font-semibold text-slate-400">
               {formatFileSize(message.attachmentSize)}
@@ -622,7 +638,7 @@ function FileMessage({ message }: { message: Message }) {
               href={message.attachmentUrl}
               target="_blank"
               rel="noreferrer"
-              download={message.attachmentName || ""}
+              download={attachmentName || ""}
               className="shrink-0 rounded-md border border-slate-200 bg-white p-1.5 text-slate-600 transition-colors hover:text-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
             >
               <Download className="h-3.5 w-3.5" />
@@ -666,14 +682,6 @@ function ChatInput({
         onSubmit={onSendMessage}
         className="mx-auto flex w-full max-w-4xl items-center gap-3"
       >
-        <button
-          type="button"
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-          title="Biểu cảm"
-        >
-          <Smile className="h-5 w-5" />
-        </button>
-
         <label className="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300">
           <Paperclip className="h-5 w-5" />
           <input
@@ -720,7 +728,7 @@ export default function Chat() {
   const requestedConversationIdParam = Number(searchParams.get("conversationId"));
   const requestedConversationId =
     Number.isInteger(requestedConversationIdParam) &&
-    requestedConversationIdParam > 0
+      requestedConversationIdParam > 0
       ? requestedConversationIdParam
       : null;
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -765,8 +773,8 @@ export default function Chat() {
 
       const requestedConversation = requestedConversationId
         ? data.find(
-            (conversation) => conversation.id === requestedConversationId,
-          )
+          (conversation) => conversation.id === requestedConversationId,
+        )
         : null;
 
       if (requestedConversation) {
@@ -789,7 +797,7 @@ export default function Chat() {
       try {
         setIsLoadingMessages(true);
         const response = await chatService.getMessages(conversationId, 1, 100);
-        setMessages(response.items);
+        setMessages(normalizeMessages(response.items));
 
         const unreadMessages = response.items.filter(
           (message) => !message.isRead && message.senderId !== user?.id,
@@ -847,7 +855,7 @@ export default function Chat() {
               1,
               100,
             );
-            setMessages(response.items);
+            setMessages(normalizeMessages(response.items));
 
             const unreadNewMessages = response.items.filter(
               (message) => !message.isRead && message.senderId !== user?.id,
@@ -882,7 +890,7 @@ export default function Chat() {
               1,
               100,
             );
-            setMessages(response.items);
+            setMessages(normalizeMessages(response.items));
             loadConversations();
           } catch (error) {
             console.error("Lỗi cập nhật trạng thái tin nhắn realtime:", error);
@@ -925,7 +933,7 @@ export default function Chat() {
       );
       setMessages((current) =>
         current.map((message) =>
-          message.id === optimisticId ? sentMessage : message,
+          message.id === optimisticId ? normalizeMessage(sentMessage) : message,
         ),
       );
       loadConversations();
@@ -949,10 +957,10 @@ export default function Chat() {
       current.map((item) =>
         item.id === message.id
           ? {
-              ...item,
-              sentAt: new Date().toISOString(),
-              deliveryStatus: "sending",
-            }
+            ...item,
+            sentAt: new Date().toISOString(),
+            deliveryStatus: "sending",
+          }
           : item,
       ),
     );
@@ -963,7 +971,9 @@ export default function Chat() {
         textToSend,
       );
       setMessages((current) =>
-        current.map((item) => (item.id === message.id ? sentMessage : item)),
+        current.map((item) =>
+          item.id === message.id ? normalizeMessage(sentMessage) : item,
+        ),
       );
       loadConversations();
     } catch (error) {
@@ -993,7 +1003,9 @@ export default function Chat() {
         activeConversationId,
         file,
       );
-      setMessages((current) => [...current, sentMessage]);
+      setMessages((current) =>
+        sortMessagesByTime([...current, normalizeMessage(sentMessage)]),
+      );
       loadConversations();
     } catch (error) {
       console.error("Lỗi khi tải lên tệp đính kèm:", error);

@@ -221,9 +221,6 @@ export default function WhyChooseUs() {
 
         <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-2">
           <div className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl shadow-slate-900/15">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
-              <Sparkles className="h-6 w-6" />
-            </div>
             <h3 className="mb-3 text-xl font-bold">
               Gợi ý cơ hội phù hợp hơn
             </h3>

@@ -123,9 +123,6 @@ function PageHeader() {
         <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
           Tổng quan ứng viên
         </h1>
-        <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
-          Theo dõi hồ sơ, tiến độ ứng tuyển và các cơ hội phù hợp với bạn.
-        </p>
       </div>
 
       <Link
@@ -167,9 +164,6 @@ function StatCard({
       <div className="flex items-end gap-3">
         <span className="text-[36px] font-black leading-none text-slate-900 dark:text-white">
           {isLoading ? "--" : item.value}
-        </span>
-        <span className="mb-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-          {item.note}
         </span>
       </div>
 

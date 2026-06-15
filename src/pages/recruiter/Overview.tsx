@@ -7,6 +7,7 @@ import {
   type RecruiterApplication,
   type RecruiterJob,
 } from "../../services/recruiter.service";
+import { isActiveJobStatus, isDeletedJobStatus, JOB_STATUS } from "../../utils/job-status";
 
 type UrgentTask = {
   text: string;
@@ -120,7 +121,7 @@ export function RecruiterOverviewPage() {
       const myJobs = jobsResponse.data ?? [];
       setJobs(myJobs);
 
-      const activeJobs = myJobs.filter((job) => job.status !== "deleted");
+      const activeJobs = myJobs.filter((job) => !isDeletedJobStatus(job.status));
 
       const applicationResults = await Promise.allSettled(
         activeJobs.map((job) =>
@@ -171,8 +172,8 @@ export function RecruiterOverviewPage() {
   };
 
   const stats = useMemo(() => {
-    const totalJobs = jobs.filter((job) => job.status !== "deleted").length;
-    const activeJobs = jobs.filter((job) => job.status === "active").length;
+    const totalJobs = jobs.filter((job) => !isDeletedJobStatus(job.status)).length;
+    const activeJobs = jobs.filter((job) => isActiveJobStatus(job.status)).length;
     const newApplications = applications.filter(
       (application) => application.status === "pending",
     ).length;
@@ -249,7 +250,7 @@ export function RecruiterOverviewPage() {
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
     const expiringJobs = jobs.filter((job) => {
-      if (!job.expiresAt || job.status !== "active") return false;
+      if (!job.expiresAt || !isActiveJobStatus(job.status)) return false;
       const expiresAt = new Date(job.expiresAt);
       return expiresAt.getTime() <= sevenDaysLater.getTime();
     });
@@ -277,7 +278,7 @@ export function RecruiterOverviewPage() {
     threeDaysLater.setDate(threeDaysLater.getDate() + 3);
 
     const expiringSoon = jobs.filter((job) => {
-      if (!job.expiresAt || job.status !== "active") return false;
+      if (!job.expiresAt || !isActiveJobStatus(job.status)) return false;
       const expiresAt = new Date(job.expiresAt);
       return expiresAt.getTime() <= threeDaysLater.getTime() && expiresAt.getTime() > now.getTime();
     });
@@ -301,7 +302,7 @@ export function RecruiterOverviewPage() {
     }
 
     const noSalaryJobs = jobs.filter(
-      (job) => job.status === "active" && !job.salaryMin && !job.salaryMax,
+      (job) => isActiveJobStatus(job.status) && !job.salaryMin && !job.salaryMax,
     );
 
     if (noSalaryJobs.length > 0) {
@@ -312,7 +313,7 @@ export function RecruiterOverviewPage() {
     }
 
     const noApplicantJobs = jobs.filter((job) => {
-      return job.status === "active" && (job._count?.applications ?? 0) === 0;
+      return isActiveJobStatus(job.status) && (job._count?.applications ?? 0) === 0;
     });
 
     if (noApplicantJobs.length > 0) {
@@ -339,10 +340,6 @@ export function RecruiterOverviewPage() {
           <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
             Tổng quan tuyển dụng
           </h1>
-
-          <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-300">
-            Theo dõi tin tuyển dụng, ứng viên mới và các tác vụ cần xử lý.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -400,12 +397,12 @@ export function RecruiterOverviewPage() {
             </Link>
 
             <Link
-              to="/recruiter/manage-jobs?status=active"
+              to={`/recruiter/manage-jobs?status=${JOB_STATUS.ACTIVE}`}
               className="block border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-900"
             >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                  Tin đang mở
+                  Tin đang hoạt động
                 </p>
 
                 <svg

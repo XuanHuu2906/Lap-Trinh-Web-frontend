@@ -1,9 +1,10 @@
 import { requestApi, type ApiResponse } from "./api";
+import { JOB_STATUS, type JobStatus } from "../utils/job-status";
 
-export type JobStatus = "draft" | "active" | "closed" | "deleted";
 export type JobType = "full-time" | "part-time" | "remote" | "hybrid" | "freelance" | "internship";
 export type ExperienceLevel = "entry" | "junior" | "mid" | "senior" | "lead" | "director";
 export type ApplicationStatus = "pending" | "reviewing" | "interview" | "accepted" | "rejected" | "cancelled";
+export type RecruiterJobStatusUpdate = "active" | typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED;
 
 export interface RecruiterJob {
   id: number;
@@ -42,7 +43,7 @@ export interface CreateJobPayload {
   categoryId?: number | null;
   expiresAt?: string | null;
   skillIds?: number[];
-  status?: "active" | "draft";
+  status?: "active" | typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.DRAFT;
 }
 
 export interface RecruiterApplication {
@@ -148,7 +149,7 @@ export async function updateJob(id: number, data: CreateJobPayload) {
   return requestApi<RecruiterJob>({ method: "PUT", url: `/jobs/${id}`, data });
 }
 
-export async function updateJobStatus(id: number, status: "active" | "closed") {
+export async function updateJobStatus(id: number, status: RecruiterJobStatusUpdate) {
   return requestApi<RecruiterJob>({ method: "PATCH", url: `/jobs/${id}/status`, data: { status } });
 }
 

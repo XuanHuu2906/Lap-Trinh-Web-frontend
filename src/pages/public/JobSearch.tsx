@@ -501,15 +501,9 @@ export default function JobSearch({
     <div className={styles.page}>
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className={styles.eyebrow}>
-            HireArch / Cổng ứng viên
-          </p>
           <h1 className={styles.title}>
             Tìm việc làm
           </h1>
-          <p className={styles.subtitle}>
-            Tìm kiếm cơ hội đang hoạt động từ dữ liệu tuyển dụng thật.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -536,9 +530,8 @@ export default function JobSearch({
 
       <div className={styles.layout}>
         <aside
-          className={`${styles.filterPanel} ${
-            mobileFilterOpen ? "block" : "hidden"
-          } lg:block`}
+          className={`${styles.filterPanel} ${mobileFilterOpen ? "block" : "hidden"
+            } lg:block`}
         >
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-semibold text-slate-950 dark:text-white">Bộ lọc chi tiết</h2>
@@ -718,11 +711,10 @@ export default function JobSearch({
                       type="button"
                       onClick={() => toggleSave(job.id)}
                       disabled={isSavingId === job.id}
-                      className={`transition ${
-                        savedJobs.has(job.id)
+                      className={`transition ${savedJobs.has(job.id)
                           ? "text-blue-600 dark:text-blue-400"
                           : "text-slate-300 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-300"
-                      }`}
+                        }`}
                       title="Lưu việc làm"
                     >
                       {isSavingId === job.id ? (

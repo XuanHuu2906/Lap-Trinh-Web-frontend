@@ -52,6 +52,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/candidate/overview": "Tổng quan",
   "/candidate/find-jobs": "Tìm việc làm",
   "/candidate/job-search": "Tìm việc làm",
+  "/candidate/jobs": "Chi tiết việc làm",
+  "/candidate/companies": "Hồ sơ doanh nghiệp",
   "/candidate/applied-jobs": "Đã ứng tuyển",
   "/candidate/saved-jobs": "Việc đã lưu",
   "/candidate/chat": "Trò chuyện",
@@ -197,9 +199,9 @@ export function Topbar({
       ? "/candidate/notifications"
       : `/${role}/notifications`;
 
-  const matchedKey = Object.keys(PAGE_TITLES).find(
-    (key) => pathname === key || pathname.startsWith(`${key}/`),
-  );
+  const matchedKey = Object.keys(PAGE_TITLES)
+    .sort((a, b) => b.length - a.length)
+    .find((key) => pathname === key || pathname.startsWith(`${key}/`));
 
   const pageTitle = matchedKey ? PAGE_TITLES[matchedKey] : "Bảng điều khiển";
 

@@ -109,9 +109,6 @@ function PageHeader() {
       <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
         Quản lý ứng tuyển
       </h1>
-      <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
-        Theo dõi trạng thái và phản hồi từ các vị trí bạn đã nộp hồ sơ.
-      </p>
     </div>
   );
 }
@@ -380,9 +377,6 @@ function ApplicationDetailModal({
             <h2 className="text-lg font-bold text-slate-950 dark:text-white">
               Chi tiết đơn ứng tuyển
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Xem lại thông tin hồ sơ bạn đã gửi cho nhà tuyển dụng.
-            </p>
           </div>
 
           <button

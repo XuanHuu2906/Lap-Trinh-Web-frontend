@@ -18,8 +18,21 @@ import {
   type RecruiterJob,
 } from "../../services/recruiter.service";
 import { formatJobTypeLabel } from "../../utils/job-type-labels";
+import {
+  getJobStatusLabel,
+  getJobStatusStyle,
+  isActiveJobStatus,
+  isDeletedJobStatus,
+  isPendingReviewJobStatus,
+  JOB_STATUS,
+} from "../../utils/job-status";
 
-type JobStatusFilter = "" | "active" | "draft" | "closed";
+type JobStatusFilter =
+  | ""
+  | typeof JOB_STATUS.PENDING_REVIEW
+  | typeof JOB_STATUS.ACTIVE
+  | typeof JOB_STATUS.DRAFT
+  | typeof JOB_STATUS.CLOSED;
 type JobSortOption =
   | "newest"
   | "deadline"
@@ -30,22 +43,10 @@ const deadlineWarningDays = 3;
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
 const getStatusFilterFromParam = (value: string | null): JobStatusFilter => {
-  if (value === "active" || value === "draft" || value === "closed") return value;
+  if (value === "active" || value === "approved" || value === JOB_STATUS.ACTIVE) return JOB_STATUS.ACTIVE;
+  if (value === "pending" || value === JOB_STATUS.PENDING_REVIEW) return JOB_STATUS.PENDING_REVIEW;
+  if (value === JOB_STATUS.DRAFT || value === JOB_STATUS.CLOSED) return value;
   return "";
-};
-
-const statusLabel: Record<string, string> = {
-  active: "Đang mở",
-  draft: "Bản nháp",
-  closed: "Đã đóng",
-  deleted: "Đã xóa",
-};
-
-const statusStyle: Record<string, string> = {
-  active: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
-  draft: "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  closed: "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
-  deleted: "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 const formatDate = (value?: string | null) => {
@@ -107,7 +108,7 @@ const getDeadlineInfo = (value?: string | null) => {
 
   const daysLeft = Math.ceil(
     (getStartOfDayTime(new Date(deadlineTime)) - getStartOfDayTime(new Date())) /
-      millisecondsPerDay,
+    millisecondsPerDay,
   );
 
   if (daysLeft < 0) {
@@ -274,14 +275,15 @@ export function ManageJobsPage() {
     });
   }, [categoryFilter, jobs, search, sortOption]);
 
-  const totalJobs = jobs.filter((job) => job.status !== "deleted").length;
-  const activeJobs = jobs.filter((job) => job.status === "active").length;
-  const draftJobs = jobs.filter((job) => job.status === "draft").length;
-  const closedJobs = jobs.filter((job) => job.status === "closed").length;
+  const totalJobs = jobs.filter((job) => !isDeletedJobStatus(job.status)).length;
+  const pendingReviewJobs = jobs.filter((job) => isPendingReviewJobStatus(job.status)).length;
+  const activeJobs = jobs.filter((job) => isActiveJobStatus(job.status)).length;
+  const draftJobs = jobs.filter((job) => job.status === JOB_STATUS.DRAFT).length;
+  const closedJobs = jobs.filter((job) => job.status === JOB_STATUS.CLOSED).length;
 
   const handleUpdateStatus = async (
     jobId: number,
-    nextStatus: "active" | "closed",
+    nextStatus: typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED,
   ) => {
     setError("");
     setMessage("");
@@ -332,10 +334,6 @@ export function ManageJobsPage() {
           <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
             Quản lý tin đăng
           </h1>
-
-          <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-300">
-            Quản lý các tin tuyển dụng đã đăng, trạng thái hiển thị và số lượng ứng viên.
-          </p>
         </div>
 
         <Link
@@ -348,25 +346,23 @@ export function ManageJobsPage() {
 
       {(message || error) && (
         <div
-          className={`mb-4 border px-4 py-3 text-[13px] ${
-            error
+          className={`mb-4 border px-4 py-3 text-[13px] ${error
               ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
               : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-          }`}
+            }`}
         >
           {error || message}
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-4 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <button
           type="button"
           onClick={() => handleStatusFilterChange("")}
-          className={`border p-4 text-left transition-colors ${
-            statusFilter === ""
+          className={`border p-4 text-left transition-colors ${statusFilter === ""
               ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-          }`}
+            }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Tổng tin
@@ -378,15 +374,30 @@ export function ManageJobsPage() {
 
         <button
           type="button"
-          onClick={() => handleStatusFilterChange("active")}
-          className={`border p-4 text-left transition-colors ${
-            statusFilter === "active"
-              ? "border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+          onClick={() => handleStatusFilterChange(JOB_STATUS.PENDING_REVIEW)}
+          className={`border p-4 text-left transition-colors ${statusFilter === JOB_STATUS.PENDING_REVIEW
+              ? "border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-          }`}
+            }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Đang mở
+            Chờ duyệt
+          </p>
+          <p className="mt-2 text-[28px] font-black text-slate-900 dark:text-slate-50">
+            {pendingReviewJobs}
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleStatusFilterChange(JOB_STATUS.ACTIVE)}
+          className={`border p-4 text-left transition-colors ${statusFilter === JOB_STATUS.ACTIVE
+              ? "border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
+            }`}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            Đang hoạt động
           </p>
           <p className="mt-2 text-[28px] font-black text-slate-900 dark:text-slate-50">
             {activeJobs}
@@ -396,11 +407,10 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange("draft")}
-          className={`border p-4 text-left transition-colors ${
-            statusFilter === "draft"
+          className={`border p-4 text-left transition-colors ${statusFilter === "draft"
               ? "border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-          }`}
+            }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Bản nháp
@@ -413,11 +423,10 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange("closed")}
-          className={`border p-4 text-left transition-colors ${
-            statusFilter === "closed"
+          className={`border p-4 text-left transition-colors ${statusFilter === "closed"
               ? "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-          }`}
+            }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Đã đóng
@@ -444,9 +453,10 @@ export function ManageJobsPage() {
           className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
         >
           <option value="">Tất cả trạng thái</option>
-          <option value="active">Đang mở</option>
-          <option value="draft">Bản nháp</option>
-          <option value="closed">Đã đóng</option>
+          <option value={JOB_STATUS.PENDING_REVIEW}>Chờ duyệt</option>
+          <option value={JOB_STATUS.ACTIVE}>Đang hoạt động</option>
+          <option value={JOB_STATUS.DRAFT}>Bản nháp</option>
+          <option value={JOB_STATUS.CLOSED}>Đã đóng</option>
         </select>
 
         <select
@@ -566,12 +576,9 @@ export function ManageJobsPage() {
 
                     <td className="px-5 py-4">
                       <span
-                        className={`inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${
-                          statusStyle[job.status] ??
-                          "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                        }`}
+                        className={`inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${getJobStatusStyle(job.status)}`}
                       >
-                        {statusLabel[job.status] ?? job.status}
+                        {getJobStatusLabel(job.status)}
                       </span>
                     </td>
 
@@ -667,29 +674,30 @@ export function ManageJobsPage() {
                                 Nhân bản tin
                               </Link>
 
-                              {job.status !== "active" &&
-                                job.status !== "deleted" && (
+                              {!isActiveJobStatus(job.status) &&
+                                !isPendingReviewJobStatus(job.status) &&
+                                !isDeletedJobStatus(job.status) && (
                                   <button
                                     type="button"
                                     role="menuitem"
                                     onClick={() => {
                                       setOpenMenuJobId(null);
-                                      void handleUpdateStatus(job.id, "active");
+                                      void handleUpdateStatus(job.id, JOB_STATUS.PENDING_REVIEW);
                                     }}
                                     className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
                                   >
                                     <Unlock className="h-3.5 w-3.5" />
-                                    Mở tin
+                                    Gửi duyệt
                                   </button>
                                 )}
 
-                              {job.status === "active" && (
+                              {isActiveJobStatus(job.status) && (
                                 <button
                                   type="button"
                                   role="menuitem"
                                   onClick={() => {
                                     setOpenMenuJobId(null);
-                                    void handleUpdateStatus(job.id, "closed");
+                                    void handleUpdateStatus(job.id, JOB_STATUS.CLOSED);
                                   }}
                                   className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-orange-700 hover:bg-orange-50 dark:text-orange-300 dark:hover:bg-orange-950/30"
                                 >
@@ -698,7 +706,7 @@ export function ManageJobsPage() {
                                 </button>
                               )}
 
-                              {job.status !== "deleted" && (
+                              {!isDeletedJobStatus(job.status) && (
                                 <button
                                   type="button"
                                   role="menuitem"

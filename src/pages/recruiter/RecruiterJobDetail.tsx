@@ -6,20 +6,14 @@ import {
   updateJobStatus,
   type RecruiterJob,
 } from "../../services/recruiter.service";
-
-const statusLabel: Record<string, string> = {
-  active: "Đang mở",
-  draft: "Bản nháp",
-  closed: "Đã đóng",
-  deleted: "Đã xóa",
-};
-
-const statusStyle: Record<string, string> = {
-  active: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
-  draft: "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  closed: "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
-  deleted: "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
-};
+import {
+  getJobStatusLabel,
+  getJobStatusStyle,
+  isActiveJobStatus,
+  isDeletedJobStatus,
+  isPendingReviewJobStatus,
+  JOB_STATUS,
+} from "../../utils/job-status";
 
 const formatDate = (value?: string | null) => {
   if (!value) return "--";
@@ -88,7 +82,9 @@ export function RecruiterJobDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
-  const handleStatusChange = async (nextStatus: "active" | "closed") => {
+  const handleStatusChange = async (
+    nextStatus: typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED,
+  ) => {
     if (!job) return;
 
     setError("");
@@ -223,12 +219,9 @@ export function RecruiterJobDetailPage() {
                 Trạng thái
               </p>
               <span
-                className={`mt-2 inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${
-                  statusStyle[job.status] ??
-                  "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                }`}
+                className={`mt-2 inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${getJobStatusStyle(job.status)}`}
               >
-                {statusLabel[job.status] ?? job.status}
+                {getJobStatusLabel(job.status)}
               </span>
             </div>
 
@@ -291,27 +284,29 @@ export function RecruiterJobDetailPage() {
             </div>
 
             <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-              {job.status !== "active" && job.status !== "deleted" && (
+              {!isActiveJobStatus(job.status) &&
+                !isPendingReviewJobStatus(job.status) &&
+                !isDeletedJobStatus(job.status) && (
                 <button
                   type="button"
-                  onClick={() => void handleStatusChange("active")}
+                  onClick={() => void handleStatusChange(JOB_STATUS.PENDING_REVIEW)}
                   className="h-9 w-full border border-emerald-300 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
                 >
-                  Mở tin
+                  Gửi duyệt
                 </button>
               )}
 
-              {job.status === "active" && (
+              {isActiveJobStatus(job.status) && (
                 <button
                   type="button"
-                  onClick={() => void handleStatusChange("closed")}
+                  onClick={() => void handleStatusChange(JOB_STATUS.CLOSED)}
                   className="h-9 w-full border border-orange-300 text-[12px] font-semibold text-orange-700 hover:bg-orange-50 dark:border-orange-900/60 dark:text-orange-300 dark:hover:bg-orange-950/30"
                 >
                   Đóng tin
                 </button>
               )}
 
-              {job.status !== "deleted" && (
+              {!isDeletedJobStatus(job.status) && (
                 <button
                   type="button"
                   onClick={() => void handleDelete()}
