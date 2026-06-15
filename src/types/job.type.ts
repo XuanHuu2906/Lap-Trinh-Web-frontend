@@ -1,5 +1,7 @@
+import type { JobStatus } from '../utils/job-status';
+
 export type JobType = 'full_time' | 'part_time' | 'remote' | 'internship' | 'contract';
-export type JobStatus = 'draft' | 'active' | 'closed' | 'deleted';
+export type { JobStatus };
 export type SalaryUnit = 'month' | 'year' | 'hour' | 'negotiable';
 export type ExperienceLevel = 'no_exp' | 'junior' | 'mid' | 'senior' | 'manager';
 

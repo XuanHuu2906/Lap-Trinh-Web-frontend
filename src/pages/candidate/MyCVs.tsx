@@ -120,9 +120,6 @@ function PageHeader({
         <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
           CV của tôi
         </h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Quản lý CV lấy trực tiếp từ database của tài khoản ứng viên.
-        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -192,9 +189,6 @@ function CVListPanel({
           <h2 className="font-semibold text-slate-950 dark:text-white">
             Danh sách CV
           </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Hiển thị đúng dữ liệu trong bảng CV.
-          </p>
         </div>
 
         <button
@@ -215,10 +209,6 @@ function CVListPanel({
         activatingId={activatingId}
         handlers={handlers}
       />
-
-      <div className="border-t border-slate-200 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-        Đang hiển thị {cvs.length} CV từ database.
-      </div>
     </section>
   );
 }

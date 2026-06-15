@@ -60,9 +60,6 @@ function PageHeader() {
         <h1 className="text-[28px] font-bold leading-tight text-slate-950 dark:text-white">
           Việc làm đã lưu
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Các công việc bạn đã lưu từ dữ liệu tuyển dụng thật trong hệ thống.
-        </p>
       </div>
 
       <Link

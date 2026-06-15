@@ -65,7 +65,7 @@ export function SetupProfilePage() {
           navigate("/recruiter");
         }
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi khi hoàn tất thiết lập hồ sơ:", err);
       const errMsg =
@@ -190,8 +190,8 @@ export function SetupProfilePage() {
                 <div
                   onClick={() => !isSubmitting && setRole("candidate")}
                   className={`border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-between h-44 transition-all duration-300 transform ${role === "candidate"
-                      ? "border-slate-950 bg-slate-50/50 scale-[1.02] shadow-md"
-                      : "border-slate-200 hover:border-slate-400 hover:scale-[1.01]"
+                    ? "border-slate-950 bg-slate-50/50 scale-[1.02] shadow-md"
+                    : "border-slate-200 hover:border-slate-400 hover:scale-[1.01]"
                     } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div className="flex items-center justify-between">
@@ -210,16 +210,9 @@ export function SetupProfilePage() {
                         />
                       </svg>
                     </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                        role === "candidate"
-                          ? "border-slate-950 bg-slate-950"
-                          : "border-slate-300"
-                      }`}
-                    >
-                      {role === "candidate" && (
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
-                      )}
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${role === "candidate" ? "border-slate-950 bg-slate-950" : "border-slate-300"
+                      }`}>
+                      {role === "candidate" && <div className="w-2 h-2 rounded-full bg-white"></div>}
                     </div>
                   </div>
                   <div>
@@ -237,8 +230,8 @@ export function SetupProfilePage() {
                 <div
                   onClick={() => !isSubmitting && setRole("recruiter")}
                   className={`border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-between h-44 transition-all duration-300 transform ${role === "recruiter"
-                      ? "border-slate-950 bg-slate-50/50 scale-[1.02] shadow-md"
-                      : "border-slate-200 hover:border-slate-400 hover:scale-[1.01]"
+                    ? "border-slate-950 bg-slate-50/50 scale-[1.02] shadow-md"
+                    : "border-slate-200 hover:border-slate-400 hover:scale-[1.01]"
                     } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div className="flex items-center justify-between">
@@ -257,16 +250,9 @@ export function SetupProfilePage() {
                         />
                       </svg>
                     </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                        role === "recruiter"
-                          ? "border-slate-950 bg-slate-950"
-                          : "border-slate-300"
-                      }`}
-                    >
-                      {role === "recruiter" && (
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
-                      )}
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${role === "recruiter" ? "border-slate-950 bg-slate-950" : "border-slate-300"
+                      }`}>
+                      {role === "recruiter" && <div className="w-2 h-2 rounded-full bg-white"></div>}
                     </div>
                   </div>
                   <div>
@@ -284,11 +270,8 @@ export function SetupProfilePage() {
 
             {/* INPUT TEN CONG TY (TRUOT XUONG KHI CHON RECRUITER) */}
             <div
-              className={`transition-all duration-500 overflow-hidden ${
-                role === "recruiter"
-                  ? "max-h-32 opacity-100 translate-y-0"
-                  : "max-h-0 opacity-0 -translate-y-2"
-              }`}
+              className={`transition-all duration-500 overflow-hidden ${role === "recruiter" ? "max-h-32 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2"
+                }`}
             >
               <div className="space-y-2 pt-2">
                 <label

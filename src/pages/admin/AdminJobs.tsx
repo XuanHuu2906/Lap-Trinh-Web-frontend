@@ -23,6 +23,7 @@ import { Input } from "../../components/ui/input";
 import { getAdminJobs, updateJobStatus, forceDeleteJob } from "../../services/admin.service";
 import { useToast } from "../../components/common/toast";
 import { formatJobTypeLabel } from "../../utils/job-type-labels";
+import { JOB_STATUS } from "../../utils/job-status";
 
 interface AdminJob extends Job {
   companyName: string;
@@ -112,9 +113,9 @@ export const AdminJobs: React.FC = () => {
     setError(null);
     try {
       let statusParam: string | undefined = undefined;
-      if (activeTab === "pending") statusParam = "draft";
-      else if (activeTab === "approved") statusParam = "active";
-      else if (activeTab === "rejected") statusParam = "closed";
+      if (activeTab === "pending") statusParam = JOB_STATUS.PENDING_REVIEW;
+      else if (activeTab === "approved") statusParam = JOB_STATUS.ACTIVE;
+      else if (activeTab === "rejected") statusParam = JOB_STATUS.CLOSED;
 
       const searchParam = debouncedSearch.trim() || undefined;
 
@@ -197,7 +198,7 @@ export const AdminJobs: React.FC = () => {
       )
     ) {
       try {
-        const response = await updateJobStatus(jobId, "active");
+        const response = await updateJobStatus(jobId, JOB_STATUS.ACTIVE);
         if (response.success) {
           // Cập nhật state cục bộ để loại bỏ tin vừa phê duyệt khỏi tab chờ duyệt
           setJobs(prev => prev.filter(j => j.id !== jobId));
@@ -247,7 +248,7 @@ export const AdminJobs: React.FC = () => {
       try {
         const response = await updateJobStatus(
           rejectingJobId,
-          "closed",
+          JOB_STATUS.CLOSED,
           rejectionReasonInput,
         );
         if (response.success) {
@@ -326,7 +327,7 @@ export const AdminJobs: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight mt-1.5 font-sans uppercase">
-            DUYỆT & KIỂM DUYỆT TIN ĐĂNG
+            Quản lý và kiểm duyệt tin tuyển dụng
           </h1>
         </div>
       </div>
@@ -390,7 +391,7 @@ export const AdminJobs: React.FC = () => {
                 : "border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300"
                 }`}
             >
-              Đã kích hoạt{" "}
+              Đang hoạt động{" "}
               {activeTab === "approved" ? `(${pagination.total})` : ""}
             </button>
             <button
@@ -840,7 +841,7 @@ export const AdminJobs: React.FC = () => {
                   Đóng lại
                 </Button>
 
-                {previewingJob.status === "draft" && (
+                {previewingJob.status === JOB_STATUS.PENDING_REVIEW && (
                   <>
                     <Button
                       size="sm"

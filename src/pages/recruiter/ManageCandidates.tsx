@@ -240,10 +240,10 @@ export function ManageCandidatesPage() {
     } catch (err) {
       if (updateError) {
         setError(
-        err instanceof Error
-          ? err.message
-          : "Không tải được danh sách ứng viên",
-      );
+          err instanceof Error
+            ? err.message
+            : "Không tải được danh sách ứng viên",
+        );
       } else {
         console.error("Loi polling danh sach ung vien:", err);
       }
@@ -443,19 +443,14 @@ export function ManageCandidatesPage() {
         <h1 className="text-[26px] font-bold leading-tight text-slate-900 dark:text-white">
           Quản lý ứng viên
         </h1>
-
-        <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-300">
-          Theo dõi hồ sơ ứng tuyển, đánh giá ứng viên và gửi phản hồi tuyển dụng.
-        </p>
       </div>
 
       {(message || error) && (
         <div
-          className={`mb-4 border px-4 py-3 text-[13px] ${
-            error
+          className={`mb-4 border px-4 py-3 text-[13px] ${error
               ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
               : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-          }`}
+            }`}
         >
           {error || message}
         </div>
@@ -602,9 +597,8 @@ export function ManageCandidatesPage() {
 
                     <td className="px-6 py-5">
                       <span
-                        className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${
-                          statusStyle[application.status]
-                        }`}
+                        className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${statusStyle[application.status]
+                          }`}
                       >
                         {statusLabel[application.status]}
                       </span>
@@ -692,10 +686,10 @@ export function ManageCandidatesPage() {
                 <div className="flex flex-wrap gap-2">
                   {nextStatusOptions(selectedApplication.status).length ===
                     0 && (
-                    <span className="text-[13px] text-slate-400 dark:text-slate-500">
-                      Không còn bước chuyển hợp lệ.
-                    </span>
-                  )}
+                      <span className="text-[13px] text-slate-400 dark:text-slate-500">
+                        Không còn bước chuyển hợp lệ.
+                      </span>
+                    )}
 
                   {nextStatusOptions(selectedApplication.status).map((item) => (
                     <button

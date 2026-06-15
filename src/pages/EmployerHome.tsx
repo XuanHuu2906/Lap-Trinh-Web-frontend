@@ -193,18 +193,6 @@ export default function EmployerHome() {
           </div>
         </div>
       </section>
-
-      <button
-        type="button"
-        onClick={() => navigate(postJobPath)}
-        className="fixed bottom-6 right-6 z-40 hidden rounded-lg bg-sky-500 px-5 py-4 text-left text-sm font-bold text-white shadow-xl shadow-sky-950/30 transition hover:bg-sky-400 lg:block"
-      >
-        <span className="mb-2 flex items-center gap-2">
-          <MessageCircle className="h-4 w-4" />
-          Trợ giúp tư vấn
-        </span>
-        nhà tuyển dụng
-      </button>
     </main>
   );
 }

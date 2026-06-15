@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getDashboardStats, type DashboardStats } from "../../services/admin.service";
 import { getAdminBadgeClass } from "../../utils/adminBadge";
+import { JOB_STATUS } from "../../utils/job-status";
 
 const getErrorMessage = (err: unknown): string => {
   if (typeof err === "object" && err !== null) {
@@ -237,8 +238,11 @@ export const AdminDashboard: React.FC = () => {
 
   // 2. Job breakdown status calculations
   const totalJobs = stats?.kpis.jobs || 0;
-  const activeJobs = (stats?.jobsBreakdown.active || 0) + (stats?.jobsBreakdown.approved || 0);
-  const pendingJobs = stats?.jobsBreakdown.pending || 0;
+  const activeJobs =
+    stats?.jobsBreakdown.active ??
+    ((stats?.jobsBreakdown[JOB_STATUS.ACTIVE] || 0) + (stats?.jobsBreakdown.approved || 0));
+  const pendingJobs =
+    stats?.jobsBreakdown.pending ?? (stats?.jobsBreakdown[JOB_STATUS.PENDING_REVIEW] || 0);
 
   const activePercent = totalJobs > 0 ? Math.round((activeJobs / totalJobs) * 100) : 0;
   const pendingPercent = totalJobs > 0 ? Math.round((pendingJobs / totalJobs) * 100) : 0;
@@ -259,9 +263,6 @@ export const AdminDashboard: React.FC = () => {
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
             TỔNG QUAN HỆ THỐNG
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-            Báo cáo thời gian thực và quản lý các hoạt động tuyển dụng trên hệ thống.
-          </p>
         </div>
       </div>
 

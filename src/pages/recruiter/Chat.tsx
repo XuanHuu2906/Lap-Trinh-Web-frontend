@@ -3,10 +3,9 @@ import {
   Send,
   Search,
   CheckCheck,
-  Smile,
-  Info,
   Circle,
   Loader2,
+  Paperclip,
   X,
 } from "lucide-react";
 import { Input } from "../../components/ui/input";
@@ -245,9 +244,8 @@ function ApplicationPanel({
                   </p>
                   {status ? (
                     <span
-                      className={`mt-1 inline-flex border px-2 py-1 text-[11px] font-bold ${
-                        statusStyle[status]
-                      }`}
+                      className={`mt-1 inline-flex border px-2 py-1 text-[11px] font-bold ${statusStyle[status]
+                        }`}
                     >
                       {statusLabel[status]}
                     </span>
@@ -268,9 +266,6 @@ function ApplicationPanel({
                 <div className="min-w-0">
                   <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">
                     {cvTitle}
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-medium text-slate-400">
-                    {selectedApplication?.cv?.cvType || "Không rõ loại CV"}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -411,11 +406,10 @@ function ApplicationPanel({
                       key={application.id}
                       type="button"
                       onClick={() => onSelectApplication(application.id)}
-                      className={`w-full border px-3 py-2 text-left transition-colors ${
-                        selectedApplication?.id === application.id
-                          ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-950/30"
-                          : "border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
-                      }`}
+                      className={`w-full border px-3 py-2 text-left transition-colors ${selectedApplication?.id === application.id
+                        ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-950/30"
+                        : "border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
+                        }`}
                     >
                       <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">
                         {application.jobPosting?.title || "Tin tuyển dụng"}
@@ -884,11 +878,10 @@ export function RecruiterChatPage() {
                   <div
                     key={c.id}
                     onClick={() => setActiveConversationId(c.id)}
-                    className={`p-4 flex gap-3 cursor-pointer transition-all ${
-                      active
-                        ? "bg-white dark:bg-slate-950 border-l-4 border-indigo-500 font-medium shadow-3xs"
-                        : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
-                    }`}
+                    className={`p-4 flex gap-3 cursor-pointer transition-all ${active
+                      ? "bg-white dark:bg-slate-950 border-l-4 border-indigo-500 font-medium shadow-3xs"
+                      : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
+                      }`}
                   >
                     <div className="relative shrink-0">
                       <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shadow-3xs">
@@ -969,15 +962,6 @@ export function RecruiterChatPage() {
                   >
                     <span className="hidden sm:inline">Xem hồ sơ ứng tuyển</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenApplicationPanel}
-                    title="Xem hồ sơ ứng tuyển"
-                    aria-label="Xem hồ sơ ứng tuyển"
-                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-                  >
-                    <Info className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
 
@@ -1001,11 +985,10 @@ export function RecruiterChatPage() {
                           className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}
                         >
                           <div
-                            className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${
-                              isMe
-                                ? "bg-indigo-600 text-white rounded-br-none"
-                                : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none"
-                            }`}
+                            className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${isMe
+                              ? "bg-indigo-600 text-white rounded-br-none"
+                              : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none"
+                              }`}
                           >
                             {/* File Rendering */}
                             {isFile ? (
@@ -1057,11 +1040,10 @@ export function RecruiterChatPage() {
                             )}
 
                             <div
-                              className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${
-                                isMe
-                                  ? "text-indigo-200"
-                                  : "text-slate-400 dark:text-slate-500"
-                              }`}
+                              className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${isMe
+                                ? "text-indigo-200"
+                                : "text-slate-400 dark:text-slate-500"
+                                }`}
                             >
                               <span>{formatMessageTime(msg.sentAt)}</span>
                               {isMe && (
@@ -1093,16 +1075,12 @@ export function RecruiterChatPage() {
                   onSubmit={handleSendMessage}
                   className="flex items-center gap-3"
                 >
-                  <button
-                    type="button"
-                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-                    title="Biểu cảm"
+                  <label
+                    className="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
+                    title="Đính kèm"
+                    aria-label="Đính kèm"
                   >
-                    <Smile className="w-5 h-5" />
-                  </button>
-
-                  <label className="h-9 px-3 inline-flex items-center text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
-                    Đính kèm
+                    <Paperclip className="h-5 w-5" />
                     <input
                       type="file"
                       onChange={handleFileUpload}
