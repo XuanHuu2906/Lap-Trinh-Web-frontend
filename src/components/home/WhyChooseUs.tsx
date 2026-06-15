@@ -3,7 +3,6 @@ import {
   BarChart3,
   Clock3,
   ShieldCheck,
-  Sparkles,
   Star,
   UserCircle,
   type LucideIcon,

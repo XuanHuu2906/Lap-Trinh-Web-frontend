@@ -39,7 +39,7 @@ const applicationStatusOptions: StatusOption[] = [
   { label: "Tất cả trạng thái", value: "" },
   { label: "Đang chờ", value: "pending" },
   { label: "Đang xem", value: "reviewing" },
-  { label: "Đã tiếp nhận", value: "accepted" },
+  { label: "Mời phỏng vấn", value: "interview" },
   { label: "Từ chối", value: "rejected" },
 ];
 
@@ -54,10 +54,10 @@ const applicationStatusDisplays: Record<string, StatusDisplay> = {
     className:
       "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
   },
-  accepted: {
-    label: "Đã tiếp nhận",
+  interview: {
+    label: "Mời phỏng vấn",
     className:
-      "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300",
+      "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
   },
   rejected: {
     label: "Từ chối",
@@ -606,11 +606,11 @@ export default function AppliedJobs() {
           "text-yellow-600 bg-yellow-50 dark:bg-yellow-950/40 dark:text-yellow-300",
       },
       {
-        label: "Đã tiếp nhận",
-        value: applications.filter((item) => item.status === "accepted").length,
+        label: "Mời phỏng vấn",
+        value: applications.filter((item) => item.status === "interview").length,
         icon: ShieldCheck,
         color:
-          "text-green-600 bg-green-50 dark:bg-green-950/40 dark:text-green-300",
+          "text-violet-600 bg-violet-50 dark:bg-violet-950/40 dark:text-violet-300",
       },
       {
         label: "Từ chối",

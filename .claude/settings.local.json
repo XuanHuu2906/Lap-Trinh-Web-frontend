@@ -11,7 +11,12 @@
       "Bash(npm install *)",
       "Bash(rtk prisma *)",
       "Bash(rtk tsc *)",
-      "Bash(rtk find *)"
+      "Bash(rtk find *)",
+      "Bash(Test-Path *)",
+      "Bash(rtk grep *)",
+      "Bash(npm uninstall *)",
+      "Bash(rtk npx tsx -e ' *)",
+      "Bash(rtk npx *)"
     ]
   }
 }

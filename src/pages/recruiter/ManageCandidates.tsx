@@ -19,7 +19,6 @@ const statusLabel: Record<ApplicationStatus, string> = {
   pending: "Chưa xem",
   reviewing: "Đã xem",
   interview: "Mời phỏng vấn",
-  accepted: "Phù hợp",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
 };
@@ -28,19 +27,17 @@ const statusStyle: Record<ApplicationStatus, string> = {
   pending: "border border-blue-400 text-blue-600 bg-white dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
   reviewing: "border border-orange-400 text-orange-600 bg-white dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
   interview: "border border-violet-400 text-violet-600 bg-white dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
-  accepted: "border border-emerald-400 text-emerald-600 bg-white dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
   rejected: "border border-red-400 text-red-600 bg-white dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
   cancelled: "border border-slate-300 text-slate-500 bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
-type FeedbackStatus = "interview" | "accepted" | "rejected";
+type FeedbackStatus = "interview" | "rejected";
 
 const getStatusFilterFromParam = (value: string | null): ApplicationStatus | "" => {
   if (
     value === "pending" ||
     value === "reviewing" ||
     value === "interview" ||
-    value === "accepted" ||
     value === "rejected" ||
     value === "cancelled"
   ) {
@@ -51,7 +48,7 @@ const getStatusFilterFromParam = (value: string | null): ApplicationStatus | "" 
 };
 
 const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
-  if (status === "accepted" || status === "rejected" || status === "interview") {
+  if (status === "rejected" || status === "interview") {
     return status;
   }
 
@@ -69,14 +66,12 @@ const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "reviewing") {
     return [
       { label: "Mời phỏng vấn", value: "interview" as const },
-      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
 
   if (status === "interview") {
     return [
-      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
@@ -379,7 +374,7 @@ export function ManageCandidatesPage() {
   };
 
   const handleChangeStatus = async (
-    nextStatus: "reviewing" | "interview" | "accepted" | "rejected",
+    nextStatus: "reviewing" | "interview" | "rejected",
   ) => {
     if (!selectedApplication) return;
 
@@ -497,7 +492,6 @@ export function ManageCandidatesPage() {
               <option value="pending">Chưa xem</option>
               <option value="reviewing">Đã xem</option>
               <option value="interview">Mời phỏng vấn</option>
-              <option value="accepted">Phù hợp</option>
               <option value="rejected">Không phù hợp</option>
               <option value="cancelled">Đã hủy</option>
             </select>
@@ -715,7 +709,6 @@ export function ManageCandidatesPage() {
                   className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                 >
                   <option value="interview">Mời phỏng vấn</option>
-                  <option value="accepted">Phù hợp</option>
                   <option value="rejected">Không phù hợp</option>
                 </select>
 
