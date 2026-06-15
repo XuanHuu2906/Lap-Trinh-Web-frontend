@@ -172,8 +172,6 @@ export function ManageCandidatesPage() {
         setSelectedJobId(requestedJobId);
       } else if (hasDashboardTarget) {
         setSelectedJobId("");
-      } else if (!selectedJobId && myJobs.length > 0) {
-        setSelectedJobId(myJobs[0].id);
       }
     } catch (err) {
       setError(
@@ -443,8 +441,8 @@ export function ManageCandidatesPage() {
       {(message || error) && (
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${error
-              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
-              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+            ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+            : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
             }`}
         >
           {error || message}
