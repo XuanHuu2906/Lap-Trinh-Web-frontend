@@ -3,7 +3,7 @@ import { JOB_STATUS, type JobStatus } from "../utils/job-status";
 
 export type JobType = "full-time" | "part-time" | "remote" | "hybrid" | "freelance" | "internship";
 export type ExperienceLevel = "entry" | "junior" | "mid" | "senior" | "lead" | "director";
-export type ApplicationStatus = "pending" | "reviewing" | "interview" | "accepted" | "rejected" | "cancelled";
+export type ApplicationStatus = "pending" | "reviewing" | "interview" | "rejected" | "cancelled";
 export type RecruiterJobStatusUpdate = "active" | typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED;
 
 export interface RecruiterJob {
@@ -178,7 +178,7 @@ export async function getApplicationDetail(id: number) {
   return requestApi<RecruiterApplication>({ method: "GET", url: `/applications/${id}` });
 }
 
-export async function updateApplicationStatus(id: number, status: "reviewing" | "interview" | "accepted" | "rejected") {
+export async function updateApplicationStatus(id: number, status: "reviewing" | "interview" | "rejected") {
   return requestApi<RecruiterApplication>({
     method: "PUT",
     url: `/applications/${id}/status`,
@@ -189,7 +189,7 @@ export async function updateApplicationStatus(id: number, status: "reviewing" | 
 export async function createFeedback(
   applicationId: number,
   content: string,
-  status?: "interview" | "accepted" | "rejected",
+  status?: "interview" | "rejected",
 ) {
   return requestApi({
     method: "POST",

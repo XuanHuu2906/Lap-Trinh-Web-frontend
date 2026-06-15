@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   MapPin,
   Search,
-  Sparkles,
 } from "lucide-react";
 import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { WORK_LOCATION_OPTIONS } from "../../constants/locations";

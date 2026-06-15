@@ -29,13 +29,12 @@ import {
   type RecruiterApplication,
 } from "../../services/recruiter.service";
 
-type FeedbackStatus = "interview" | "accepted" | "rejected";
+type FeedbackStatus = "interview" | "rejected";
 
 const statusLabel: Record<ApplicationStatus, string> = {
   pending: "Chờ xử lý",
   reviewing: "Đã xem",
   interview: "Mời phỏng vấn",
-  accepted: "Phù hợp",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
 };
@@ -44,13 +43,12 @@ const statusStyle: Record<ApplicationStatus, string> = {
   pending: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
   reviewing: "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
   interview: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
-  accepted: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
   rejected: "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
   cancelled: "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300",
 };
 
 const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
-  if (status === "accepted" || status === "rejected" || status === "interview") {
+  if (status === "rejected" || status === "interview") {
     return status;
   }
 
@@ -68,14 +66,12 @@ const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "reviewing") {
     return [
       { label: "Mời phỏng vấn", value: "interview" as const },
-      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
 
   if (status === "interview") {
     return [
-      { label: "Phù hợp", value: "accepted" as const },
       { label: "Từ chối", value: "rejected" as const },
     ];
   }
@@ -115,7 +111,7 @@ const getCandidateName = (application: RecruiterApplication) =>
   application.candidateProfile?.user?.email ||
   "Ứng viên chưa cập nhật tên";
 
-type NextApplicationStatus = "reviewing" | "interview" | "accepted" | "rejected";
+type NextApplicationStatus = "reviewing" | "interview" | "rejected";
 
 function ApplicationPanel({
   conversation,
@@ -343,7 +339,6 @@ function ApplicationPanel({
                 className="mt-2 h-9 w-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
               >
                 <option value="interview">Mời phỏng vấn</option>
-                <option value="accepted">Phù hợp</option>
                 <option value="rejected">Không phù hợp</option>
               </select>
               <textarea
@@ -734,7 +729,7 @@ export function RecruiterChatPage() {
   };
 
   const handleChangeStatus = async (
-    nextStatus: "reviewing" | "interview" | "accepted" | "rejected",
+    nextStatus: "reviewing" | "interview" | "rejected",
   ) => {
     if (!selectedApplication) return;
 

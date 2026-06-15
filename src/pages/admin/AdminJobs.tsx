@@ -44,6 +44,50 @@ const getErrorMessage = (err: unknown): string => {
   return "";
 };
 
+const experienceLevelLabels: Record<string, string> = {
+  no_exp: "Không yêu cầu",
+  entry: "Mới tốt nghiệp",
+  junior: "Junior",
+  mid: "Mid-level",
+  senior: "Senior",
+  lead: "Lead",
+  manager: "Manager",
+  director: "Director",
+};
+
+const formatSalary = (
+  min?: number | string | null,
+  max?: number | string | null,
+) => {
+  const minNumber = min === null || min === undefined || min === "" ? null : Number(min);
+  const maxNumber = max === null || max === undefined || max === "" ? null : Number(max);
+
+  if (!minNumber && !maxNumber) return "Thỏa thuận";
+
+  const formatter = new Intl.NumberFormat("vi-VN");
+
+  if (minNumber && maxNumber) {
+    return `${formatter.format(minNumber)} - ${formatter.format(maxNumber)} VND`;
+  }
+
+  if (minNumber) return `Từ ${formatter.format(minNumber)} VND`;
+
+  return `Đến ${formatter.format(maxNumber ?? 0)} VND`;
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "--";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
 const SkeletonJobCard: React.FC = () => (
   <div className="p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-6 animate-pulse">
     <div className="flex items-start gap-4 grow">
@@ -487,9 +531,7 @@ export const AdminJobs: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <DollarSign className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                         <span>
-                          {job.salaryMin && job.salaryMax
-                            ? `${job.salaryMin}$ - ${job.salaryMax}$ / tháng`
-                            : "Thỏa thuận"}
+                          {formatSalary(job.salaryMin, job.salaryMax)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -509,7 +551,7 @@ export const AdminJobs: React.FC = () => {
                         variant="outline"
                         className="text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/30 dark:bg-indigo-950/30"
                       >
-                        Kinh nghiệm: {job.experienceLevel}
+                        Kinh nghiệm: {job.experienceLevel ? experienceLevelLabels[job.experienceLevel] || job.experienceLevel : "Không yêu cầu"}
                       </Badge>
                     </div>
 
@@ -779,7 +821,9 @@ export const AdminJobs: React.FC = () => {
                     {translateJobType(previewingJob.jobType)}
                   </Badge>
                   <Badge variant="outline">
-                    Cấp bậc: {previewingJob.experienceLevel}
+                    Cấp bậc: {previewingJob.experienceLevel
+                      ? experienceLevelLabels[previewingJob.experienceLevel] || previewingJob.experienceLevel
+                      : "Không yêu cầu"}
                   </Badge>
                 </div>
               </div>
@@ -791,7 +835,7 @@ export const AdminJobs: React.FC = () => {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    {previewingJob.location}
+                    {previewingJob.location || "Chưa cập nhật"}
                   </span>
                 </div>
                 <div>
@@ -800,9 +844,24 @@ export const AdminJobs: React.FC = () => {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                     <DollarSign className="w-3.5 h-3.5 text-slate-400" />
-                    {previewingJob.salaryMin && previewingJob.salaryMax
-                      ? `${previewingJob.salaryMin}$ - ${previewingJob.salaryMax}$ / tháng`
-                      : "Thỏa thuận"}
+                    {formatSalary(previewingJob.salaryMin, previewingJob.salaryMax)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-wider uppercase mb-1">
+                    DANH MỤC
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    {previewingJob.category?.name || "Chưa phân loại"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-wider uppercase mb-1">
+                    NGÀY ĐĂNG / HẾT HẠN
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    {formatDate(previewingJob.createdAt)}
+                    {previewingJob.expiresAt ? ` → ${formatDate(previewingJob.expiresAt)}` : ""}
                   </span>
                 </div>
               </div>
@@ -821,9 +880,36 @@ export const AdminJobs: React.FC = () => {
                   YÊU CẦU CÔNG VIỆC
                 </span>
                 <p className="text-xs font-semibold leading-relaxed text-slate-650 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-sm border border-slate-150 dark:border-slate-800 whitespace-pre-wrap">
-                  {previewingJob.requirements}
+                  {previewingJob.requirements || "Chưa cập nhật yêu cầu."}
                 </p>
               </div>
+
+              <div>
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-widest uppercase mb-2">
+                  QUYỀN LỢI
+                </span>
+                <p className="text-xs font-semibold leading-relaxed text-slate-650 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-sm border border-slate-150 dark:border-slate-800 whitespace-pre-wrap">
+                  {previewingJob.benefits || "Chưa cập nhật quyền lợi."}
+                </p>
+              </div>
+
+              {previewingJob.skills && previewingJob.skills.length > 0 && (
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-widest uppercase mb-2">
+                    KỸ NĂNG YÊU CẦU
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {previewingJob.skills.map((s) => (
+                      <span
+                        key={s.skill.id}
+                        className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      >
+                        {s.skill.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bottom buttons */}
