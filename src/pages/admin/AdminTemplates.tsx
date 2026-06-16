@@ -40,7 +40,7 @@ interface CVTemplate {
 }
 
 // Mock ban đầu cho các mẫu CV hiện tại (Thỏa mãn UC-19)
-const INITIAL_TEMPLATES_MOCK: CVTemplate[] = [
+export const INITIAL_TEMPLATES_MOCK: CVTemplate[] = [
   {
     id: 1,
     name: "Executive Standard",

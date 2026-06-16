@@ -58,7 +58,7 @@ const getPriority = (type: string): "high" | "normal" => {
 
 const getNotificationPath = (
   relatedType: string | null,
-  relatedId: number | null,
+  _relatedId: any,
   type: string
 ): string => {
   const lowerType = type.toLowerCase();
