@@ -11,6 +11,7 @@ import {
 import { getDashboardStats, type DashboardStats } from "../../services/admin.service";
 import { getAdminBadgeClass } from "../../utils/adminBadge";
 import { JOB_STATUS } from "../../utils/job-status";
+import { useToast } from "../../components/common/toast";
 
 const getErrorMessage = (err: unknown): string => {
   if (typeof err === "object" && err !== null) {
@@ -28,29 +29,32 @@ const getErrorMessage = (err: unknown): string => {
 export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = React.useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = React.useState(false);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
-        setError(null);
+        setHasLoadError(false);
         const response = await getDashboardStats();
         if (response.success && response.data) {
           setStats(response.data);
         } else {
-          setError(response.message || "Không thể tải dữ liệu thống kê");
+          setHasLoadError(true);
+          toast({ title: response.message || "Không thể tải dữ liệu thống kê", variant: "error" });
         }
       } catch (err: unknown) {
         console.error("Lỗi khi tải thống kê:", err);
-        setError(getErrorMessage(err) || "Đã xảy ra lỗi khi kết nối đến máy chủ");
+        setHasLoadError(true);
+        toast({ title: getErrorMessage(err) || "Đã xảy ra lỗi khi kết nối đến máy chủ", variant: "error" });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [toast]);
 
   const formatRelativeTime = (dateStr: string): string => {
     try {
@@ -159,7 +163,7 @@ export const AdminDashboard: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (hasLoadError) {
     return (
       <div className="space-y-8 animate-fade-in font-sans">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -174,7 +178,7 @@ export const AdminDashboard: React.FC = () => {
             Không thể tải dữ liệu thống kê
           </h3>
           <p className="text-xs text-rose-600 dark:text-rose-300 font-medium mb-6">
-            {error}
+            Vui lòng thử tải lại trang
           </p>
           <button
             onClick={() => window.location.reload()}

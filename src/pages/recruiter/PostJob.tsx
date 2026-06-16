@@ -9,7 +9,6 @@ import {
   type ExperienceLevel,
   type JobType,
 } from "../../services/recruiter.service";
-import { JOB_STATUS } from "../../utils/job-status";
 
 type CategoryOption = {
   id: number;
@@ -30,12 +29,7 @@ type SkillOption = {
 
 type WorkMode = "onsite" | "remote" | "hybrid";
 
-type SubmitStatus = typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.DRAFT;
-
-type ParsedSalaryInput = {
-  value: number | null;
-  error?: string;
-};
+type SubmitStatus = "active" | "draft";
 
 const employmentTypeOptions: Array<{ label: string; value: JobType }> = [
   { label: "Toàn thời gian", value: "full-time" },
@@ -69,7 +63,7 @@ const flattenCategories = (categories: CategoryOption[]): FlatCategoryOption[] =
     })),
   ]);
 
-const parseSalaryInput = (value: string, label: string): ParsedSalaryInput => {
+const parseSalaryInput = (value: string, label: string): { value: number | null; error?: string } => {
   if (!value.trim()) return { value: null };
 
   const numberValue = Number(value);
@@ -300,7 +294,7 @@ export function PostJobPage() {
       return null;
     }
 
-    if (status === JOB_STATUS.PENDING_REVIEW && !expiresAt) {
+    if (status === "active" && !expiresAt) {
       setError("Vui lòng chọn hạn nộp hồ sơ trước khi đăng tin");
       return null;
     }
@@ -310,10 +304,10 @@ export function PostJobPage() {
       return null;
     }
 
-    const parsedSalaryMin: ParsedSalaryInput = salaryNegotiable
+    const parsedSalaryMin: { value: number | null; error?: string } = salaryNegotiable
       ? { value: null }
       : parseSalaryInput(salaryMin, "Lương tối thiểu");
-    const parsedSalaryMax: ParsedSalaryInput = salaryNegotiable
+    const parsedSalaryMax: { value: number | null; error?: string } = salaryNegotiable
       ? { value: null }
       : parseSalaryInput(salaryMax, "Lương tối đa");
 
@@ -368,9 +362,9 @@ export function PostJobPage() {
       } else {
         await createJob({ ...payload, status });
         setMessage(
-          status === JOB_STATUS.DRAFT
+          status === "draft"
             ? "Lưu nháp tin tuyển dụng thành công"
-            : "Gửi duyệt tin tuyển dụng thành công",
+            : "Đăng tin tuyển dụng thành công",
         );
 
         setTimeout(() => {
@@ -383,7 +377,7 @@ export function PostJobPage() {
           ? err.message
           : isEditing
             ? "Cập nhật tin thất bại"
-            : "Gửi duyệt tin thất bại",
+            : "Đăng tin thất bại",
       );
     } finally {
       setLoading(false);
@@ -393,7 +387,7 @@ export function PostJobPage() {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    void submitJob(JOB_STATUS.PENDING_REVIEW);
+    void submitJob("active");
   };
 
   return (
@@ -404,23 +398,15 @@ export function PostJobPage() {
             ? "Chỉnh sửa tin tuyển dụng"
             : isDuplicating
               ? "Nhân bản tin tuyển dụng"
-              : "Gửi duyệt tin tuyển dụng"}
+              : "Đăng tin tuyển dụng"}
         </h1>
-
-        <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-300">
-          {isEditing
-            ? "Cập nhật thông tin vị trí, yêu cầu và quyền lợi trước khi hiển thị cho ứng viên."
-            : isDuplicating
-              ? "Tạo tin mới từ dữ liệu đã có, kiểm tra lại thông tin trước khi xuất bản."
-              : "Tạo tin tuyển dụng mới với đầy đủ thông tin vị trí, yêu cầu và quyền lợi."}
-        </p>
       </div>
 
       {(message || error) && (
         <div
           className={`mb-5 border px-4 py-3 text-[13px] ${error
-              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
-              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+            ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+            : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
             }`}
         >
           {error || message}
@@ -658,8 +644,8 @@ export function PostJobPage() {
                           aria-pressed={selected}
                           onClick={() => toggleSkill(skill.id)}
                           className={`border px-3 py-1.5 text-[12px] font-semibold transition-colors ${selected
-                              ? "border-[#0f1f3d] bg-[#0f1f3d] text-white"
-                              : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            ? "border-[#0f1f3d] bg-[#0f1f3d] text-white"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                             }`}
                         >
                           {skill.name}
@@ -741,7 +727,7 @@ export function PostJobPage() {
 
           <div className="sticky top-6 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
             <h2 className="mb-3 text-[14px] font-bold text-slate-800 dark:text-slate-50">
-              {isEditing ? "Cập nhật" : "Gửi duyệt"}
+              {isEditing ? "Cập nhật" : "Xuất bản"}
             </h2>
 
             <p className="mb-5 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
@@ -753,23 +739,23 @@ export function PostJobPage() {
               disabled={loading}
               className="h-11 w-full bg-[#0f1f3d] text-[13px] font-bold text-white hover:bg-[#1a2f52] disabled:opacity-60"
             >
-              {loading && submitStatus === JOB_STATUS.PENDING_REVIEW
+              {loading && submitStatus === "active"
                 ? isEditing
                   ? "ĐANG CẬP NHẬT..."
-                  : "ĐANG GỬI DUYỆT..."
+                  : "ĐANG ĐĂNG..."
                 : isEditing
                   ? "CẬP NHẬT TIN"
-                  : "GỬI DUYỆT"}
+                  : "ĐĂNG TIN NGAY"}
             </button>
 
             {!isEditing && (
               <button
                 type="button"
-                onClick={() => void submitJob(JOB_STATUS.DRAFT)}
+                onClick={() => void submitJob("draft")}
                 disabled={loading}
                 className="mt-3 h-10 w-full border border-slate-300 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
-                {loading && submitStatus === JOB_STATUS.DRAFT ? "ĐANG LƯU..." : "LƯU NHÁP"}
+                {loading && submitStatus === "draft" ? "ĐANG LƯU..." : "LƯU NHÁP"}
               </button>
             )}
 

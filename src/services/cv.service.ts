@@ -85,6 +85,37 @@ export const cvService = {
     return response.data;
   },
 
+  async getAdminTemplates() {
+    const response =
+      await api.get<ApiResponse<CandidateCVTemplate[]>>("/cvs/templates?isActive=false");
+    return response.data;
+  },
+
+  async createTemplate(data: { name: string; description?: string; thumbnailUrl?: string; layoutConfig?: string }) {
+    const response =
+      await api.post<ApiResponse<CandidateCVTemplate>>("/cvs/templates", data);
+    return response.data;
+  },
+
+  async updateTemplate(id: number, data: Partial<CandidateCVTemplate>) {
+    const response =
+      await api.put<ApiResponse<CandidateCVTemplate>>(`/cvs/templates/${id}`, data);
+    return response.data;
+  },
+
+  async deleteTemplate(id: number) {
+    const response =
+      await api.delete<ApiResponse<null>>(`/cvs/templates/${id}`);
+    return response.data;
+  },
+
+  async toggleTemplate(id: number) {
+    const response =
+      await api.patch<ApiResponse<CandidateCVTemplate>>(`/cvs/templates/${id}/toggle`);
+    return response.data;
+  },
+
+
   async getById(id: number) {
     const response = await api.get<ApiResponse<CandidateCV>>(`/cvs/${id}`);
     return response.data;

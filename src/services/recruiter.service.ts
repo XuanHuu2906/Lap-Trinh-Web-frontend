@@ -3,7 +3,7 @@ import { JOB_STATUS, type JobStatus } from "../utils/job-status";
 
 export type JobType = "full-time" | "part-time" | "remote" | "hybrid" | "freelance" | "internship";
 export type ExperienceLevel = "entry" | "junior" | "mid" | "senior" | "lead" | "director";
-export type ApplicationStatus = "pending" | "reviewing" | "interview" | "rejected" | "cancelled";
+export type ApplicationStatus = "pending" | "reviewing" | "interview" | "confirmed" | "rejected" | "cancelled";
 export type RecruiterJobStatusUpdate = "active" | typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED;
 
 export interface RecruiterJob {
@@ -79,6 +79,15 @@ export interface RecruiterApplication {
     id: number;
     score?: number | null;
     notes?: string | null;
+  }>;
+  interviews?: Array<{
+    id: number;
+    scheduledAt: string;
+    type: "online" | "offline";
+    location: string | null;
+    notes?: string | null;
+    status: string;
+    confirmedAt?: string | null;
   }>;
   conversation?: {
     id: number;
@@ -195,6 +204,22 @@ export async function createFeedback(
     method: "POST",
     url: `/applications/${applicationId}/feedback`,
     data: { content, status },
+  });
+}
+
+export interface ScheduleInterviewPayload {
+  content: string;
+  scheduledAt: string;
+  type: 'online' | 'offline';
+  location: string;
+  notes?: string;
+}
+
+export async function scheduleInterview(applicationId: number, data: ScheduleInterviewPayload) {
+  return requestApi({
+    method: 'POST',
+    url: `/applications/${applicationId}/interview`,
+    data,
   });
 }
 

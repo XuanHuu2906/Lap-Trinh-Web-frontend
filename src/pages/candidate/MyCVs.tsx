@@ -582,7 +582,7 @@ export default function MyCVs() {
         isUploading={isUploading}
         fileInputRef={fileInputRef}
         onUpload={handleUploadPDF}
-        onCreate={() => navigate("/candidate/cv-builder")}
+        onCreate={() => navigate("/candidate/cv-templates")}
       />
 
       {errorMessage && <ErrorAlert message={errorMessage} />}

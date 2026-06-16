@@ -26,6 +26,7 @@ import Notifications from "./pages/candidate/Notifications";
 import Overview from "./pages/candidate/Overview";
 import SavedJobs from "./pages/candidate/SavedJobs";
 import CandidateSettings from "./pages/candidate/Settings";
+import { ConfirmInterviewPage } from "./pages/candidate/ConfirmInterview";
 import JobDetail from "./pages/public/JobDetail";
 import JobList from "./pages/public/JobList";
 import JobSearch from "./pages/public/JobSearch";
@@ -92,6 +93,7 @@ function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="cv-templates" element={<CVTemplatePage />} />
             <Route path="cv-builder" element={<CVBuilder />} />
+            <Route path="confirm-interview" element={<ConfirmInterviewPage />} />
             <Route path="settings" element={<CandidateSettings />} />
           </Route>
         </Route>

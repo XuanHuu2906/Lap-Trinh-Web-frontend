@@ -13,7 +13,6 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  AlertCircle,
 } from "lucide-react";
 import { type Job, type JobType } from "../../types/job.type";
 import { Button } from "../../components/ui/button";
@@ -124,7 +123,7 @@ export const AdminJobs: React.FC = () => {
     total: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
     "pending" | "approved" | "rejected"
@@ -154,7 +153,7 @@ export const AdminJobs: React.FC = () => {
   // Hàm gọi API lấy danh sách tin tuyển dụng từ server
   const fetchJobs = async () => {
     setIsLoading(true);
-    setError(null);
+    setHasLoadError(false);
     try {
       let statusParam: string | undefined = undefined;
       if (activeTab === "pending") statusParam = JOB_STATUS.PENDING_REVIEW;
@@ -171,7 +170,6 @@ export const AdminJobs: React.FC = () => {
       });
 
       if (response.success) {
-        // Ánh xạ dữ liệu từ backend trả về dạng AdminJob của frontend
         const mappedJobs: AdminJob[] = response.data.map((job) => ({
           ...job,
           companyName:
@@ -182,7 +180,6 @@ export const AdminJobs: React.FC = () => {
             "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=80&q=80",
         }));
 
-        // Bộ lọc phụ client-side cho jobType nếu được chọn (vì server chỉ hỗ trợ bộ lọc chính)
         let finalJobs = mappedJobs;
         if (selectedJobType !== "Tất cả") {
           finalJobs = mappedJobs.filter(
@@ -204,7 +201,8 @@ export const AdminJobs: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || "Có lỗi xảy ra khi kết nối tới máy chủ.");
+      setHasLoadError(true);
+      toast({ title: getErrorMessage(err) || "Có lỗi xảy ra khi kết nối tới máy chủ.", variant: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -487,15 +485,14 @@ export const AdminJobs: React.FC = () => {
               <SkeletonJobCard key={idx} />
             ))}
           </div>
-        ) : error ? (
+        ) : hasLoadError ? (
           <div className="py-16 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-            <p className="text-sm font-bold text-red-650 dark:text-red-300">{error}</p>
+            <p className="text-sm font-bold text-slate-500">Không thể tải dữ liệu</p>
             <Button
               variant="outline"
               size="sm"
               onClick={fetchJobs}
-              className="mt-3 border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 font-bold text-xs h-9 px-4 cursor-pointer"
+              className="mt-3 font-bold text-xs h-9 px-4 cursor-pointer"
             >
               Thử lại
             </Button>
@@ -633,7 +630,7 @@ export const AdminJobs: React.FC = () => {
         )}
 
         {/* 5. PAGINATION FOOTER */}
-        {!error && !isLoading && jobs.length > 0 && (
+        {!hasLoadError && !isLoading && jobs.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-950/40">
             {/* Left Side: Current view status */}
             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
