@@ -797,7 +797,7 @@ export default function JobDetail({
           onChange={setApplyForm}
           onClose={() => setIsApplyModalOpen(false)}
           onSubmit={handleSubmitApplication}
-          onCreateCV={() => navigate("/candidate/cv-builder")}
+          onCreateCV={() => navigate("/candidate/cv-templates")}
           styles={styles}
         />
       ) : null}

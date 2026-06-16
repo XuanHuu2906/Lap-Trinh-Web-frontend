@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  getApplicationsByJob,
+  getRecruiterApplications,
   getMyJobs,
   updateJobStatus,
   type RecruiterApplication,
@@ -108,40 +108,24 @@ export function RecruiterOverviewPage() {
       setLoading(true);
       setError("");
 
-      const jobsResponse = await getMyJobs({
-        page: 1,
-        limit: 50,
-        status: "",
-      });
+      const [jobsResponse, applicationsResponse] = await Promise.all([
+        getMyJobs({
+          page: 1,
+          limit: 50,
+          status: "",
+        }),
+        getRecruiterApplications({
+          page: 1,
+          limit: 100,
+          status: "",
+        }),
+      ]);
 
       const myJobs = jobsResponse.data ?? [];
       setJobs(myJobs);
 
-      const activeJobs = myJobs.filter((job) => !isDeletedJobStatus(job.status));
-
-      const applicationResults = await Promise.allSettled(
-        activeJobs.map((job) =>
-          getApplicationsByJob({
-            jobId: job.id,
-            page: 1,
-            limit: 20,
-            status: "",
-          }),
-        ),
-      );
-
-      const allApplications = applicationResults.flatMap((result) => {
-        if (result.status !== "fulfilled") return [];
-        return result.value.data ?? [];
-      });
-
-      const uniqueApplicationMap = new Map<number, RecruiterApplication>();
-
-      allApplications.forEach((application) => {
-        uniqueApplicationMap.set(application.id, application);
-      });
-
-      setApplications(Array.from(uniqueApplicationMap.values()));
+      const allApplications = applicationsResponse.data ?? [];
+      setApplications(allApplications);
     } catch (err) {
       setError(
         err instanceof Error
