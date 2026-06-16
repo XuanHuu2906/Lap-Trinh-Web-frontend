@@ -57,7 +57,7 @@ const getPriority = (type: string): "high" | "normal" => {
 };
 
 const getNotificationPath = (
-  relatedType: string | null,
+  relatedType: string | null | undefined,
   _relatedId: any,
   type: string
 ): string => {
