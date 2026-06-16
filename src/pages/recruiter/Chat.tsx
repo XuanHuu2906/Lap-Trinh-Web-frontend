@@ -6,11 +6,6 @@ import {
   Circle,
   Loader2,
   Paperclip,
-  X,
-  Eye,
-  Calendar,
-  AlertCircle,
-  XCircle,
 } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
@@ -30,7 +25,6 @@ import {
   getApplicationDetail,
   updateApplicationStatus,
   scheduleInterview,
-  type ApplicationStatus,
   type RecruiterApplication,
 } from "../../services/recruiter.service";
 import { CandidateCVModal } from "../../components/cv/CandidateCVModal";

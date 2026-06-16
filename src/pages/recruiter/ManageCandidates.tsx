@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageSquare, Calendar, AlertCircle, XCircle, Eye } from "lucide-react";
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useVisiblePolling } from "../../hooks/useVisiblePolling";
 import { supabase } from "../../utils/supabase";
@@ -7,7 +7,6 @@ import {
   createEvaluation,
   createFeedback,
   getApplicationDetail,
-  getApplicationsByJob,
   getRecruiterApplications,
   getMyJobs,
   scheduleInterview,
