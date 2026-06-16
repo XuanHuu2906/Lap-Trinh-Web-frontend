@@ -61,9 +61,16 @@ export interface RecruiterApplication {
     user?: { email?: string; createdAt?: string };
   };
   cv?: {
+    id: number;
     title?: string | null;
     cvType?: string | null;
     pdfUrl?: string | null;
+    personalInfo?: any | null;
+    education?: any | null;
+    experience?: any | null;
+    skills?: any | null;
+    certifications?: any | null;
+    projects?: any | null;
   } | null;
   jobPosting?: {
     id?: number;
@@ -164,6 +171,24 @@ export async function updateJobStatus(id: number, status: RecruiterJobStatusUpda
 
 export async function deleteJob(id: number) {
   return requestApi<null>({ method: "DELETE", url: `/jobs/${id}` });
+}
+
+export async function getRecruiterApplications(params: {
+  page?: number;
+  limit?: number;
+  status?: ApplicationStatus | "";
+  jobId?: number;
+} = {}) {
+  return requestApi<RecruiterApplication[]>({
+    method: "GET",
+    url: "/applications",
+    params: {
+      page: params.page ?? 1,
+      limit: params.limit ?? 50,
+      status: params.status || undefined,
+      jobId: params.jobId || undefined,
+    },
+  });
 }
 
 export async function getApplicationsByJob(params: {
