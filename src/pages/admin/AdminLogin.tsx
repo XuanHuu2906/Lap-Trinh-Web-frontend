@@ -1,16 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ShieldAlert,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertCircle,
-} from "lucide-react";
+import { ShieldAlert, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { useToast } from "../../components/common/toast";
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -20,15 +14,14 @@ export const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (!email || !password) {
-      setError("Vui lòng nhập đầy đủ địa chỉ email và mật khẩu.");
+      toast({ title: "Vui lòng nhập đầy đủ địa chỉ email và mật khẩu.", variant: "error" });
       return;
     }
 
@@ -39,15 +32,12 @@ export const AdminLogin: React.FC = () => {
       if (res.success && res.data) {
         const { user } = res.data;
 
-        // Kiểm tra xem người dùng có phải là admin hay không
         if (user.role !== "admin") {
-          // Gọi logout để xóa session vừa tạo ra do đăng nhập sai quyền
           await logout();
-          setError("Tài khoản này không có quyền truy cập quản trị viên.");
+          toast({ title: "Tài khoản này không có quyền truy cập quản trị viên.", variant: "error" });
           return;
         }
 
-        // Điều hướng sau đăng nhập thành công
         const redirectUrl = searchParams.get("redirect") || "/admin/dashboard";
         navigate(redirectUrl);
       }
@@ -58,7 +48,7 @@ export const AdminLogin: React.FC = () => {
         err.response?.data?.message ||
         err.message ||
         "Tài khoản hoặc mật khẩu quản trị viên không hợp lệ.";
-      setError(errMsg);
+      toast({ title: errMsg, variant: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -95,19 +85,6 @@ export const AdminLogin: React.FC = () => {
               Hệ thống giám sát và vận hành cổng tuyển dụng
             </p>
           </div>
-
-          {/* Alert Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-sm flex items-start gap-3 mb-6 animate-fade-in">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-red-700 font-bold text-xs">Lỗi đăng nhập</p>
-                <p className="text-red-600 text-xs mt-1 font-medium leading-relaxed">
-                  {error}
-                </p>
-              </div>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Field: Email - Sử dụng Shadcn Input */}

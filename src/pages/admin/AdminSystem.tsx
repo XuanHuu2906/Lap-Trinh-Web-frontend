@@ -6,7 +6,6 @@ import {
   Unlock,
   ChevronLeft,
   ChevronRight,
-  AlertCircle
 } from 'lucide-react';
 import { type User, type UserRole, type UserStatus } from '../../types/user.type';
 import { Button } from '../../components/ui/button';
@@ -14,6 +13,7 @@ import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { getUsers, updateUser, toggleUserStatus } from '../../services/admin.service';
 import { useToast } from '../../components/common/toast';
+import { Modal } from '../../components/common/Modal';
 
 const SkeletonRow: React.FC = () => (
   <tr className="animate-pulse">
@@ -62,12 +62,24 @@ export const AdminSystem: React.FC = () => {
     total: 0
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   // States bộ lọc tìm kiếm
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState<string>("Tất cả");
+
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
   // Cơ chế Debounce ô tìm kiếm sau 500ms
   useEffect(() => {
@@ -83,7 +95,7 @@ export const AdminSystem: React.FC = () => {
   // Hàm gọi API lấy danh sách người dùng
   const fetchUsers = async () => {
     setIsLoading(true);
-    setError(null);
+    setHasLoadError(false);
     try {
       const roleParam =
         userRoleFilter === "Tất cả" ? undefined : userRoleFilter.toLowerCase();
@@ -108,7 +120,8 @@ export const AdminSystem: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || 'Có lỗi xảy ra khi tải dữ liệu từ máy chủ.');
+      setHasLoadError(true);
+      toast({ title: getErrorMessage(err) || 'Có lỗi xảy ra khi tải dữ liệu từ máy chủ.', variant: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -136,41 +149,42 @@ export const AdminSystem: React.FC = () => {
     const actionText = isBan ? "Khóa vĩnh viễn" : "Mở khóa hoạt động";
     const newStatus: UserStatus = isBan ? "banned" : "active";
 
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn ${actionText} tài khoản người dùng "${email}"?`,
-      )
-    ) {
-      try {
-        const response = await toggleUserStatus(userId, newStatus);
-        if (response.success) {
-          setUsers(prev => prev.map(u => {
-            if (u.id === userId) {
-              return { ...u, status: newStatus };
-            }
-            return u;
-          }));
+    setConfirmConfig({
+      isOpen: true,
+      title: "Xác nhận hành động",
+      message: `Bạn có chắc chắn muốn ${actionText} tài khoản người dùng "${email}"?`,
+      onConfirm: async () => {
+        try {
+          const response = await toggleUserStatus(userId, newStatus);
+          if (response.success) {
+            setUsers(prev => prev.map(u => {
+              if (u.id === userId) {
+                return { ...u, status: newStatus };
+              }
+              return u;
+            }));
+            toast({
+              title: isBan ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản',
+              description: `Tài khoản "${email}" đã được cập nhật thành công.`,
+              variant: 'success',
+            });
+          } else {
+            toast({
+              title: 'Thao tác thất bại',
+              description: response.message || 'Lỗi không xác định',
+              variant: 'error',
+            });
+          }
+        } catch (err: unknown) {
+          console.error(err);
           toast({
-            title: isBan ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản',
-            description: `Tài khoản "${email}" đã được cập nhật thành công.`,
-            variant: 'success',
-          });
-        } else {
-          toast({
-            title: 'Thao tác thất bại',
-            description: response.message || 'Lỗi không xác định',
+            title: 'Đã xảy ra lỗi',
+            description: getErrorMessage(err) || 'Lỗi không xác định',
             variant: 'error',
           });
         }
-      } catch (err: unknown) {
-        console.error(err);
-        toast({
-          title: 'Đã xảy ra lỗi',
-          description: getErrorMessage(err) || 'Lỗi không xác định',
-          variant: 'error',
-        });
       }
-    }
+    });
   };
 
   // Thay đổi quyền hạn (Role) người dùng qua PUT API
@@ -179,41 +193,42 @@ export const AdminSystem: React.FC = () => {
     newRole: UserRole,
     email: string,
   ) => {
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn thay đổi vai trò tài khoản "${email}" thành "${newRole.toUpperCase()}"?`,
-      )
-    ) {
-      try {
-        const response = await updateUser(userId, { role: newRole });
-        if (response.success) {
-          setUsers(prev => prev.map(u => {
-            if (u.id === userId) {
-              return { ...u, role: newRole };
-            }
-            return u;
-          }));
+    setConfirmConfig({
+      isOpen: true,
+      title: "Thay đổi vai trò người dùng",
+      message: `Bạn có chắc chắn muốn thay đổi vai trò tài khoản "${email}" thành "${newRole.toUpperCase()}"?`,
+      onConfirm: async () => {
+        try {
+          const response = await updateUser(userId, { role: newRole });
+          if (response.success) {
+            setUsers(prev => prev.map(u => {
+              if (u.id === userId) {
+                return { ...u, role: newRole };
+              }
+              return u;
+            }));
+            toast({
+              title: 'Đã thay đổi vai trò',
+              description: `Tài khoản "${email}" đã được chuyển thành "${newRole}".`,
+              variant: 'success',
+            });
+          } else {
+            toast({
+              title: 'Thao tác thất bại',
+              description: response.message || 'Lỗi không xác định',
+              variant: 'error',
+            });
+          }
+        } catch (err: unknown) {
+          console.error(err);
           toast({
-            title: 'Đã thay đổi vai trò',
-            description: `Tài khoản "${email}" đã được chuyển thành "${newRole}".`,
-            variant: 'success',
-          });
-        } else {
-          toast({
-            title: 'Thao tác thất bại',
-            description: response.message || 'Lỗi không xác định',
+            title: 'Đã xảy ra lỗi',
+            description: getErrorMessage(err) || 'Lỗi không xác định',
             variant: 'error',
           });
         }
-      } catch (err: unknown) {
-        console.error(err);
-        toast({
-          title: 'Đã xảy ra lỗi',
-          description: getErrorMessage(err) || 'Lỗi không xác định',
-          variant: 'error',
-        });
       }
-    }
+    });
   };
 
   // Tính toán tổng số trang
@@ -286,17 +301,16 @@ export const AdminSystem: React.FC = () => {
                   Array.from({ length: pagination.limit }).map((_, idx) => (
                     <SkeletonRow key={idx} />
                   ))
-                ) : error ? (
-                  <tr className="bg-red-50/20 dark:bg-red-950/20">
+                ) : hasLoadError ? (
+                  <tr>
                     <td colSpan={6} className="py-10 text-center">
                       <div className="flex flex-col items-center justify-center gap-2.5">
-                        <AlertCircle className="w-7 h-7 text-red-500" />
-                        <span className="text-xs font-bold text-red-650 dark:text-red-300">{error}</span>
+                        <span className="text-xs font-bold text-slate-500">Không thể tải dữ liệu</span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={fetchUsers}
-                          className="mt-1 border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 h-8 text-[11px] cursor-pointer"
+                          className="mt-1 h-8 text-[11px] cursor-pointer"
                         >
                           Thử lại
                         </Button>
@@ -376,7 +390,7 @@ export const AdminSystem: React.FC = () => {
           </div>
 
           {/* 3. PAGINATION FOOTER */}
-          {!error && !isLoading && users.length > 0 && (
+          {!hasLoadError && !isLoading && users.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               {/* Page Navigation Buttons */}
               <div className="flex items-center gap-1">
@@ -421,6 +435,39 @@ export const AdminSystem: React.FC = () => {
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        title={confirmConfig.title}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-650 dark:text-slate-350">
+            {confirmConfig.message}
+          </p>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+              className="cursor-pointer h-9 px-4 text-xs font-semibold"
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                confirmConfig.onConfirm();
+                setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer h-9 px-4 text-xs font-semibold"
+            >
+              Xác nhận
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

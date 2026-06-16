@@ -255,16 +255,256 @@ function TextAreaInput({
   );
 }
 
-function CVPreview({ data }: { data: CVFormData }) {
+function getTemplateCategory(tmpl: any): string {
+  if (!tmpl) return "Đơn giản";
+  if (tmpl.layoutConfig) {
+    try {
+      const config = typeof tmpl.layoutConfig === "string" ? JSON.parse(tmpl.layoutConfig) : tmpl.layoutConfig;
+      if (config && config.category) {
+        return config.category;
+      }
+    } catch (e) {
+      console.error("Lỗi parse template category:", e);
+    }
+  }
+  return "Đơn giản";
+}
+
+function CVPreview({ data, template }: { data: CVFormData; template: any }) {
+  const category = getTemplateCategory(template);
   const skills = data.skills
     .split(",")
     .map((skill) => skill.trim())
     .filter(Boolean);
 
+  if (category === "Hiện đại" || category === "Đon giản" && template?.name?.includes("Modern")) {
+    return (
+      <div
+        id="cv-preview"
+        className="bg-white text-gray-900 shadow-lg flex"
+        style={{
+          width: "210mm",
+          minHeight: "297mm",
+          fontFamily: "sans-serif",
+          fontSize: "10pt",
+        }}
+      >
+        {/* Left Sidebar */}
+        <div className="w-[32%] bg-slate-900 text-white p-6 flex flex-col justify-between text-left font-sans">
+          <div className="space-y-6">
+            <div className="border-b border-slate-850 pb-4">
+              <h2 className="text-lg font-black tracking-tight leading-snug text-white uppercase break-words">
+                {data.name || "Họ và Tên"}
+              </h2>
+              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1.5 block">
+                {data.title || "Chức danh chuyên môn"}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-[9px] font-black text-indigo-400 tracking-wider block uppercase">
+                Liên hệ
+              </span>
+              <div className="text-[10px] text-slate-350 space-y-2 font-medium break-all">
+                {data.email && <p>{data.email}</p>}
+                {data.phone && <p>{data.phone}</p>}
+                {data.address && <p>{data.address}</p>}
+                {data.linkedin && <p>{data.linkedin}</p>}
+              </div>
+            </div>
+
+            {skills.length > 0 && (
+              <div className="space-y-3">
+                <span className="text-[9px] font-black text-indigo-400 tracking-wider block uppercase">
+                  Kỹ năng
+                </span>
+                <div className="space-y-2 text-[10px] text-slate-300 font-semibold">
+                  {skills.map((skill) => (
+                    <div key={skill} className="space-y-1">
+                      <div className="flex justify-between">
+                        <span>{skill}</span>
+                      </div>
+                      <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 w-[85%]"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Main Body */}
+        <div className="flex-1 p-8 space-y-6 text-left font-sans">
+          {data.summary && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                Giới thiệu bản thân
+              </h4>
+              <p className="text-[11px] text-slate-650 font-medium leading-relaxed">
+                {data.summary}
+              </p>
+            </div>
+          )}
+
+          {data.workExp.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                Kinh nghiệm làm việc
+              </h4>
+              <div className="space-y-4">
+                {data.workExp.map((work) => (
+                  <div key={work.id}>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-900">
+                      <span>{work.company} — {work.title}</span>
+                      <span className="text-indigo-600 text-[10px] shrink-0 ml-2">
+                        {work.period}
+                      </span>
+                    </div>
+                    {work.desc && (
+                      <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed whitespace-pre-line">
+                        {work.desc}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {data.education.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                Học vấn
+              </h4>
+              <div className="space-y-2">
+                {data.education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between text-[11px] font-bold text-slate-900">
+                    <span>{edu.school} — {edu.degree}</span>
+                    <span className="text-slate-500 text-[10px] shrink-0 ml-2">{edu.year}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (category === "Chuyên nghiệp") {
+    return (
+      <div
+        id="cv-preview"
+        className="bg-white text-gray-900 shadow-lg text-left"
+        style={{
+          width: "210mm",
+          minHeight: "297mm",
+          fontFamily: "Georgia, serif",
+          fontSize: "11pt",
+          padding: "16mm",
+        }}
+      >
+        {/* Header Professional Navy style banner */}
+        <div className="bg-[#0f172a] text-white p-6 -mx-[16mm] -mt-[16mm] mb-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-black tracking-wider uppercase">
+              {data.name || "Họ và Tên"}
+            </h2>
+            <p className="text-xs font-bold text-indigo-400 tracking-widest uppercase mt-1">
+              {data.title || "Chức danh chuyên môn"}
+            </p>
+          </div>
+          <div className="text-[10px] text-slate-350 font-medium text-right space-y-1">
+            {data.email && <p>{data.email}</p>}
+            {data.phone && <p>{data.phone}</p>}
+            {data.address && <p>{data.address}</p>}
+            {data.linkedin && <p>{data.linkedin}</p>}
+          </div>
+        </div>
+
+        {/* Summary */}
+        {data.summary && (
+          <div className="space-y-2 mb-6">
+            <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b-2 border-[#0f172a] pb-1.5">
+              TÓM TẮT CHUYÊN MÔN
+            </h4>
+            <p className="text-[11px] text-slate-650 font-medium leading-relaxed">
+              {data.summary}
+            </p>
+          </div>
+        )}
+
+        {/* Work Experience */}
+        {data.workExp.length > 0 && (
+          <div className="space-y-3 mb-6">
+            <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b-2 border-[#0f172a] pb-1.5">
+              QUÁ TRÌNH CÔNG TÁC CHUYÊN NGHIỆP
+            </h4>
+            <div className="space-y-4">
+              {data.workExp.map((work) => (
+                <div key={work.id}>
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-900">
+                    <span>
+                      {work.company} — {work.title}
+                    </span>
+                    <span className="text-[#0f172a] font-black text-[10px] shrink-0 ml-2">
+                      {work.period}
+                    </span>
+                  </div>
+                  {work.desc && (
+                    <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed whitespace-pre-line">
+                      {work.desc}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Core Skills & Education in columns */}
+        <div className="grid grid-cols-2 gap-6 border-t border-slate-100 pt-4">
+          {skills.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-black text-slate-950 uppercase tracking-wider">
+                KỸ NĂNG CỐT LÕI
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {skills.map((skill) => (
+                  <span key={skill} className="px-2 py-0.5 bg-slate-100 text-[10px] font-bold text-slate-650 rounded-xs">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {data.education.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-black text-slate-950 uppercase tracking-wider">
+                HỌC TRÌNH ĐÀO TẠO
+              </h4>
+              <ul className="text-[10px] font-semibold text-slate-600 space-y-2 list-disc list-inside">
+                {data.education.map((edu) => (
+                  <li key={edu.id}>
+                    {edu.school} ({edu.year})
+                    <span className="block text-slate-500 text-[9px] pl-4">{edu.degree}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Default: Đơn giản (Minimal / Standard)
   return (
     <div
       id="cv-preview"
-      className="bg-white text-gray-900 shadow-lg"
+      className="bg-white text-gray-900 shadow-lg text-left"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -331,6 +571,7 @@ function CVPreview({ data }: { data: CVFormData }) {
                     marginTop: "4px",
                     lineHeight: "1.5",
                     color: "#374151",
+                    whiteSpace: "pre-line",
                   }}
                 >
                   {work.desc}
@@ -772,7 +1013,7 @@ function SkillsSection({
   );
 }
 
-function PreviewPanel({ data }: { data: CVFormData }) {
+function PreviewPanel({ data, template }: { data: CVFormData; template: any }) {
   return (
     <div className="flex flex-1 items-start justify-center overflow-auto bg-gray-200 p-8 transition-colors dark:bg-slate-950/40">
       <div
@@ -783,7 +1024,7 @@ function PreviewPanel({ data }: { data: CVFormData }) {
           marginBottom: "-25%",
         }}
       >
-        <CVPreview data={data} />
+        <CVPreview data={data} template={template} />
       </div>
     </div>
   );
@@ -797,36 +1038,83 @@ export default function CVBuilder() {
 
   const [currentCvId, setCurrentCvId] = useState<number | null>(editingId);
   const [data, setData] = useState<CVFormData>(emptyFormData);
+  const [template, setTemplate] = useState<any | null>(null);
   const [openSections, setOpenSections] =
     useState<OpenSections>(initialOpenSections);
   const [saving, setSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(Boolean(editingId));
+  const [isLoading, setIsLoading] = useState(Boolean(editingId) || Boolean(templateId));
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!editingId) return;
-
-    const loadCV = async () => {
+    const loadInitialData = async () => {
       try {
         setIsLoading(true);
         setErrorMessage(null);
 
-        const response = await cvService.getById(editingId);
-        setData(mapCVToFormData(response.data));
-        setCurrentCvId(response.data.id);
-        setLastSavedAt(response.data.updatedAt);
+        if (editingId) {
+          const response = await cvService.getById(editingId);
+          setData(mapCVToFormData(response.data));
+          setCurrentCvId(response.data.id);
+          setLastSavedAt(response.data.updatedAt);
+
+          if (response.data.templateId) {
+            const templatesRes = await cvService.getTemplates();
+            const tmpl = templatesRes.data.find(t => t.id === response.data.templateId);
+            if (tmpl) {
+              setTemplate(tmpl);
+            }
+          }
+        } else if (templateId) {
+          const templatesRes = await cvService.getTemplates();
+          const tmpl = templatesRes.data.find(t => t.id === templateId);
+          if (tmpl) {
+            setTemplate(tmpl);
+            if (tmpl.layoutConfig) {
+              try {
+                const config = typeof tmpl.layoutConfig === "string" ? JSON.parse(tmpl.layoutConfig) : tmpl.layoutConfig;
+                if (config && config.defaultData) {
+                  setData({
+                    name: config.defaultData.personalInfo?.fullName || "",
+                    title: tmpl.name || "",
+                    email: config.defaultData.personalInfo?.email || "",
+                    phone: config.defaultData.personalInfo?.phone || "",
+                    address: config.defaultData.personalInfo?.address || "",
+                    linkedin: config.defaultData.personalInfo?.linkedin || "",
+                    summary: config.defaultData.personalInfo?.summary || "",
+                    skills: (config.defaultData.skills || []).map((s: any) => s.name).join(", "),
+                    workExp: (config.defaultData.experience || []).map((w: any, idx: number) => ({
+                      id: w.id || Date.now() + idx,
+                      title: w.title || "",
+                      company: w.company || "",
+                      period: w.period || "",
+                      desc: w.desc || ""
+                    })),
+                    education: (config.defaultData.education || []).map((e: any, idx: number) => ({
+                      id: e.id || Date.now() + idx,
+                      degree: e.degree || "",
+                      school: e.school || "",
+                      year: e.year || ""
+                    }))
+                  });
+                }
+              } catch (e) {
+                console.error("Lỗi parse layoutConfig của template:", e);
+              }
+            }
+          }
+        }
       } catch (error: unknown) {
         setErrorMessage(
-          getApiErrorMessage(error, "Không thể tải CV từ database."),
+          getApiErrorMessage(error, "Không thể tải dữ liệu CV từ database.")
         );
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadCV();
-  }, [editingId]);
+    loadInitialData();
+  }, [editingId, templateId]);
 
   const toggleSection = (key: string) => {
     setOpenSections((current) => ({ ...current, [key]: !current[key] }));
@@ -901,7 +1189,8 @@ export default function CVBuilder() {
       setSaving(true);
       setErrorMessage(null);
 
-      const payload = mapFormDataToPayload(data, templateId);
+      const targetTemplateId = templateId || template?.id;
+      const payload = mapFormDataToPayload(data, targetTemplateId);
       const response = currentCvId
         ? await cvService.update(currentCvId, payload)
         : await cvService.create(payload);
@@ -961,7 +1250,7 @@ export default function CVBuilder() {
           handlers={editorHandlers}
         />
 
-        <PreviewPanel data={data} />
+        <PreviewPanel data={data} template={template} />
       </div>
     </div>
   );

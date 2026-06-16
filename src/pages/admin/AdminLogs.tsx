@@ -6,7 +6,6 @@ import {
   Building2,
   FileText,
   Briefcase,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Calendar,
@@ -15,6 +14,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { getSystemActivities, type SystemActivity } from "../../services/admin.service";
 import { getAdminBadgeClass } from "../../utils/adminBadge";
+import { useToast } from "../../components/common/toast";
 
 const SkeletonRow: React.FC = () => (
   <tr className="animate-pulse">
@@ -48,7 +48,8 @@ export const AdminLogs: React.FC = () => {
   const [activities, setActivities] = useState<SystemActivity[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<SystemActivity[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const { toast } = useToast();
 
   // Filters state
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,9 +62,8 @@ export const AdminLogs: React.FC = () => {
 
   const fetchLogs = async () => {
     setIsLoading(true);
-    setError(null);
+    setHasLoadError(false);
     try {
-      // Fetch the last 100 activities from server
       const response = await getSystemActivities({ limit: 100 });
       if (response.success && response.data) {
         setActivities(response.data);
@@ -73,7 +73,8 @@ export const AdminLogs: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || "Đã xảy ra lỗi khi tải dữ liệu từ máy chủ.");
+      setHasLoadError(true);
+      toast({ title: getErrorMessage(err) || "Đã xảy ra lỗi khi tải dữ liệu từ máy chủ.", variant: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -261,17 +262,16 @@ export const AdminLogs: React.FC = () => {
                   Array.from({ length: pageSize }).map((_, idx) => (
                     <SkeletonRow key={idx} />
                   ))
-                ) : error ? (
-                  <tr className="bg-red-50/20 dark:bg-red-950/20">
+                ) : hasLoadError ? (
+                  <tr>
                     <td colSpan={5} className="py-10 text-center">
                       <div className="flex flex-col items-center justify-center gap-2.5">
-                        <AlertCircle className="w-7 h-7 text-red-500" />
-                        <span className="text-xs font-bold text-red-650 dark:text-red-300">{error}</span>
+                        <span className="text-xs font-bold text-slate-500">Không thể tải dữ liệu</span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={fetchLogs}
-                          className="mt-1 border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 h-8 text-[11px] cursor-pointer"
+                          className="mt-1 h-8 text-[11px] cursor-pointer"
                         >
                           Thử lại
                         </Button>
@@ -327,7 +327,7 @@ export const AdminLogs: React.FC = () => {
           </div>
 
           {/* 3. PAGINATION FOOTER */}
-          {!error && !isLoading && totalItems > 0 && (
+          {!hasLoadError && !isLoading && totalItems > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-1">
                 <Button

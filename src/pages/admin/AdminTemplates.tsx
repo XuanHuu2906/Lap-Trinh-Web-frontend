@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { cvService } from "../../services/cv.service";
 import {
   Search,
   Plus,
@@ -324,9 +325,8 @@ const TemplateMockup: React.FC<TemplateMockupProps> = ({ id, name }) => {
 export const AdminTemplates: React.FC = () => {
   const { toast } = useToast();
 
-  const [templates, setTemplates] = useState<CVTemplate[]>(
-    INITIAL_TEMPLATES_MOCK,
-  );
+  const [templates, setTemplates] = useState<CVTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tất cả");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
@@ -345,6 +345,7 @@ export const AdminTemplates: React.FC = () => {
   const [formDescription, setFormDescription] = useState("");
   const [formPreviewName, setFormPreviewName] = useState("");
   const [formConfigName, setFormConfigName] = useState("");
+  const [formConfigContent, setFormConfigContent] = useState("");
   const [formFeatureInput, setFormFeatureInput] = useState("");
   const [formFeaturesList, setFormFeaturesList] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
@@ -353,6 +354,284 @@ export const AdminTemplates: React.FC = () => {
   const [previewTemplate, setPreviewTemplate] = useState<CVTemplate | null>(
     null,
   );
+
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  const handleInitializeDefaultTemplates = async () => {
+    try {
+      setIsInitializing(true);
+      toast({
+        title: "Đang khởi tạo",
+        description: "Đang tạo các mẫu CV mặc định trong database...",
+      });
+
+      const defaults = [
+        {
+          name: "Executive Standard",
+          description: "Bố cục truyền thống, đơn giản, tập trung làm nổi bật quá trình công tác. Mẫu CV chuẩn hóa đạt điểm tương thích tối đa 99% với các bộ đọc ATS tự động trên thị trường.",
+          thumbnailUrl: "executive_standard_v1.png",
+          layoutConfig: JSON.stringify({
+            category: "Đơn giản",
+            features: [
+              "Chuẩn hóa ATS tuyệt đối",
+              "Bố cục 1 cột tối ưu cho robot",
+              "Cực kỳ tinh gọn chuyên nghiệp"
+            ],
+            defaultData: {
+              personalInfo: {
+                fullName: "NGUYỄN VĂN A",
+                email: "anv@gmail.com",
+                phone: "0987 654 321",
+                address: "Hà Nội, Việt Nam",
+                linkedin: "linkedin.com/in/anv",
+                summary: "Hơn 3 năm kinh nghiệm trong phát triển hệ thống web quy mô lớn. Mong muốn mang kiến thức về React, Node.js và kiến trúc microservices đóng góp cho sự phát triển của công ty."
+              },
+              education: [
+                {
+                  school: "ĐẠI HỌC CÔNG NGHỆ THÔNG TIN",
+                  degree: "Cử nhân CNTT (GPA: 3.4/4)",
+                  year: "2020 - 2024"
+                }
+              ],
+              experience: [
+                {
+                  company: "CÔNG TY CÔNG NGHỆ ABC",
+                  title: "Lập trình viên ReactJS",
+                  period: "T6/2024 - Hiện tại",
+                  desc: "Xây dựng và tối ưu giao diện dashboard quản lý thông tin doanh nghiệp, nâng tốc độ tải trang lên 35%."
+                },
+                {
+                  company: "TẬP ĐOÀN XYZ",
+                  title: "Lập trình viên Backend",
+                  period: "T9/2023 - T5/2024",
+                  desc: "Phát triển hệ thống APIs cho mobile app dịch vụ thương mại điện tử sử dụng Express và MongoDB."
+                }
+              ],
+              skills: [
+                { "name": "React" },
+                { "name": "Node.js" },
+                { "name": "TypeScript" }
+              ]
+            }
+          })
+        },
+        {
+          name: "Modern Split Creative",
+          description: "Thiết kế chia hai cột tương phản cao. Thích hợp cho ứng viên mong muốn ứng tuyển các vị trí Sáng tạo, Marketing, thiết kế UI/UX nhờ cách trình bày kỹ năng bắt mắt.",
+          thumbnailUrl: "modern_split_blue.png",
+          layoutConfig: JSON.stringify({
+            category: "Hiện đại",
+            features: [
+              "Bố cục 2 cột cá tính",
+              "Thang đo kỹ năng trực quan",
+              "Không gian chèn ảnh chân dung sang trọng"
+            ],
+            defaultData: {
+              personalInfo: {
+                fullName: "TRẦN THỊ B",
+                email: "tranthib@gmail.com",
+                phone: "0901 234 567",
+                address: "TP. HCM, Việt Nam",
+                linkedin: "linkedin.com/in/tranthib",
+                summary: "Nhà thiết kế sản phẩm sáng tạo với niềm đam mê sâu sắc trong việc chuyển đổi các vấn đề phức tạp của người dùng thành các giải pháp tương tác đơn giản, mượt mà và trực quan nhất."
+              },
+              education: [
+                {
+                  school: "ĐẠI HỌC KIẾN TRÚC TP.HCM",
+                  degree: "Ngành Thiết Kế Đồ Họa",
+                  year: "2019 - 2023"
+                }
+              ],
+              experience: [
+                {
+                  company: "CREATIVE HUB",
+                  title: "UI/UX Designer",
+                  period: "2024 - Hiện tại",
+                  desc: "Nghiên cứu hành vi, tái cấu trúc luồng mua sắm sàn TMĐT giúp tăng chỉ số chuyển đổi giỏ hàng lên 14%."
+                },
+                {
+                  company: "SAIGON STUDIO",
+                  title: "Thiết kế giao diện",
+                  period: "2023 - 2024",
+                  desc: "Phối hợp với PM thiết kế 5 website thương hiệu lớn đạt giải thưởng thiết kế quốc gia."
+                }
+              ],
+              skills: [
+                { "name": "Figma Design" },
+                { "name": "Prototyping" },
+                { "name": "User Research" }
+              ]
+            }
+          })
+        },
+        {
+          name: "Tech Minimalist Dark",
+          description: "Tông màu xám ghi trung tính hiện đại, mang hơi thở công nghệ cao. Bố cục phân mảnh hợp lý, khuyên dùng cho các lập trình viên, kỹ sư dữ liệu hoặc chuyên gia CNTT.",
+          thumbnailUrl: "tech_minimalist_dark.png",
+          layoutConfig: JSON.stringify({
+            category: "Hiện đại",
+            features: [
+              "Tông màu xám đen sang trọng",
+              "Dễ theo dõi kinh nghiệm dự án",
+              "Bố cục cân đối, thoáng đãng"
+            ],
+            defaultData: {
+              personalInfo: {
+                fullName: "LÊ HOÀNG C",
+                email: "lehoangc@gmail.com",
+                phone: "0934 567 890",
+                address: "Đà Nẵng, Việt Nam",
+                linkedin: "linkedin.com/in/lehoangc",
+                summary: "Kỹ sư phần mềm chuyên nghiệp với thế mạnh về phát triển hệ thống backend hiệu năng cao, cơ sở dữ liệu lớn và kiến trúc hướng sự kiện."
+              },
+              education: [
+                {
+                  school: "ĐẠI HỌC BÁCH KHOA ĐÀ NẴNG",
+                  degree: "Kỹ sư Khoa học Máy tính",
+                  year: "2018 - 2023"
+                }
+              ],
+              experience: [
+                {
+                  company: "TECH SOLUTIONS",
+                  title: "Backend Engineer",
+                  period: "2023 - Hiện tại",
+                  desc: "Tối ưu hóa các truy vấn database giúp hệ thống xử lý nhanh hơn 50% trong các khung giờ cao điểm."
+                }
+              ],
+              skills: [
+                { "name": "PostgreSQL" },
+                { "name": "Docker" },
+                { "name": "Redis" }
+              ]
+            }
+          })
+        },
+        {
+          name: "Corporate Leadership",
+          description: "Dành cho các vị trí quản lý cấp cao, giám đốc điều hành, trưởng phòng. Màu xanh hải quân sẫm biểu trưng cho sự ổn định, tin cậy, vững chắc và năng lực vượt trội.",
+          thumbnailUrl: "corporate_navy_gold.png",
+          layoutConfig: JSON.stringify({
+            category: "Chuyên nghiệp",
+            features: [
+              "Thiết kế navy vương giả",
+              "Làm nổi bật dự án & chứng chỉ",
+              "Có phần tóm tắt mục tiêu uy tín"
+            ],
+            defaultData: {
+              personalInfo: {
+                fullName: "PHẠM MINH C",
+                email: "pmc@gmail.com",
+                phone: "0912 345 678",
+                address: "Hà Nội, Việt Nam",
+                linkedin: "linkedin.com/in/pmc",
+                summary: "Chuyên gia Quản lý dự án đạt chứng chỉ PMP quốc tế với hơn 5 năm kinh nghiệm dẫn dắt các dự án tài chính số quy mô lớn. Am hiểu sâu sắc về quản trị rủi ro và tối ưu hóa ngân sách vận hành."
+              },
+              education: [
+                {
+                  school: "ĐẠI HỌC NGOẠI THƯƠNG",
+                  degree: "Thạc sĩ Quản trị Kinh doanh",
+                  year: "2019 - 2021"
+                }
+              ],
+              experience: [
+                {
+                  company: "VINA BANK",
+                  title: "Trưởng Ban Quản Lý Dự Án Fintech",
+                  period: "T1/2023 - Hiện tại",
+                  desc: "Quản lý ngân sách 2.5 triệu USD, dẫn dắt đội ngũ 24 kỹ sư xây dựng lõi thẻ thanh toán thế hệ mới đúng tiến độ cam kết."
+                },
+                {
+                  company: "FINANCE GROUP",
+                  title: "Trưởng nhóm Phân tích Nghiệp vụ",
+                  period: "T8/2021 - T12/2022",
+                  desc: "Phân tích yêu cầu, xây dựng tài liệu kỹ thuật cho hệ thống ERP nội bộ giúp cắt giảm 18% chi phí vận hành."
+                }
+              ],
+              skills: [
+                { "name": "Risk Management" },
+                { "name": "Agile/Scrum" },
+                { "name": "Budget Control" }
+              ]
+            }
+          })
+        }
+      ];
+
+      for (const item of defaults) {
+        await cvService.createTemplate(item);
+      }
+
+      toast({
+        title: "Thành công",
+        description: "Đã khởi tạo thành công 4 mẫu CV mặc định.",
+        variant: "success"
+      });
+      loadTemplates();
+    } catch (err: any) {
+      console.error(err);
+      const errorMsg = err?.response?.data?.message || err?.message || "Có lỗi xảy ra khi khởi tạo các mẫu mặc định.";
+      toast({
+        title: "Lỗi khởi tạo",
+        description: errorMsg,
+        variant: "error"
+      });
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  const mapApiTemplateToCVTemplate = (t: any): CVTemplate => {
+    let category: any = "Đơn giản";
+    let features: string[] = ["Dễ dàng tùy biến thông tin", "Bố cục cân đối trực quan"];
+    let layoutConfigStr = "";
+    if (t.layoutConfig) {
+      try {
+        const config = typeof t.layoutConfig === "string" ? JSON.parse(t.layoutConfig) : t.layoutConfig;
+        if (config) {
+          if (config.category) category = config.category;
+          if (config.features) features = config.features;
+          layoutConfigStr = typeof t.layoutConfig === "string" ? t.layoutConfig : JSON.stringify(t.layoutConfig);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return {
+      id: t.id,
+      name: t.name,
+      category: category,
+      description: t.description || "",
+      thumbnailUrl: t.thumbnailUrl || "",
+      previewUrl: t.thumbnailUrl || "",
+      layoutConfig: layoutConfigStr,
+      isActive: t.isActive,
+      features: features,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    };
+  };
+
+  const loadTemplates = async () => {
+    try {
+      setIsLoading(true);
+      const res = await cvService.getAdminTemplates();
+      setTemplates(res.data.map(mapApiTemplateToCVTemplate));
+    } catch (err) {
+      console.error("Lỗi khi tải templates:", err);
+      toast({
+        title: "Lỗi tải dữ liệu",
+        description: "Không thể tải danh sách template từ database.",
+        variant: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
 
   // Mở modal thêm mới mẫu CV (UC-19)
   const handleOpenAddModal = () => {
@@ -363,6 +642,7 @@ export const AdminTemplates: React.FC = () => {
     setFormDescription("");
     setFormPreviewName("");
     setFormConfigName("");
+    setFormConfigContent("");
     setFormFeatureInput("");
     setFormFeaturesList([]);
     setFormIsActive(true);
@@ -379,28 +659,46 @@ export const AdminTemplates: React.FC = () => {
     );
     setFormDescription(template.description);
     setFormPreviewName(template.previewUrl || template.thumbnailUrl || "");
-    setFormConfigName(template.layoutConfig || "layout_config_schema.json");
+    setFormConfigName("layout_config.json");
+    setFormConfigContent(template.layoutConfig || "");
     setFormFeatureInput("");
     setFormFeaturesList(template.features || []);
     setFormIsActive(template.isActive);
     setIsFormModalOpen(true);
   };
 
+  const handleConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormConfigName(file.name);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormConfigContent(event.target?.result as string || "");
+      };
+      reader.readAsText(file);
+    }
+  };
+
   // Kích hoạt hoặc ẩn mẫu CV khỏi ứng viên (Luồng phụ ẩn CV của UC-19)
-  const handleToggleActive = (id: number) => {
-    setTemplates((prev) =>
-      prev.map((t) => {
-        if (t.id === id) {
-          const nextState = !t.isActive;
-          return {
-            ...t,
-            isActive: nextState,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return t;
-      }),
-    );
+  const handleToggleActive = async (id: number) => {
+    try {
+      const res = await cvService.toggleTemplate(id);
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === id ? mapApiTemplateToCVTemplate(res.data) : t))
+      );
+      toast({
+        title: "Đã cập nhật trạng thái",
+        description: `Template đã được ${res.data.isActive ? 'kích hoạt' : 'vô hiệu hóa'}.`,
+        variant: "success",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thay đổi trạng thái hoạt động.",
+        variant: "error",
+      });
+    }
   };
 
   // Thêm một đặc điểm thiết kế vào danh sách tạm của Form
@@ -417,7 +715,7 @@ export const AdminTemplates: React.FC = () => {
   };
 
   // Gửi Form Đăng ký / Chỉnh sửa mẫu CV (Xác thực UC-25)
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // RÀO CẢN KIỂM DUYỆT (UC-25: Kiểm duyệt tính an toàn của tệp tải lên)
@@ -451,89 +749,91 @@ export const AdminTemplates: React.FC = () => {
       return;
     }
 
-    if (formMode === "add") {
-      // Đăng ký mới mẫu CV
-      const newTemplateId =
-        templates.length > 0 ? Math.max(...templates.map((t) => t.id)) + 1 : 1;
-      const newTemplateObj: CVTemplate = {
-        id: newTemplateId,
-        name: formName.trim(),
-        category: formCategory,
-        description: formDescription.trim(),
-        thumbnailUrl: formPreviewName || "default_cv_template.png",
-        previewUrl: formPreviewName || "default_cv_template.png",
-        layoutConfig: formConfigName,
-        isActive: formIsActive,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        features:
-          formFeaturesList.length > 0
-            ? formFeaturesList
-            : ["Dễ dàng tùy biến thông tin", "Bố cục cân đối trực quan"],
-      };
-
-      setTemplates((prev) => [newTemplateObj, ...prev]);
-      toast({
-        title: "Đã tạo mẫu CV mới",
-        description: "Mẫu CV đã được đăng ký và đưa vào danh sách quản trị.",
-        variant: "success",
-      });
+    let finalConfig = formConfigContent;
+    if (!finalConfig) {
+      finalConfig = JSON.stringify({ category: formCategory, features: formFeaturesList, defaultData: {} });
     } else {
-      // Chỉnh sửa mẫu CV hiện có
-      setTemplates((prev) =>
-        prev.map((t) => {
-          if (t.id === editingTemplateId) {
-            return {
-              ...t,
-              name: formName.trim(),
-              category: formCategory,
-              description: formDescription.trim(),
-              thumbnailUrl: formPreviewName,
-              previewUrl: formPreviewName,
-              layoutConfig: formConfigName,
-              isActive: formIsActive,
-              features: formFeaturesList,
-              updatedAt: new Date().toISOString(),
-            };
-          }
-          return t;
-        }),
-      );
-      toast({
-        title: "Đã cập nhật mẫu CV",
-        description: "Các thay đổi của mẫu CV đã được lưu thành công.",
-        variant: "success",
-      });
+      try {
+        const parsed = JSON.parse(finalConfig);
+        parsed.category = formCategory;
+        parsed.features = formFeaturesList;
+        finalConfig = JSON.stringify(parsed);
+      } catch (e) {
+        console.error("Lỗi parse config content:", e);
+      }
     }
 
-    setIsFormModalOpen(false);
+    try {
+      if (formMode === "add") {
+        const payload = {
+          name: formName.trim(),
+          description: formDescription.trim(),
+          thumbnailUrl: formPreviewName || "default_cv_template.png",
+          layoutConfig: finalConfig,
+        };
+
+        const res = await cvService.createTemplate(payload);
+        setTemplates((prev) => [mapApiTemplateToCVTemplate(res.data), ...prev]);
+        toast({
+          title: "Đã tạo mẫu CV mới",
+          description: "Mẫu CV đã được đăng ký và đưa vào danh sách quản trị.",
+          variant: "success",
+        });
+      } else {
+        const payload = {
+          name: formName.trim(),
+          description: formDescription.trim(),
+          thumbnailUrl: formPreviewName,
+          layoutConfig: finalConfig,
+        };
+
+        const res = await cvService.updateTemplate(editingTemplateId!, payload);
+        setTemplates((prev) =>
+          prev.map((t) => (t.id === editingTemplateId ? mapApiTemplateToCVTemplate(res.data) : t))
+        );
+        toast({
+          title: "Đã cập nhật mẫu CV",
+          description: "Các thay đổi của mẫu CV đã được lưu thành công.",
+          variant: "success",
+        });
+      }
+      setIsFormModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      const msg = err?.response?.data?.message || "Không thể lưu template.";
+      toast({
+        title: "Lỗi lưu template",
+        description: msg,
+        variant: "error",
+      });
+    }
   };
 
   // Xóa mẫu CV (Xử lý ngoại lệ UC-19)
-  const handleDeleteTemplate = (id: number, name: string) => {
-    // NGOẠI LỆ: Xóa template đang được dùng bởi ứng viên
-    if (id === 1 || id === 2) {
-      toast({
-        title: `Không thể xóa mẫu CV "${name}"`,
-        description:
-          "Mẫu này đang được liên kết với 34 bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị cho ứng viên mới.",
-        variant: "warning",
-        duration: 7000,
-      });
-      return;
-    }
-
+  const handleDeleteTemplate = async (id: number, name: string) => {
     if (
       window.confirm(
         `Bạn có chắc chắn muốn xóa vĩnh viễn mẫu CV "${name}" khỏi hệ thống?`,
       )
     ) {
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-      toast({
-        title: "Đã xóa mẫu CV",
-        description: "Mẫu CV đã được xóa khỏi danh sách quản trị.",
-        variant: "success",
-      });
+      try {
+        await cvService.deleteTemplate(id);
+        setTemplates((prev) => prev.filter((t) => t.id !== id));
+        toast({
+          title: "Đã xóa mẫu CV",
+          description: "Mẫu CV đã được xóa khỏi danh sách quản trị.",
+          variant: "success",
+        });
+      } catch (error: any) {
+        console.error(error);
+        const msg = error?.response?.data?.message || "Mẫu này đang được liên kết với các bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị.";
+        toast({
+          title: `Không thể xóa mẫu CV "${name}"`,
+          description: msg,
+          variant: "warning",
+          duration: 7050,
+        });
+      }
     }
   };
 
@@ -605,7 +905,12 @@ export const AdminTemplates: React.FC = () => {
       </div>
 
       {/* 3. TEMPLATES DISPLAY GRID */}
-      {filteredTemplates.length > 0 ? (
+      {isLoading ? (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/95 dark:border-slate-850 rounded-sm py-16 text-center shadow-3xs flex items-center justify-center gap-2 text-slate-500 font-semibold">
+          <div className="animate-spin rounded-full h-5 w-5 border-2 border-indigo-600 border-t-transparent"></div>
+          <span>Đang tải danh sách mẫu thiết kế...</span>
+        </div>
+      ) : filteredTemplates.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredTemplates.map((template) => (
             <div
@@ -734,14 +1039,34 @@ export const AdminTemplates: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-sm py-16 text-center shadow-3xs">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-sm py-16 text-center shadow-3xs flex flex-col items-center justify-center">
           <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
-            Không tìm thấy mẫu CV nào khớp bộ lọc
-          </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            Vui lòng thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc danh mục khác.
-          </p>
+          {templates.length === 0 ? (
+            <>
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                Kho mẫu CV trong database hiện đang trống
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 mb-6">
+                Hãy bắt đầu bằng cách khởi tạo các mẫu CV mặc định của hệ thống.
+              </p>
+              <Button
+                disabled={isInitializing}
+                onClick={handleInitializeDefaultTemplates}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-6 cursor-pointer shadow-md"
+              >
+                {isInitializing ? "Đang khởi tạo..." : "KHỞI TẠO 4 MẪU CV MẶC ĐỊNH"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                Không tìm thấy mẫu CV nào khớp bộ lọc
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                Vui lòng thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc danh mục khác.
+              </p>
+            </>
+          )}
         </div>
       )}
 
@@ -830,9 +1155,7 @@ export const AdminTemplates: React.FC = () => {
                       accept=".json"
                       id="config-upload"
                       className="hidden"
-                      onChange={(e) =>
-                        setFormConfigName(e.target.files?.[0]?.name || "")
-                      }
+                      onChange={handleConfigChange}
                     />
                     <label
                       htmlFor="config-upload"

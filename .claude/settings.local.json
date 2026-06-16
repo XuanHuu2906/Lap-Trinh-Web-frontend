@@ -16,7 +16,10 @@
       "Bash(rtk grep *)",
       "Bash(npm uninstall *)",
       "Bash(rtk npx tsx -e ' *)",
-      "Bash(rtk npx *)"
+      "Bash(rtk npx *)",
+      "Bash(.\\\\node_modules\\\\.bin\\\\prisma migrate *)",
+      "Bash(Remove-Item *)",
+      "Bash(node *)"
     ]
   }
 }

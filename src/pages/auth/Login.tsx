@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../utils/supabase";
 import Footer from "../../components/layout/Footer";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect");
+  const { login, loginWithGoogle, logout } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,17 +64,26 @@ export function LoginPage() {
 
           if (res.success && res.data) {
             const { user } = res.data;
-            // Điều hướng người dùng dựa vào vai trò
+
             if (user.role === "admin") {
-              navigate("/admin");
-            } else if (user.role === "candidate") {
-              navigate("/candidate");
-            } else if (user.role === "recruiter") {
-              navigate("/recruiter");
-            } else if (user.role === "pending") {
-              navigate("/auth/setup-profile");
+              await logout();
+              setError("Tài khoản quản trị viên không được phép đăng nhập tại đây. Vui lòng sử dụng cổng quản trị.");
+              processingRef.current = false;
             } else {
-              navigate("/");
+              // Điều hướng người dùng dựa vào vai trò
+              if (redirect) {
+                navigate(redirect);
+              } else {
+                if (user.role === "candidate") {
+                  navigate("/candidate");
+                } else if (user.role === "recruiter") {
+                  navigate("/recruiter");
+                } else if (user.role === "pending") {
+                  navigate("/auth/setup-profile");
+                } else {
+                  navigate("/");
+                }
+              }
             }
           }
         }
@@ -100,7 +111,7 @@ export function LoginPage() {
       cancelledRef.current = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginWithGoogle, navigate]);
+  }, [loginWithGoogle, navigate, logout]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,17 +123,25 @@ export function LoginPage() {
       if (res.success && res.data) {
         const { user } = res.data;
 
-        // Điều hướng dựa trên vai trò của người dùng
         if (user.role === "admin") {
-          navigate("/admin");
-        } else if (user.role === "candidate") {
-          navigate("/candidate");
-        } else if (user.role === "recruiter") {
-          navigate("/recruiter");
-        } else if (user.role === "pending") {
-          navigate("/auth/setup-profile");
+          await logout();
+          setError("Tài khoản quản trị viên không được phép đăng nhập tại đây. Vui lòng sử dụng cổng quản trị.");
+          return;
+        }
+
+        // Điều hướng dựa trên vai trò của người dùng
+        if (redirect) {
+          navigate(redirect);
         } else {
-          navigate("/");
+          if (user.role === "candidate") {
+            navigate("/candidate");
+          } else if (user.role === "recruiter") {
+            navigate("/recruiter");
+          } else if (user.role === "pending") {
+            navigate("/auth/setup-profile");
+          } else {
+            navigate("/");
+          }
         }
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
