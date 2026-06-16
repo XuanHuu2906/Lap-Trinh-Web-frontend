@@ -19,7 +19,14 @@
       "Bash(rtk npx *)",
       "Bash(.\\\\node_modules\\\\.bin\\\\prisma migrate *)",
       "Bash(Remove-Item *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(Get-ChildItem D:\\\\LTWeb\\\\LTWeb-backend -Depth 0)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Get-ChildItem -Path \"D:\\\\LTWeb\\\\LTWeb-backend\\\\src\" -Recurse -Name)",
+      "Bash(Select-Object -First 200)",
+      "Bash(rtk read *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(rtk git *)"
     ]
   }
 }
