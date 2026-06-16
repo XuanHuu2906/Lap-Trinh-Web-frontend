@@ -2,6 +2,34 @@
 
 Frontend project for the LTWeb recruitment management system. The app is built with React, TypeScript, Vite, Tailwind CSS, Axios, React Hook Form, and React Router DOM, ShadcnUI.
 
+## 🐳 Docker
+
+```bash
+cd D:\LTWeb
+
+# Start (lần đầu cần --build)
+docker compose -f docker-compose.dev.yml up --build
+
+# Start (lần sau)
+docker compose -f docker-compose.dev.yml up
+
+# Xem logs
+docker compose -f docker-compose.dev.yml logs -f
+
+# Xem trạng thái
+docker compose -f docker-compose.dev.yml ps
+
+# Dừng
+docker compose -f docker-compose.dev.yml stop
+
+# Dừng + xóa
+docker compose -f docker-compose.dev.yml down
+```
+
+Frontend tại `http://localhost:5173`, sửa code là reload ngay (Vite HMR).
+
+---
+
 ## Scripts
 
 ```bash
