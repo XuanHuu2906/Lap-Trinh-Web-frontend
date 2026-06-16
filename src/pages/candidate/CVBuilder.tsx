@@ -8,7 +8,10 @@ import {
   Plus,
   Save,
   Trash2,
+  X,
 } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { type CandidateCV, cvService } from "@/services/cv.service";
 
 type WorkExperience = {
@@ -270,7 +273,16 @@ function getTemplateCategory(tmpl: any): string {
   return "Đơn giản";
 }
 
-function CVPreview({ data, template }: { data: CVFormData; template: any }) {
+function CVPreview({
+  data,
+  template,
+  idSuffix = "",
+}: {
+  data: CVFormData;
+  template: any;
+  idSuffix?: string;
+}) {
+  const previewId = `cv-preview${idSuffix}`;
   const category = getTemplateCategory(template);
   const skills = data.skills
     .split(",")
@@ -280,7 +292,7 @@ function CVPreview({ data, template }: { data: CVFormData; template: any }) {
   if (category === "Hiện đại" || category === "Đon giản" && template?.name?.includes("Modern")) {
     return (
       <div
-        id="cv-preview"
+        id={previewId}
         className="bg-white text-gray-900 shadow-lg flex"
         style={{
           width: "210mm",
@@ -396,7 +408,7 @@ function CVPreview({ data, template }: { data: CVFormData; template: any }) {
   if (category === "Chuyên nghiệp") {
     return (
       <div
-        id="cv-preview"
+        id={previewId}
         className="bg-white text-gray-900 shadow-lg text-left"
         style={{
           width: "210mm",
@@ -503,7 +515,7 @@ function CVPreview({ data, template }: { data: CVFormData; template: any }) {
   // Default: Đơn giản (Minimal / Standard)
   return (
     <div
-      id="cv-preview"
+      id={previewId}
       className="bg-white text-gray-900 shadow-lg text-left"
       style={{
         width: "210mm",
@@ -655,11 +667,15 @@ function PreviewSection({
 
 function BuilderTopBar({
   saving,
+  downloading,
   onSave,
+  onPreview,
   onDownload,
 }: {
   saving: boolean;
+  downloading: boolean;
   onSave: () => void;
+  onPreview: () => void;
   onDownload: () => void;
 }) {
   return (
@@ -685,6 +701,7 @@ function BuilderTopBar({
         </button>
         <button
           type="button"
+          onClick={onPreview}
           className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <Eye size={14} />
@@ -693,10 +710,11 @@ function BuilderTopBar({
         <button
           type="button"
           onClick={onDownload}
-          className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+          disabled={downloading}
+          className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60 dark:bg-indigo-600 dark:hover:bg-indigo-500"
         >
           <Download size={14} />
-          Tải PDF
+          {downloading ? "Đang tạo PDF..." : "Tải PDF"}
         </button>
       </div>
     </div>
@@ -1024,7 +1042,55 @@ function PreviewPanel({ data, template }: { data: CVFormData; template: any }) {
           marginBottom: "-25%",
         }}
       >
-        <CVPreview data={data} template={template} />
+        <CVPreview data={data} template={template} idSuffix="-live" />
+      </div>
+    </div>
+  );
+}
+
+function PreviewModal({
+  data,
+  template,
+  downloading,
+  onClose,
+  onDownload,
+}: {
+  data: CVFormData;
+  template: any;
+  downloading: boolean;
+  onClose: () => void;
+  onDownload: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-sm">
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-6 py-3">
+        <h2 className="text-sm font-semibold text-white">
+          Xem trước CV ({data.name || "Chưa đặt tên"})
+        </h2>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onDownload}
+            disabled={downloading}
+            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+          >
+            <Download size={14} />
+            {downloading ? "Đang tạo PDF..." : "Tải PDF"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
+          >
+            <X size={14} />
+            Đóng
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-1 items-start justify-center overflow-auto bg-slate-800 p-8">
+        <div className="shadow-2xl">
+          <CVPreview data={data} template={template} />
+        </div>
       </div>
     </div>
   );
@@ -1042,6 +1108,8 @@ export default function CVBuilder() {
   const [openSections, setOpenSections] =
     useState<OpenSections>(initialOpenSections);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(editingId) || Boolean(templateId));
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -1212,10 +1280,69 @@ export default function CVBuilder() {
     }
   };
 
-  const handleDownload = () => {
-    alert(
-      "Để tải PDF: cài html2canvas + jspdf, sau đó gọi html2canvas(document.getElementById('cv-preview')) rồi dùng jsPDF để xuất file.",
-    );
+  const handleDownload = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    setErrorMessage(null);
+
+    const openedModalForCapture = !showPreviewModal;
+    if (openedModalForCapture) {
+      setShowPreviewModal(true);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+    }
+
+    try {
+      const target = document.getElementById("cv-preview");
+      if (!target) {
+        throw new Error(
+          "Không tìm thấy phần xem trước CV. Vui lòng thử lại sau khi mở 'Xem trước'.",
+        );
+      }
+
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const safeName = (data.name || "untitled")
+        .trim()
+        .replace(/[\\/:*?"<>|]/g, "")
+        .replace(/\s+/g, "_") || "untitled";
+      pdf.save(`CV_${safeName}.pdf`);
+    } catch (error: unknown) {
+      setErrorMessage(
+        getApiErrorMessage(error, "Không thể tạo file PDF. Vui lòng thử lại."),
+      );
+    } finally {
+      if (openedModalForCapture) {
+        setShowPreviewModal(false);
+      }
+      setDownloading(false);
+    }
   };
 
   const editorHandlers: EditorHandlers = {
@@ -1233,7 +1360,9 @@ export default function CVBuilder() {
     <div className="-m-6 flex h-full flex-col bg-white transition-colors duration-150 dark:bg-slate-900">
       <BuilderTopBar
         saving={saving}
+        downloading={downloading}
         onSave={handleSave}
+        onPreview={() => setShowPreviewModal(true)}
         onDownload={handleDownload}
       />
 
@@ -1252,6 +1381,16 @@ export default function CVBuilder() {
 
         <PreviewPanel data={data} template={template} />
       </div>
+
+      {showPreviewModal && (
+        <PreviewModal
+          data={data}
+          template={template}
+          downloading={downloading}
+          onClose={() => setShowPreviewModal(false)}
+          onDownload={handleDownload}
+        />
+      )}
     </div>
   );
 }
