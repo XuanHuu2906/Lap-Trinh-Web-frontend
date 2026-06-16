@@ -26,7 +26,10 @@
       "Bash(Select-Object -First 200)",
       "Bash(rtk read *)",
       "Bash(Get-ChildItem *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(Select-Object FullName)",
+      "Bash(Select-Object Name)",
+      "Bash(git ls-tree *)"
     ]
   }
 }

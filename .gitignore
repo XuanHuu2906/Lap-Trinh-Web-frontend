@@ -31,7 +31,3 @@ dist-ssr
 # TypeScript
 *.tsbuildinfo
 
-# Misc
-database_schema_docs.md
-Use_Case_Modeling_Cham_Diem_Bao_Cao.md
-system.md
