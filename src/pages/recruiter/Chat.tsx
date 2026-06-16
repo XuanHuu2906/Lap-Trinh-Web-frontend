@@ -35,6 +35,7 @@ const statusLabel: Record<ApplicationStatus, string> = {
   pending: "Chờ xử lý",
   reviewing: "Đã xem",
   interview: "Mời phỏng vấn",
+  confirmed: "Đã xác nhận",
   rejected: "Không phù hợp",
   cancelled: "Đã hủy",
 };
@@ -43,6 +44,7 @@ const statusStyle: Record<ApplicationStatus, string> = {
   pending: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
   reviewing: "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
   interview: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
+  confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
   rejected: "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
   cancelled: "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300",
 };

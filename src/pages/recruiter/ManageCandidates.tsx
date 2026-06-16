@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageSquare, Calendar, MapPin, Video, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { MessageSquare, Calendar, AlertCircle, XCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useVisiblePolling } from "../../hooks/useVisiblePolling";
 import { supabase } from "../../utils/supabase";
@@ -58,7 +58,7 @@ const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
   return "interview";
 };
 
-const nextStatusOptions = (status: ApplicationStatus) => {
+export const nextStatusOptions = (status: ApplicationStatus) => {
   if (status === "pending") {
     return [
       { label: "Đánh dấu đã xem", value: "reviewing" as const },
