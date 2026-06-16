@@ -1333,6 +1333,7 @@ export default function CVBuilder() {
         .replace(/[\\/:*?"<>|]/g, "")
         .replace(/\s+/g, "_") || "untitled";
       pdf.save(`CV_${safeName}.pdf`);
+      setLastSavedAt(null);
     } catch (error: unknown) {
       console.error("[CVBuilder] PDF export error:", error);
       const detail = error instanceof Error ? error.message : String(error);
