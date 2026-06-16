@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { type CandidateCV, cvService } from "@/services/cv.service";
 
@@ -1334,9 +1334,9 @@ export default function CVBuilder() {
         .replace(/\s+/g, "_") || "untitled";
       pdf.save(`CV_${safeName}.pdf`);
     } catch (error: unknown) {
-      setErrorMessage(
-        getApiErrorMessage(error, "Không thể tạo file PDF. Vui lòng thử lại."),
-      );
+      console.error("[CVBuilder] PDF export error:", error);
+      const detail = error instanceof Error ? error.message : String(error);
+      setErrorMessage(`Không thể tạo file PDF: ${detail}`);
     } finally {
       if (openedModalForCapture) {
         setShowPreviewModal(false);
