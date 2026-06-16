@@ -29,7 +29,8 @@
       "Bash(rtk git *)",
       "Bash(Select-Object FullName)",
       "Bash(Select-Object Name)",
-      "Bash(git ls-tree *)"
+      "Bash(git ls-tree *)",
+      "PowerShell(Remove-Item *)"
     ]
   }
 }
