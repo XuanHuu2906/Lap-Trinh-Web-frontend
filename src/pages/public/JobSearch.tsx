@@ -501,13 +501,13 @@ export default function JobSearch({
     <div className={styles.page}>
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className={styles.title}>
-            Tìm việc làm
-          </h1>
+          <h1 className={styles.title}>Tìm việc làm</h1>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500 dark:text-slate-400">Sắp xếp:</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            Sắp xếp:
+          </span>
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value)}
@@ -530,11 +530,14 @@ export default function JobSearch({
 
       <div className={styles.layout}>
         <aside
-          className={`${styles.filterPanel} ${mobileFilterOpen ? "block" : "hidden"
-            } lg:block`}
+          className={`${styles.filterPanel} ${
+            mobileFilterOpen ? "block" : "hidden"
+          } lg:block`}
         >
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-950 dark:text-white">Bộ lọc chi tiết</h2>
+            <h2 className="font-semibold text-slate-950 dark:text-white">
+              Bộ lọc chi tiết
+            </h2>
             <button
               type="button"
               onClick={handleResetFilters}
@@ -661,8 +664,10 @@ export default function JobSearch({
                 Bộ lọc
               </button>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                <span className="font-bold text-slate-950 dark:text-white">{total}</span> việc làm
-                phù hợp
+                <span className="font-bold text-slate-950 dark:text-white">
+                  {total}
+                </span>{" "}
+                việc làm phù hợp
               </p>
             </div>
           </div>
@@ -675,7 +680,10 @@ export default function JobSearch({
             </div>
           ) : jobs.length === 0 ? (
             <div className={styles.emptyState}>
-              <BriefcaseBusiness className="mb-4 text-slate-300 dark:text-slate-700" size={46} />
+              <BriefcaseBusiness
+                className="mb-4 text-slate-300 dark:text-slate-700"
+                size={46}
+              />
               <p className="font-semibold text-slate-950 dark:text-white">
                 Không có việc làm phù hợp.
               </p>
@@ -686,10 +694,7 @@ export default function JobSearch({
           ) : (
             <div className={styles.cardGrid}>
               {jobs.map((job) => (
-                <article
-                  key={job.id}
-                  className={styles.jobCard}
-                >
+                <article key={job.id} className={styles.jobCard}>
                   <div className="mb-4 flex items-start justify-between gap-3">
                     <button
                       type="button"
@@ -711,10 +716,11 @@ export default function JobSearch({
                       type="button"
                       onClick={() => toggleSave(job.id)}
                       disabled={isSavingId === job.id}
-                      className={`transition ${savedJobs.has(job.id)
+                      className={`transition ${
+                        savedJobs.has(job.id)
                           ? "text-blue-600 dark:text-blue-400"
                           : "text-slate-300 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-300"
-                        }`}
+                      }`}
                       title="Lưu việc làm"
                     >
                       {isSavingId === job.id ? (

@@ -3,11 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../utils/supabase";
 import Footer from "../../components/layout/Footer";
-import {
-  completePendingApplyJob,
-  getPendingApplyJob,
-} from "@/services/job-application-flow";
-
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useAuth();
@@ -20,30 +15,6 @@ export function LoginPage() {
   const [isGoogleSyncing, setIsGoogleSyncing] = useState(false);
 
   // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
-  const navigateAfterLogin = async (user: { role: string }) => {
-    if (user.role === "candidate" && getPendingApplyJob()) {
-      try {
-        await completePendingApplyJob();
-        navigate("/candidate/applied-jobs");
-        return;
-      } catch {
-        navigate("/candidate/job-search");
-        return;
-      }
-    }
-
-    if (user.role === "admin") {
-      navigate("/admin/dashboard");
-    } else if (user.role === "candidate") {
-      navigate("/candidate/overview");
-    } else if (user.role === "recruiter") {
-      navigate("/recruiter/overview");
-    } else if (user.role === "pending") {
-      navigate("/auth/setup-profile");
-    } else {
-      navigate("/");
-    }
-  };
 
   const processingRef = useRef(false);
   // Cờ hủy effect để chống Strict Mode double-invoke (React 18)

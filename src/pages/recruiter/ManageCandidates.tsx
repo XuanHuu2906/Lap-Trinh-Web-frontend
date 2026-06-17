@@ -25,17 +25,25 @@ const statusLabel: Record<ApplicationStatus, string> = {
 };
 
 const statusStyle: Record<ApplicationStatus, string> = {
-  pending: "border border-blue-400 text-blue-600 bg-white dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
-  reviewing: "border border-orange-400 text-orange-600 bg-white dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
-  interview: "border border-violet-400 text-violet-600 bg-white dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
-  accepted: "border border-emerald-400 text-emerald-600 bg-white dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
-  rejected: "border border-red-400 text-red-600 bg-white dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
-  cancelled: "border border-slate-300 text-slate-500 bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
+  pending:
+    "border border-blue-400 text-blue-600 bg-white dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
+  reviewing:
+    "border border-orange-400 text-orange-600 bg-white dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
+  interview:
+    "border border-violet-400 text-violet-600 bg-white dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
+  accepted:
+    "border border-emerald-400 text-emerald-600 bg-white dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+  rejected:
+    "border border-red-400 text-red-600 bg-white dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+  cancelled:
+    "border border-slate-300 text-slate-500 bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 type FeedbackStatus = "interview" | "accepted" | "rejected";
 
-const getStatusFilterFromParam = (value: string | null): ApplicationStatus | "" => {
+const getStatusFilterFromParam = (
+  value: string | null,
+): ApplicationStatus | "" => {
   if (
     value === "pending" ||
     value === "reviewing" ||
@@ -51,7 +59,11 @@ const getStatusFilterFromParam = (value: string | null): ApplicationStatus | "" 
 };
 
 const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
-  if (status === "accepted" || status === "rejected" || status === "interview") {
+  if (
+    status === "accepted" ||
+    status === "rejected" ||
+    status === "interview"
+  ) {
     return status;
   }
 
@@ -225,7 +237,9 @@ export function ManageCandidatesPage() {
       });
 
       const uniqueApplications = Array.from(
-        new Map(responseData.map((application) => [application.id, application])).values(),
+        new Map(
+          responseData.map((application) => [application.id, application]),
+        ).values(),
       );
 
       setApplications(uniqueApplications);
@@ -258,7 +272,9 @@ export function ManageCandidatesPage() {
   }, [jobIdParam, hasDashboardTarget]);
 
   useEffect(() => {
-    setStatusFilter((current) => (current === statusParam ? current : statusParam));
+    setStatusFilter((current) =>
+      current === statusParam ? current : statusParam,
+    );
   }, [statusParam]);
 
   useEffect(() => {
@@ -333,7 +349,9 @@ export function ManageCandidatesPage() {
   };
 
   useEffect(() => {
-    const requestedApplicationId = applicationIdParam ? Number(applicationIdParam) : null;
+    const requestedApplicationId = applicationIdParam
+      ? Number(applicationIdParam)
+      : null;
     if (
       !requestedApplicationId ||
       !Number.isInteger(requestedApplicationId) ||
@@ -342,7 +360,9 @@ export function ManageCandidatesPage() {
       return;
     }
 
-    const application = applications.find((item) => item.id === requestedApplicationId);
+    const application = applications.find(
+      (item) => item.id === requestedApplicationId,
+    );
     if (application) void openApplication(application);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationIdParam, applications, selectedApplication?.id]);
@@ -404,7 +424,11 @@ export function ManageCandidatesPage() {
     setMessage("");
 
     try {
-      await createFeedback(selectedApplication.id, feedback.trim(), feedbackStatus);
+      await createFeedback(
+        selectedApplication.id,
+        feedback.trim(),
+        feedbackStatus,
+      );
       setMessage("Gửi phản hồi cho ứng viên thành công");
       await loadApplications();
     } catch (err) {
@@ -447,10 +471,11 @@ export function ManageCandidatesPage() {
 
       {(message || error) && (
         <div
-          className={`mb-4 border px-4 py-3 text-[13px] ${error
+          className={`mb-4 border px-4 py-3 text-[13px] ${
+            error
               ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
               : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-            }`}
+          }`}
         >
           {error || message}
         </div>
@@ -489,7 +514,9 @@ export function ManageCandidatesPage() {
             <select
               value={statusFilter}
               onChange={(e) =>
-                handleStatusFilterChange(e.target.value as ApplicationStatus | "")
+                handleStatusFilterChange(
+                  e.target.value as ApplicationStatus | "",
+                )
               }
               className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             >
@@ -520,7 +547,9 @@ export function ManageCandidatesPage() {
 
       <div className="grid grid-cols-[1fr_380px] items-start gap-6">
         <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
-          <table className={showJobColumn ? "w-full min-w-[900px]" : "w-full min-w-[760px]"}>
+          <table
+            className={showJobColumn ? "w-full min-w-225" : "w-full min-w-190"}
+          >
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
                 {[
@@ -597,8 +626,9 @@ export function ManageCandidatesPage() {
 
                     <td className="px-6 py-5">
                       <span
-                        className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${statusStyle[application.status]
-                          }`}
+                        className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${
+                          statusStyle[application.status]
+                        }`}
                       >
                         {statusLabel[application.status]}
                       </span>
@@ -686,10 +716,10 @@ export function ManageCandidatesPage() {
                 <div className="flex flex-wrap gap-2">
                   {nextStatusOptions(selectedApplication.status).length ===
                     0 && (
-                      <span className="text-[13px] text-slate-400 dark:text-slate-500">
-                        Không còn bước chuyển hợp lệ.
-                      </span>
-                    )}
+                    <span className="text-[13px] text-slate-400 dark:text-slate-500">
+                      Không còn bước chuyển hợp lệ.
+                    </span>
+                  )}
 
                   {nextStatusOptions(selectedApplication.status).map((item) => (
                     <button
@@ -711,7 +741,9 @@ export function ManageCandidatesPage() {
 
                 <select
                   value={feedbackStatus}
-                  onChange={(e) => setFeedbackStatus(e.target.value as FeedbackStatus)}
+                  onChange={(e) =>
+                    setFeedbackStatus(e.target.value as FeedbackStatus)
+                  }
                   className="mb-2 h-9 w-full border border-slate-200 px-3 text-[13px] text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                 >
                   <option value="interview">Mời phỏng vấn</option>

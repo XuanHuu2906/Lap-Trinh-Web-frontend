@@ -4,7 +4,6 @@ import {
   BriefcaseBusiness,
   Gem,
   Headphones,
-  MessageCircle,
   ShieldCheck,
   Users,
 } from "lucide-react";

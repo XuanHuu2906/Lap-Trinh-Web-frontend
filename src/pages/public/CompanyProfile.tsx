@@ -115,7 +115,9 @@ export default function CompanyProfile({
         <h1 className="mt-5 text-2xl font-bold text-slate-950 dark:text-white">
           Không tìm thấy công ty
         </h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{error}</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          {error}
+        </p>
         <button
           type="button"
           onClick={() =>
@@ -149,16 +151,12 @@ export default function CompanyProfile({
         <div className="relative h-48 overflow-hidden bg-slate-950 sm:h-60">
           <div className="absolute inset-0 bg-[linear-gradient(115deg,#0f172a_0%,#172554_42%,#1d4ed8_100%)]" />
           <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full bg-cyan-400/30 blur-3xl" />
-          <div className="absolute bottom-[-8rem] left-[18%] h-72 w-72 rounded-full bg-blue-500/30 blur-3xl" />
+          <div className="absolute -bottom-32 left-[18%] h-72 w-72 rounded-full bg-blue-500/30 blur-3xl" />
           <div className="absolute right-8 top-8 hidden items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur sm:flex">
             <BadgeCheck className="h-4 w-4 text-cyan-300" />
             Doanh nghiệp trên HireArch
           </div>
-          <div className="absolute bottom-6 left-6 max-w-sm text-white/70 sm:left-8">
-            <p className="text-xs font-bold uppercase tracking-[0.24em]">
-              Company profile
-            </p>
-          </div>
+          <div className="absolute bottom-6 left-6 max-w-sm text-white/70 sm:left-8"></div>
         </div>
 
         <div className="relative px-5 pb-6 sm:px-8">
@@ -245,7 +243,10 @@ export default function CompanyProfile({
             </p>
           </ProfileCard>
 
-          <ProfileCard title="Thông tin doanh nghiệp" icon={<Building2 size={18} />}>
+          <ProfileCard
+            title="Thông tin doanh nghiệp"
+            icon={<Building2 size={18} />}
+          >
             <div className="space-y-1">
               <ContactRow
                 icon={UserRound}
@@ -348,7 +349,10 @@ function CompanyJobCard({
   onOpen: (jobId: number) => void;
 }) {
   const skills =
-    job.skills?.map((item) => item.skill.name).filter(Boolean).slice(0, 3) ?? [];
+    job.skills
+      ?.map((item) => item.skill.name)
+      .filter(Boolean)
+      .slice(0, 3) ?? [];
 
   return (
     <article
@@ -381,8 +385,15 @@ function CompanyJobCard({
           </div>
 
           <div className="mt-4 grid gap-2 text-sm text-slate-500 dark:text-slate-400 sm:grid-cols-3">
-            <JobMeta icon={<MapPin size={15} />} value={job.location || "Chưa cập nhật"} />
-            <JobMeta icon={<Banknote size={15} />} value={formatSalary(job)} accent />
+            <JobMeta
+              icon={<MapPin size={15} />}
+              value={job.location || "Chưa cập nhật"}
+            />
+            <JobMeta
+              icon={<Banknote size={15} />}
+              value={formatSalary(job)}
+              accent
+            />
             <JobMeta
               icon={<Clock3 size={15} />}
               value={`Hạn ${formatDate(job.expiresAt)}`}
@@ -449,7 +460,7 @@ function ContactRow({
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           {label}
         </span>
-        <span className="mt-0.5 block break-words text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <span className="mt-0.5 block wrap-break-word text-sm font-semibold text-slate-700 dark:text-slate-200">
           {value}
         </span>
       </span>

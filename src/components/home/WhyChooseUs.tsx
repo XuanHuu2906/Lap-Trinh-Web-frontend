@@ -3,7 +3,6 @@ import {
   BarChart3,
   Clock3,
   ShieldCheck,
-  Sparkles,
   Star,
   UserCircle,
   type LucideIcon,
@@ -114,6 +113,7 @@ export default function WhyChooseUs() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [metrics, setMetrics] = useState<SiteMetric[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Cho biết nút “Xem thêm” đang tải.
   const [isLoadingMoreTestimonials, setIsLoadingMoreTestimonials] =
     useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -221,13 +221,11 @@ export default function WhyChooseUs() {
 
         <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-2">
           <div className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl shadow-slate-900/15">
-            <h3 className="mb-3 text-xl font-bold">
-              Gợi ý cơ hội phù hợp hơn
-            </h3>
+            <h3 className="mb-3 text-xl font-bold">Gợi ý cơ hội phù hợp hơn</h3>
             <p className="mb-7 text-sm leading-6 text-blue-100">
-              HireArch giúp ứng viên xem nhanh những thông tin quan trọng như
-              kỹ năng, mức lương và địa điểm để chọn công việc phù hợp với hồ
-              sơ của mình.
+              HireArch giúp ứng viên xem nhanh những thông tin quan trọng như kỹ
+              năng, mức lương và địa điểm để chọn công việc phù hợp với hồ sơ
+              của mình.
             </p>
             <div className="grid grid-cols-3 gap-4 text-center">
               {metrics.map((metric) => (

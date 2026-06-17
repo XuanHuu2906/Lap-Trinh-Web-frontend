@@ -43,8 +43,10 @@ const deadlineWarningDays = 3;
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
 const getStatusFilterFromParam = (value: string | null): JobStatusFilter => {
-  if (value === "active" || value === "approved" || value === JOB_STATUS.ACTIVE) return JOB_STATUS.ACTIVE;
-  if (value === "pending" || value === JOB_STATUS.PENDING_REVIEW) return JOB_STATUS.PENDING_REVIEW;
+  if (value === "active" || value === "approved" || value === JOB_STATUS.ACTIVE)
+    return JOB_STATUS.ACTIVE;
+  if (value === "pending" || value === JOB_STATUS.PENDING_REVIEW)
+    return JOB_STATUS.PENDING_REVIEW;
   if (value === JOB_STATUS.DRAFT || value === JOB_STATUS.CLOSED) return value;
   return "";
 };
@@ -66,8 +68,10 @@ const formatSalary = (
   min?: string | number | null,
   max?: string | number | null,
 ) => {
-  const minNumber = min === null || min === undefined || min === "" ? null : Number(min);
-  const maxNumber = max === null || max === undefined || max === "" ? null : Number(max);
+  const minNumber =
+    min === null || min === undefined || min === "" ? null : Number(min);
+  const maxNumber =
+    max === null || max === undefined || max === "" ? null : Number(max);
 
   if (!minNumber && !maxNumber) return "Thỏa thuận";
 
@@ -107,8 +111,9 @@ const getDeadlineInfo = (value?: string | null) => {
   if (deadlineTime === null) return null;
 
   const daysLeft = Math.ceil(
-    (getStartOfDayTime(new Date(deadlineTime)) - getStartOfDayTime(new Date())) /
-    millisecondsPerDay,
+    (getStartOfDayTime(new Date(deadlineTime)) -
+      getStartOfDayTime(new Date())) /
+      millisecondsPerDay,
   );
 
   if (daysLeft < 0) {
@@ -193,7 +198,9 @@ export function ManageJobsPage() {
 
   useEffect(() => {
     const nextStatus = getStatusFilterFromParam(searchParams.get("status"));
-    setStatusFilter((current) => (current === nextStatus ? current : nextStatus));
+    setStatusFilter((current) =>
+      current === nextStatus ? current : nextStatus,
+    );
     setPage(1);
   }, [searchParams]);
 
@@ -258,8 +265,10 @@ export function ManageJobsPage() {
 
     return nextJobs.sort((first, second) => {
       if (sortOption === "deadline") {
-        const firstTime = getDateTime(first.expiresAt) ?? Number.MAX_SAFE_INTEGER;
-        const secondTime = getDateTime(second.expiresAt) ?? Number.MAX_SAFE_INTEGER;
+        const firstTime =
+          getDateTime(first.expiresAt) ?? Number.MAX_SAFE_INTEGER;
+        const secondTime =
+          getDateTime(second.expiresAt) ?? Number.MAX_SAFE_INTEGER;
         return firstTime - secondTime;
       }
 
@@ -271,15 +280,26 @@ export function ManageJobsPage() {
         return getApplicationCount(first) - getApplicationCount(second);
       }
 
-      return (getDateTime(second.createdAt) ?? 0) - (getDateTime(first.createdAt) ?? 0);
+      return (
+        (getDateTime(second.createdAt) ?? 0) -
+        (getDateTime(first.createdAt) ?? 0)
+      );
     });
   }, [categoryFilter, jobs, search, sortOption]);
 
-  const totalJobs = jobs.filter((job) => !isDeletedJobStatus(job.status)).length;
-  const pendingReviewJobs = jobs.filter((job) => isPendingReviewJobStatus(job.status)).length;
+  const totalJobs = jobs.filter(
+    (job) => !isDeletedJobStatus(job.status),
+  ).length;
+  const pendingReviewJobs = jobs.filter((job) =>
+    isPendingReviewJobStatus(job.status),
+  ).length;
   const activeJobs = jobs.filter((job) => isActiveJobStatus(job.status)).length;
-  const draftJobs = jobs.filter((job) => job.status === JOB_STATUS.DRAFT).length;
-  const closedJobs = jobs.filter((job) => job.status === JOB_STATUS.CLOSED).length;
+  const draftJobs = jobs.filter(
+    (job) => job.status === JOB_STATUS.DRAFT,
+  ).length;
+  const closedJobs = jobs.filter(
+    (job) => job.status === JOB_STATUS.CLOSED,
+  ).length;
 
   const handleUpdateStatus = async (
     jobId: number,
@@ -320,9 +340,7 @@ export function ManageJobsPage() {
       await loadJobs();
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Không xóa được tin tuyển dụng",
+        err instanceof Error ? err.message : "Không xóa được tin tuyển dụng",
       );
     }
   };
@@ -346,10 +364,11 @@ export function ManageJobsPage() {
 
       {(message || error) && (
         <div
-          className={`mb-4 border px-4 py-3 text-[13px] ${error
+          className={`mb-4 border px-4 py-3 text-[13px] ${
+            error
               ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
               : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-            }`}
+          }`}
         >
           {error || message}
         </div>
@@ -359,10 +378,11 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange("")}
-          className={`border p-4 text-left transition-colors ${statusFilter === ""
+          className={`border p-4 text-left transition-colors ${
+            statusFilter === ""
               ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-            }`}
+          }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Tổng tin
@@ -375,10 +395,11 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange(JOB_STATUS.PENDING_REVIEW)}
-          className={`border p-4 text-left transition-colors ${statusFilter === JOB_STATUS.PENDING_REVIEW
+          className={`border p-4 text-left transition-colors ${
+            statusFilter === JOB_STATUS.PENDING_REVIEW
               ? "border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-            }`}
+          }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Chờ duyệt
@@ -391,10 +412,11 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange(JOB_STATUS.ACTIVE)}
-          className={`border p-4 text-left transition-colors ${statusFilter === JOB_STATUS.ACTIVE
+          className={`border p-4 text-left transition-colors ${
+            statusFilter === JOB_STATUS.ACTIVE
               ? "border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-            }`}
+          }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Đang hoạt động
@@ -407,10 +429,11 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange("draft")}
-          className={`border p-4 text-left transition-colors ${statusFilter === "draft"
+          className={`border p-4 text-left transition-colors ${
+            statusFilter === "draft"
               ? "border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-            }`}
+          }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Bản nháp
@@ -423,10 +446,11 @@ export function ManageJobsPage() {
         <button
           type="button"
           onClick={() => handleStatusFilterChange("closed")}
-          className={`border p-4 text-left transition-colors ${statusFilter === "closed"
+          className={`border p-4 text-left transition-colors ${
+            statusFilter === "closed"
               ? "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
               : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
-            }`}
+          }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Đã đóng
@@ -494,7 +518,7 @@ export function ManageJobsPage() {
       </div>
 
       <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
-        <table className="w-full min-w-[1120px]">
+        <table className="w-full min-w-280">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
               {[
@@ -682,7 +706,10 @@ export function ManageJobsPage() {
                                     role="menuitem"
                                     onClick={() => {
                                       setOpenMenuJobId(null);
-                                      void handleUpdateStatus(job.id, JOB_STATUS.PENDING_REVIEW);
+                                      void handleUpdateStatus(
+                                        job.id,
+                                        JOB_STATUS.PENDING_REVIEW,
+                                      );
                                     }}
                                     className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
                                   >
@@ -697,7 +724,10 @@ export function ManageJobsPage() {
                                   role="menuitem"
                                   onClick={() => {
                                     setOpenMenuJobId(null);
-                                    void handleUpdateStatus(job.id, JOB_STATUS.CLOSED);
+                                    void handleUpdateStatus(
+                                      job.id,
+                                      JOB_STATUS.CLOSED,
+                                    );
                                   }}
                                   className="flex h-9 w-full items-center gap-2 px-3 text-left text-[12px] font-semibold text-orange-700 hover:bg-orange-50 dark:text-orange-300 dark:hover:bg-orange-950/30"
                                 >
@@ -751,9 +781,7 @@ export function ManageJobsPage() {
             <button
               type="button"
               onClick={() =>
-                setPage((current) =>
-                  Math.min(meta.totalPages, current + 1),
-                )
+                setPage((current) => Math.min(meta.totalPages, current + 1))
               }
               disabled={page >= meta.totalPages || loading}
               className="h-9 border border-slate-300 px-4 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
