@@ -356,13 +356,9 @@ function TemplatesContent({
 
 function EmptyState() {
   return (
-    <div className="flex min-h-72 flex-col items-center justify-center border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-4 text-center">
-      <FileText className="mb-4 text-slate-450 dark:text-slate-600" size={48} />
-      <p className="font-semibold text-slate-900 dark:text-white">Chưa có mẫu CV nào.</p>
-      <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
-        Nếu bảng CVTemplate đang trống, frontend sẽ không hiển thị dữ liệu giả
-        nữa. Hãy thêm template ở backend/admin để candidate dùng.
-      </p>
+    <div className="flex min-h-72 flex-col items-center justify-center border border-slate-800 bg-slate-900 px-4 text-center">
+      <FileText className="mb-4 text-slate-600" size={48} />
+      <p className="font-semibold text-white">Chưa có mẫu CV nào.</p>
     </div>
   );
 }
@@ -534,10 +530,7 @@ export default function CVTemplatePage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader
-        isLoading={isLoading}
-        onRefresh={() => loadTemplates(true)}
-      />
+      <PageHeader isLoading={isLoading} onRefresh={() => loadTemplates(true)} />
 
       <SearchBox value={searchTerm} onChange={setSearchTerm} />
 
