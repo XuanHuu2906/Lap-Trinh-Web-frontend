@@ -116,13 +116,7 @@ function PageHeader({
   onCreate: () => void;
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
-          CV của tôi
-        </h1>
-      </div>
-
+    <div className="mb-8 flex flex-wrap items-start justify-end gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <input
           ref={fileInputRef}

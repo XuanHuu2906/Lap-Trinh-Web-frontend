@@ -118,13 +118,7 @@ function getStatusDisplay(status: string) {
 
 function PageHeader() {
   return (
-    <div className="mb-8 flex items-start justify-between gap-4">
-      <div>
-        <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
-          Tổng quan ứng viên
-        </h1>
-      </div>
-
+    <div className="mb-8 flex items-start justify-end gap-4">
       <Link
         to="/candidate/job-search"
         className="flex h-10 shrink-0 items-center gap-2 bg-[#0f1f3d] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1a2f52] dark:bg-indigo-600 dark:hover:bg-indigo-500"

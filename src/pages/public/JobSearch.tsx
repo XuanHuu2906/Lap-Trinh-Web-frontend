@@ -499,13 +499,7 @@ export default function JobSearch({
 
   return (
     <div className={styles.page}>
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className={styles.title}>
-            Tìm việc làm
-          </h1>
-        </div>
-
+      <div className="mb-7 flex flex-wrap items-end justify-end gap-4">
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-500 dark:text-slate-400">Sắp xếp:</span>
           <select
@@ -712,8 +706,8 @@ export default function JobSearch({
                       onClick={() => toggleSave(job.id)}
                       disabled={isSavingId === job.id}
                       className={`transition ${savedJobs.has(job.id)
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-slate-300 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-300"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-slate-300 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-300"
                         }`}
                       title="Lưu việc làm"
                     >

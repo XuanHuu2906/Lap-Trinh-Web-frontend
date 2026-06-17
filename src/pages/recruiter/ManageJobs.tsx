@@ -329,13 +329,7 @@ export function ManageJobsPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
-            Quản lý tin đăng
-          </h1>
-        </div>
-
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-end">
         <Link
           to="/recruiter/post-job"
           className="inline-flex h-10 items-center justify-center bg-[#0f1f3d] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#1a2f52]"
@@ -347,8 +341,8 @@ export function ManageJobsPage() {
       {(message || error) && (
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${error
-              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
-              : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+            ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+            : "border-green-200 bg-green-50 text-green-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
             }`}
         >
           {error || message}
@@ -360,8 +354,8 @@ export function ManageJobsPage() {
           type="button"
           onClick={() => handleStatusFilterChange("")}
           className={`border p-4 text-left transition-colors ${statusFilter === ""
-              ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/30"
-              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
+            ? "border-indigo-300 bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/30"
+            : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
             }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -376,8 +370,8 @@ export function ManageJobsPage() {
           type="button"
           onClick={() => handleStatusFilterChange(JOB_STATUS.PENDING_REVIEW)}
           className={`border p-4 text-left transition-colors ${statusFilter === JOB_STATUS.PENDING_REVIEW
-              ? "border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/30"
-              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
+            ? "border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/30"
+            : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
             }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -392,8 +386,8 @@ export function ManageJobsPage() {
           type="button"
           onClick={() => handleStatusFilterChange(JOB_STATUS.ACTIVE)}
           className={`border p-4 text-left transition-colors ${statusFilter === JOB_STATUS.ACTIVE
-              ? "border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
-              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
+            ? "border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+            : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
             }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -408,8 +402,8 @@ export function ManageJobsPage() {
           type="button"
           onClick={() => handleStatusFilterChange("draft")}
           className={`border p-4 text-left transition-colors ${statusFilter === "draft"
-              ? "border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
-              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
+            ? "border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
+            : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
             }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -424,8 +418,8 @@ export function ManageJobsPage() {
           type="button"
           onClick={() => handleStatusFilterChange("closed")}
           className={`border p-4 text-left transition-colors ${statusFilter === "closed"
-              ? "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
-              : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
+            ? "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+            : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/70"
             }`}
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">

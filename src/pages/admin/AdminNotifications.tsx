@@ -231,16 +231,7 @@ export const AdminNotifications: React.FC = () => {
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
-            <div className="flex items-center gap-2">
-              <Bell className="w-5 h-5 text-indigo-600" />
-              <h1 className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
-                THÔNG BÁO QUẢN TRỊ
-              </h1>
-            </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1.5 ml-11">
-            Chỉ hiển thị thông tin quan trọng hoặc cần quản trị viên xử lý.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -273,22 +264,20 @@ export const AdminNotifications: React.FC = () => {
             <button
               type="button"
               onClick={() => setFilter("all")}
-              className={`h-8 px-3 rounded-sm text-[11px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${
-                filter === "all"
-                  ? "bg-slate-900 dark:bg-indigo-600 text-white border-slate-900 dark:border-indigo-600"
-                  : "bg-white dark:bg-slate-950/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-              }`}
+              className={`h-8 px-3 rounded-sm text-[11px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${filter === "all"
+                ? "bg-slate-900 dark:bg-indigo-600 text-white border-slate-900 dark:border-indigo-600"
+                : "bg-white dark:bg-slate-950/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                }`}
             >
               Tất cả
             </button>
             <button
               type="button"
               onClick={() => setFilter("unread")}
-              className={`h-8 px-3 rounded-sm text-[11px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${
-                filter === "unread"
-                  ? "bg-slate-900 dark:bg-indigo-600 text-white border-slate-900 dark:border-indigo-600"
-                  : "bg-white dark:bg-slate-950/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-              }`}
+              className={`h-8 px-3 rounded-sm text-[11px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${filter === "unread"
+                ? "bg-slate-900 dark:bg-indigo-600 text-white border-slate-900 dark:border-indigo-600"
+                : "bg-white dark:bg-slate-950/60 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                }`}
             >
               Chưa đọc
             </button>
@@ -317,18 +306,16 @@ export const AdminNotifications: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className={`p-5 transition-colors ${
-                    !item.isRead ? "bg-indigo-50/40 dark:bg-indigo-950/20" : "bg-white dark:bg-transparent"
-                  } hover:bg-slate-50 dark:hover:bg-slate-800/50`}
+                  className={`p-5 transition-colors ${!item.isRead ? "bg-indigo-50/40 dark:bg-indigo-950/20" : "bg-white dark:bg-transparent"
+                    } hover:bg-slate-50 dark:hover:bg-slate-800/50`}
                 >
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <div
-                        className={`w-10 h-10 rounded-sm border flex items-center justify-center shrink-0 ${
-                          priority === "high"
-                            ? "bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900/60 text-amber-600 dark:text-amber-300"
-                            : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
-                        }`}
+                        className={`w-10 h-10 rounded-sm border flex items-center justify-center shrink-0 ${priority === "high"
+                          ? "bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900/60 text-amber-600 dark:text-amber-300"
+                          : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                          }`}
                       >
                         <Icon className="w-5 h-5" />
                       </div>
@@ -427,11 +414,10 @@ export const AdminNotifications: React.FC = () => {
                     type="button"
                     variant={currentPage === pageNumber ? "default" : "outline"}
                     onClick={() => setCurrentPage(pageNumber)}
-                    className={`h-7 w-7 text-[10px] font-bold cursor-pointer ${
-                      currentPage === pageNumber
-                        ? "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-650"
-                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700"
-                    }`}
+                    className={`h-7 w-7 text-[10px] font-bold cursor-pointer ${currentPage === pageNumber
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-650"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700"
+                      }`}
                   >
                     {pageNumber}
                   </Button>

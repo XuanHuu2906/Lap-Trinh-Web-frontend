@@ -314,13 +314,7 @@ export function RecruiterOverviewPage() {
 
   return (
     <div className="flex-1 p-8">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
-            Tổng quan tuyển dụng
-          </h1>
-        </div>
-
+      <div className="mb-8 flex items-start justify-end">
         <div className="flex items-center gap-3">
           <Link
             to="/recruiter/post-job"

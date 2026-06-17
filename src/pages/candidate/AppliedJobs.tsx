@@ -110,16 +110,6 @@ function getStatusDisplay(status: string) {
   return applicationStatusDisplays[status] || applicationStatusDisplays.pending;
 }
 
-function PageHeader() {
-  return (
-    <div className="mb-8">
-      <h1 className="text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
-        Quản lý ứng tuyển
-      </h1>
-    </div>
-  );
-}
-
 function CounterCard({ item }: { item: CounterCardInfo }) {
   const Icon = item.icon;
 
@@ -720,8 +710,6 @@ export default function AppliedJobs() {
 
   return (
     <div>
-      <PageHeader />
-
       <CounterGrid counters={counters} />
 
       <div className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">

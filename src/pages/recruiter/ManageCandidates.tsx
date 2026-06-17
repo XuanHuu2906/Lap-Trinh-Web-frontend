@@ -392,12 +392,6 @@ export function ManageCandidatesPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-[26px] font-bold leading-tight text-slate-900 dark:text-white">
-          Quản lý ứng viên
-        </h1>
-      </div>
-
       {(message || error) && (
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${error
