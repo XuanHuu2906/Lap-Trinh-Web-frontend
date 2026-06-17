@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowLeft,
-  Bell,
   Briefcase,
   CheckCircle2,
   Clock,
