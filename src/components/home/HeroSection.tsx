@@ -76,8 +76,9 @@ function CompanyLogo({ job, featured }: { job?: Job; featured?: boolean }) {
 
   return (
     <div
-      className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-sm font-bold ${featured ? "bg-blue-50 text-blue-700" : "bg-white/90 text-blue-700"
-        }`}
+      className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-sm font-bold ${
+        featured ? "bg-blue-50 text-blue-700" : "bg-white/90 text-blue-700"
+      }`}
     >
       {logoUrl ? (
         <img
@@ -121,10 +122,11 @@ function JobPreviewCard({
   return (
     <article
       onClick={() => onSelect?.(job)}
-      className={`group relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 hover:z-20 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl ${featured
-        ? "border-white bg-white p-5 text-slate-950 shadow-lg shadow-black/10"
-        : "border-white/10 bg-white/10 p-4 text-white hover:border-white hover:bg-white hover:shadow-blue-950/30"
-        }`}
+      className={`group relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 hover:z-20 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl ${
+        featured
+          ? "border-white bg-white p-5 text-slate-950 shadow-lg shadow-black/10"
+          : "border-white/10 bg-white/10 p-4 text-white hover:border-white hover:bg-white hover:shadow-blue-950/30"
+      }`}
     >
       <div className="flex items-start gap-3">
         <CompanyLogo job={job} featured={featured} />
@@ -142,10 +144,11 @@ function JobPreviewCard({
       </div>
 
       <div
-        className={`grid gap-2 overflow-hidden text-xs transition-all duration-300 ${featured
-          ? "mt-4 max-h-40 opacity-100"
-          : "max-h-0 opacity-0 group-hover:mt-4 group-hover:max-h-44 group-hover:opacity-100"
-          }`}
+        className={`grid gap-2 overflow-hidden text-xs transition-all duration-300 ${
+          featured
+            ? "mt-4 max-h-40 opacity-100"
+            : "max-h-0 opacity-0 group-hover:mt-4 group-hover:max-h-44 group-hover:opacity-100"
+        }`}
       >
         <div className={`grid grid-cols-2 gap-2 ${mutedColor}`}>
           <span className="inline-flex items-center gap-1.5">
@@ -170,10 +173,11 @@ function JobPreviewCard({
               event.stopPropagation();
               onSelect?.(job);
             }}
-            className={`inline-flex h-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${featured
-              ? "border-slate-200 text-slate-700 hover:border-blue-200 hover:text-blue-700"
-              : "border-slate-200 text-slate-700 hover:border-blue-200 hover:text-blue-700"
-              }`}
+            className={`inline-flex h-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${
+              featured
+                ? "border-slate-200 text-slate-700 hover:border-blue-200 hover:text-blue-700"
+                : "border-slate-200 text-slate-700 hover:border-blue-200 hover:text-blue-700"
+            }`}
           >
             Chi tiết
           </button>
@@ -329,8 +333,7 @@ export default function HeroSection({
             </div>
           ) : (
             <div className="rounded-2xl bg-white/10 p-5 text-sm leading-6 text-slate-300">
-              Chưa có việc làm nổi bật. Hãy chạy seed backend hoặc đăng tin
-              tuyển dụng để dữ liệu xuất hiện tại đây.
+              Chưa có việc làm nổi bật.
             </div>
           )}
         </aside>

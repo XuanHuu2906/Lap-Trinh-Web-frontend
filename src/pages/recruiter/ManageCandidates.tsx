@@ -25,7 +25,9 @@ import {
 
 type FeedbackStatus = "interview" | "rejected";
 
-const getStatusFilterFromParam = (value: string | null): ApplicationStatus | "" => {
+const getStatusFilterFromParam = (
+  value: string | null,
+): ApplicationStatus | "" => {
   if (
     value === "pending" ||
     value === "reviewing" ||
@@ -193,7 +195,9 @@ export function ManageCandidatesPage() {
   }, [jobIdParam, hasDashboardTarget]);
 
   useEffect(() => {
-    setStatusFilter((current) => (current === statusParam ? current : statusParam));
+    setStatusFilter((current) =>
+      current === statusParam ? current : statusParam,
+    );
   }, [statusParam]);
 
   useEffect(() => {
@@ -268,7 +272,9 @@ export function ManageCandidatesPage() {
   };
 
   useEffect(() => {
-    const requestedApplicationId = applicationIdParam ? Number(applicationIdParam) : null;
+    const requestedApplicationId = applicationIdParam
+      ? Number(applicationIdParam)
+      : null;
     if (
       !requestedApplicationId ||
       !Number.isInteger(requestedApplicationId) ||
@@ -277,7 +283,9 @@ export function ManageCandidatesPage() {
       return;
     }
 
-    const application = applications.find((item) => item.id === requestedApplicationId);
+    const application = applications.find(
+      (item) => item.id === requestedApplicationId,
+    );
     if (application) void openApplication(application);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationIdParam, applications, selectedApplication?.id]);
@@ -436,7 +444,9 @@ export function ManageCandidatesPage() {
             <select
               value={statusFilter}
               onChange={(e) =>
-                handleStatusFilterChange(e.target.value as ApplicationStatus | "")
+                handleStatusFilterChange(
+                  e.target.value as ApplicationStatus | "",
+                )
               }
               className="h-10 w-full border border-slate-200 bg-white px-4 text-[13px] text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             >
@@ -466,7 +476,9 @@ export function ManageCandidatesPage() {
 
       <div className="grid grid-cols-[1fr_380px] items-start gap-6">
         <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
-          <table className={showJobColumn ? "w-full min-w-[900px]" : "w-full min-w-[760px]"}>
+          <table
+            className={showJobColumn ? "w-full min-w-225" : "w-full min-w-190"}
+          >
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
                 {[
@@ -543,8 +555,9 @@ export function ManageCandidatesPage() {
 
                     <td className="px-6 py-5">
                       <span
-                        className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${statusStyle[application.status]
-                          }`}
+                        className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${
+                          statusStyle[application.status]
+                        }`}
                       >
                         {statusLabel[application.status]}
                       </span>

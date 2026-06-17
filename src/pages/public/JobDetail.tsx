@@ -54,8 +54,7 @@ const jobDetailStyles: Record<JobDetailVariant, JobDetailStyle> = {
   public: {
     page: "mx-auto w-full max-w-5xl px-4 py-10",
     grid: "grid grid-cols-1 gap-7 lg:grid-cols-[1fr_330px]",
-    card:
-      "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900",
+    card: "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900",
     heroCard:
       "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900",
     companyCard:
@@ -65,8 +64,7 @@ const jobDetailStyles: Record<JobDetailVariant, JobDetailStyle> = {
     backButton:
       "mb-6 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300",
     tag: "rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
-    logo:
-      "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white shadow-sm",
+    logo: "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white shadow-sm",
     primaryButton:
       "flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70",
     modalPrimaryButton:
@@ -85,8 +83,7 @@ const jobDetailStyles: Record<JobDetailVariant, JobDetailStyle> = {
   candidate: {
     page: "mx-auto w-full max-w-6xl",
     grid: "grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]",
-    card:
-      "border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900",
+    card: "border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900",
     heroCard:
       "border border-slate-200 border-l-4 border-l-blue-600 bg-white p-6 shadow-xs dark:border-slate-800 dark:border-l-blue-500 dark:bg-slate-900",
     companyCard:
@@ -96,8 +93,7 @@ const jobDetailStyles: Record<JobDetailVariant, JobDetailStyle> = {
     backButton:
       "mb-6 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300",
     tag: "bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
-    logo:
-      "flex h-16 w-16 shrink-0 items-center justify-center bg-blue-600 text-2xl font-bold text-white shadow-sm",
+    logo: "flex h-16 w-16 shrink-0 items-center justify-center bg-blue-600 text-2xl font-bold text-white shadow-sm",
     primaryButton:
       "flex w-full items-center justify-center gap-2 bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70",
     modalPrimaryButton:
@@ -147,7 +143,7 @@ function getCompanyName(job: Job) {
 function getTags(job: Job) {
   return job.skills?.map((item) => item.skill.name).filter(Boolean) ?? [];
 }
-
+// Hàm này tách chuỗi nhiều dòng thành mảng.
 function splitLines(value?: string | null) {
   return (
     value
@@ -437,7 +433,7 @@ export default function JobDetail({
       return;
     }
 
-    setApplyMessage("Chá»‰ tĂ i khoáº£n á»©ng viĂªn má»›i cĂ³ thá»ƒ á»©ng tuyá»ƒn.");
+    setApplyMessage("Chỉ tài khoản ứng viên mới có thể ứng tuyển.");
     navigate(location.pathname, { replace: true });
   }, [
     isAuthenticated,
@@ -471,7 +467,10 @@ export default function JobDetail({
       } catch (loadError) {
         if (isMounted) {
           setApplyMessage(
-            getApiErrorMessage(loadError, "Không thể tải danh sách CV của bạn."),
+            getApiErrorMessage(
+              loadError,
+              "Không thể tải danh sách CV của bạn.",
+            ),
           );
         }
       } finally {
@@ -530,7 +529,10 @@ export default function JobDetail({
           navigate(`/candidate/chat?conversationId=${conversation.id}`);
           return;
         } catch (chatError) {
-          console.error("Khong the mo cuoc tro chuyen sau khi ung tuyen:", chatError);
+          console.error(
+            "Không thể mở cuộc trò chuyện sau khi ứng tuyển:",
+            chatError,
+          );
         }
       }
 
@@ -653,10 +655,7 @@ export default function JobDetail({
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={styles.tag}
-                    >
+                    <span key={tag} className={styles.tag}>
                       {tag}
                     </span>
                   ))}
@@ -685,7 +684,9 @@ export default function JobDetail({
             <h2 className={`mb-3 text-lg font-bold ${styles.heading}`}>
               Mô tả công việc
             </h2>
-            <p className={`whitespace-pre-line text-sm leading-7 ${styles.muted}`}>
+            <p
+              className={`whitespace-pre-line text-sm leading-7 ${styles.muted}`}
+            >
               {job.description}
             </p>
           </section>
@@ -735,7 +736,9 @@ export default function JobDetail({
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <section className={styles.card}>
-            <h3 className={`mb-4 font-bold ${styles.heading}`}>Thông tin chung</h3>
+            <h3 className={`mb-4 font-bold ${styles.heading}`}>
+              Thông tin chung
+            </h3>
             <div className="space-y-3">
               {jobInfoItems.map((item) => (
                 <div
