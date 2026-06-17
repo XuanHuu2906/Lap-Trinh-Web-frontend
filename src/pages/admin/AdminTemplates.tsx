@@ -19,11 +19,13 @@ import {
   Globe,
   Briefcase,
   GraduationCap,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { useToast } from "../../components/common/toast";
+import { Modal } from "../../components/common/Modal";
 
 interface CVTemplate {
   id: number;
@@ -336,6 +338,14 @@ export const AdminTemplates: React.FC = () => {
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(
     null,
   );
+
+  // Modal xác nhận xóa vĩnh viễn mẫu CV
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    templateId: number | null;
+    templateName: string;
+    isSubmitting: boolean;
+  }>({ isOpen: false, templateId: null, templateName: "", isSubmitting: false });
 
   // Các trường dữ liệu của Form
   const [formName, setFormName] = useState("");
@@ -809,31 +819,36 @@ export const AdminTemplates: React.FC = () => {
     }
   };
 
-  // Xóa mẫu CV (Xử lý ngoại lệ UC-19)
-  const handleDeleteTemplate = async (id: number, name: string) => {
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn xóa vĩnh viễn mẫu CV "${name}" khỏi hệ thống?`,
-      )
-    ) {
-      try {
-        await cvService.deleteTemplate(id);
-        setTemplates((prev) => prev.filter((t) => t.id !== id));
-        toast({
-          title: "Đã xóa mẫu CV",
-          description: "Mẫu CV đã được xóa khỏi danh sách quản trị.",
-          variant: "success",
-        });
-      } catch (error: any) {
-        console.error(error);
-        const msg = error?.response?.data?.message || "Mẫu này đang được liên kết với các bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị.";
-        toast({
-          title: `Không thể xóa mẫu CV "${name}"`,
-          description: msg,
-          variant: "warning",
-          duration: 7050,
-        });
-      }
+  // Mở Modal xác nhận xóa mẫu CV (UC-19)
+  const handleDeleteTemplate = (id: number, name: string) => {
+    setDeleteConfirm({ isOpen: true, templateId: id, templateName: name, isSubmitting: false });
+  };
+
+  // Thực thi xóa mẫu CV sau khi xác nhận (Xử lý ngoại lệ UC-19)
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.templateId) return;
+    const id = deleteConfirm.templateId;
+    const name = deleteConfirm.templateName;
+    setDeleteConfirm(prev => ({ ...prev, isSubmitting: true }));
+    try {
+      await cvService.deleteTemplate(id);
+      setTemplates((prev) => prev.filter((t) => t.id !== id));
+      toast({
+        title: "Đã xóa mẫu CV",
+        description: "Mẫu CV đã được xóa khỏi danh sách quản trị.",
+        variant: "success",
+      });
+      setDeleteConfirm({ isOpen: false, templateId: null, templateName: "", isSubmitting: false });
+    } catch (error: any) {
+      console.error(error);
+      const msg = error?.response?.data?.message || "Mẫu này đang được liên kết với các bản CV đang hoạt động. Vui lòng dùng trạng thái ẩn khỏi user để ngừng hiển thị.";
+      toast({
+        title: `Không thể xóa mẫu CV "${name}"`,
+        description: msg,
+        variant: "warning",
+        duration: 7050,
+      });
+      setDeleteConfirm(prev => ({ ...prev, isSubmitting: false }));
     }
   };
 
@@ -851,17 +866,7 @@ export const AdminTemplates: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in font-sans text-slate-800 dark:text-slate-100">
       {/* 1. TOP TITLE BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight mt-1.5">
-            QUẢN LÝ TEMPLATE CV
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-            Quản lý kho template CV cung cấp cho ứng viên, hỗ trợ Thêm mới, Sửa,
-            Xóa, Xem trước và Ẩn mẫu CV an toàn.
-          </p>
-        </div>
-
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
         {/* Button Đăng ký dùng Shadcn UI */}
         <Button
           onClick={handleOpenAddModal}
@@ -1401,138 +1406,138 @@ export const AdminTemplates: React.FC = () => {
 
                 {(previewTemplate.category === "Hiện đại" ||
                   previewTemplate.category === "Đon giản") && (
-                  <div className="flex flex-1 min-h-210.5">
-                    {/* Left Split Navigation sidebar (Contrast Dark theme background) */}
-                    <div className="w-55 bg-slate-900 text-white p-6 flex flex-col justify-between">
-                      <div className="space-y-6">
-                        <div className="text-left border-b border-slate-800 pb-4">
-                          <h2 className="text-lg font-black tracking-tight leading-none text-white uppercase">
-                            TRẦN THỊ B
-                          </h2>
-                          <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1.5 block">
-                            UI/UX Designer
+                    <div className="flex flex-1 min-h-210.5">
+                      {/* Left Split Navigation sidebar (Contrast Dark theme background) */}
+                      <div className="w-55 bg-slate-900 text-white p-6 flex flex-col justify-between">
+                        <div className="space-y-6">
+                          <div className="text-left border-b border-slate-800 pb-4">
+                            <h2 className="text-lg font-black tracking-tight leading-none text-white uppercase">
+                              TRẦN THỊ B
+                            </h2>
+                            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1.5 block">
+                              UI/UX Designer
+                            </p>
+                          </div>
+
+                          {/* Contact details */}
+                          <div className="space-y-3">
+                            <span className="text-[9px] font-black text-indigo-400 tracking-wider block uppercase">
+                              Liên hệ
+                            </span>
+                            <div className="text-[10px] text-slate-300 space-y-2.5 font-medium">
+                              <p className="truncate">tranthib@gmail.com</p>
+                              <p>0901 234 567</p>
+                              <p>TP. HCM, Việt Nam</p>
+                            </div>
+                          </div>
+
+                          {/* Skills breakdown stats layout */}
+                          <div className="space-y-3">
+                            <span className="text-[9px] font-black text-indigo-400 tracking-wider block uppercase">
+                              Kỹ năng thiết kế
+                            </span>
+                            <div className="space-y-2 text-[10px] text-slate-300 font-semibold">
+                              <div className="space-y-1">
+                                <div className="flex justify-between">
+                                  <span>Figma Design</span>
+                                  <span className="text-indigo-400">90%</span>
+                                </div>
+                                <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-indigo-500 w-[90%]"></div>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between">
+                                  <span>Prototyping</span>
+                                  <span className="text-indigo-400">80%</span>
+                                </div>
+                                <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-indigo-500 w-[80%]"></div>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between">
+                                  <span>User Research</span>
+                                  <span className="text-indigo-400">75%</span>
+                                </div>
+                                <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-indigo-500 w-[75%]"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <span className="text-[8px] text-slate-500 font-mono tracking-widest block text-center">
+                          HireArch Template
+                        </span>
+                      </div>
+
+                      {/* Right side body detail view */}
+                      <div className="flex-1 p-8 space-y-6 text-left">
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                            <Sparkles className="w-4 h-4 text-indigo-500" />
+                            Giới thiệu bản thân
+                          </h4>
+                          <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                            Nhà thiết kế sản phẩm sáng tạo với niềm đam mê sâu sắc
+                            trong việc chuyển đổi các vấn đề phức tạp của người
+                            dùng thành các giải pháp tương tác đơn giản, mượt mà
+                            và trực quan nhất.
                           </p>
                         </div>
 
-                        {/* Contact details */}
                         <div className="space-y-3">
-                          <span className="text-[9px] font-black text-indigo-400 tracking-wider block uppercase">
-                            Liên hệ
-                          </span>
-                          <div className="text-[10px] text-slate-300 space-y-2.5 font-medium">
-                            <p className="truncate">tranthib@gmail.com</p>
-                            <p>0901 234 567</p>
-                            <p>TP. HCM, Việt Nam</p>
-                          </div>
-                        </div>
-
-                        {/* Skills breakdown stats layout */}
-                        <div className="space-y-3">
-                          <span className="text-[9px] font-black text-indigo-400 tracking-wider block uppercase">
-                            Kỹ năng thiết kế
-                          </span>
-                          <div className="space-y-2 text-[10px] text-slate-300 font-semibold">
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>Figma Design</span>
-                                <span className="text-indigo-400">90%</span>
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                            <Briefcase className="w-4 h-4 text-indigo-500" />
+                            Kinh nghiệm dự án nổi bật
+                          </h4>
+                          <div className="space-y-4">
+                            <div>
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-900">
+                                <span>CREATIVE HUB — UI/UX Designer</span>
+                                <span className="text-indigo-600 text-[10px]">
+                                  2024 - Hiện tại
+                                </span>
                               </div>
-                              <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500 w-[90%]"></div>
-                              </div>
+                              <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                                Nghiên cứu hành vi, tái cấu trúc luồng mua sắm sàn
+                                TMĐT giúp tăng chỉ số chuyển đổi giỏ hàng lên 14%.
+                              </p>
                             </div>
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>Prototyping</span>
-                                <span className="text-indigo-400">80%</span>
+                            <div>
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-900">
+                                <span>SAIGON STUDIO — Thiết kế giao diện</span>
+                                <span className="text-indigo-600 text-[10px]">
+                                  2023 - 2024
+                                </span>
                               </div>
-                              <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500 w-[80%]"></div>
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>User Research</span>
-                                <span className="text-indigo-400">75%</span>
-                              </div>
-                              <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500 w-[75%]"></div>
-                              </div>
+                              <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                                Phối hợp với PM thiết kế 5 website thương hiệu lớn
+                                đạt giải thưởng thiết kế quốc gia.
+                              </p>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <span className="text-[8px] text-slate-500 font-mono tracking-widest block text-center">
-                        HireArch Template
-                      </span>
-                    </div>
-
-                    {/* Right side body detail view */}
-                    <div className="flex-1 p-8 space-y-6 text-left">
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                          <Sparkles className="w-4 h-4 text-indigo-500" />
-                          Giới thiệu bản thân
-                        </h4>
-                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                          Nhà thiết kế sản phẩm sáng tạo với niềm đam mê sâu sắc
-                          trong việc chuyển đổi các vấn đề phức tạp của người
-                          dùng thành các giải pháp tương tác đơn giản, mượt mà
-                          và trực quan nhất.
-                        </p>
-                      </div>
-
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                          <Briefcase className="w-4 h-4 text-indigo-500" />
-                          Kinh nghiệm dự án nổi bật
-                        </h4>
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-900">
-                              <span>CREATIVE HUB — UI/UX Designer</span>
-                              <span className="text-indigo-600 text-[10px]">
-                                2024 - Hiện tại
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                              Nghiên cứu hành vi, tái cấu trúc luồng mua sắm sàn
-                              TMĐT giúp tăng chỉ số chuyển đổi giỏ hàng lên 14%.
-                            </p>
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                            <GraduationCap className="w-4 h-4 text-indigo-500" />
+                            Học trình đào tạo
+                          </h4>
+                          <div className="flex justify-between text-[11px] font-bold text-slate-900">
+                            <span>
+                              ĐẠI HỌC KIẾN TRÚC TP.HCM — Ngành Thiết Kế Đồ Họa
+                            </span>
+                            <span className="text-slate-500 text-[10px]">
+                              2019 - 2023
+                            </span>
                           </div>
-                          <div>
-                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-900">
-                              <span>SAIGON STUDIO — Thiết kế giao diện</span>
-                              <span className="text-indigo-600 text-[10px]">
-                                2023 - 2024
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                              Phối hợp với PM thiết kế 5 website thương hiệu lớn
-                              đạt giải thưởng thiết kế quốc gia.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                          <GraduationCap className="w-4 h-4 text-indigo-500" />
-                          Học trình đào tạo
-                        </h4>
-                        <div className="flex justify-between text-[11px] font-bold text-slate-900">
-                          <span>
-                            ĐẠI HỌC KIẾN TRÚC TP.HCM — Ngành Thiết Kế Đồ Họa
-                          </span>
-                          <span className="text-slate-500 text-[10px]">
-                            2019 - 2023
-                          </span>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {previewTemplate.category === "Chuyên nghiệp" && (
                   <div className="p-8 space-y-6">
@@ -1658,6 +1663,47 @@ export const AdminTemplates: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL: XÁC NHẬN XÓA VĨNH VIỄN MẪU CV */}
+      <Modal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => !deleteConfirm.isSubmitting && setDeleteConfirm({ isOpen: false, templateId: null, templateName: "", isSubmitting: false })}
+        title="Xác nhận xóa mẫu CV"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-sm p-4">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <p className="text-sm font-semibold text-slate-700 leading-relaxed">
+              Bạn có chắc chắn muốn xóa vĩnh viễn mẫu CV{" "}
+              <span className="font-extrabold text-red-700">"{deleteConfirm.templateName}"</span>{" "}
+              khỏi hệ thống?
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            Hành động này không thể hoàn tác. Nếu mẫu CV đang được sử dụng bởi các bản CV hoạt động, bạn nên dùng trạng thái ẩn thay vì xóa.
+          </p>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteConfirm({ isOpen: false, templateId: null, templateName: "", isSubmitting: false })}
+              disabled={deleteConfirm.isSubmitting}
+              className="cursor-pointer h-9 px-4 text-xs font-semibold"
+            >
+              Hủy
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={deleteConfirm.isSubmitting}
+              className="bg-red-600 hover:bg-red-700 text-white cursor-pointer h-9 px-4 text-xs font-bold inline-flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleteConfirm.isSubmitting ? "Đang xử lý..." : "Xóa vĩnh viễn"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

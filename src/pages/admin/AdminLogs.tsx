@@ -186,17 +186,6 @@ export const AdminLogs: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans text-slate-800 dark:text-slate-100">
-      {/* 1. TOP HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight">NHẬT KÝ HỆ THỐNG</h1>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* 2. MAIN LOGS GRID */}
       <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-sm shadow-2xs overflow-hidden">
         <div className="p-6 space-y-6">

@@ -261,15 +261,6 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans">
-      {/* 1. TOP TITLE SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
-            TỔNG QUAN HỆ THỐNG
-          </h1>
-        </div>
-      </div>
-
       {/* 2. KPIS SUMMARY CARDS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, idx) => {

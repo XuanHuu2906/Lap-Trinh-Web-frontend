@@ -21,6 +21,7 @@ import { Card, CardTitle, CardDescription } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { getAdminJobs, updateJobStatus, forceDeleteJob } from "../../services/admin.service";
 import { useToast } from "../../components/common/toast";
+import { Modal } from "../../components/common/Modal";
 import { formatJobTypeLabel } from "../../utils/job-type-labels";
 import { JOB_STATUS } from "../../utils/job-status";
 
@@ -140,6 +141,21 @@ export const AdminJobs: React.FC = () => {
   // Quản lý Modal Xem Chi Tiết Tin Đăng
   const [previewingJob, setPreviewingJob] = useState<AdminJob | null>(null);
 
+  // Modal xác nhận phê duyệt
+  const [approveConfirm, setApproveConfirm] = useState<{
+    isOpen: boolean;
+    jobId: number | null;
+    isSubmitting: boolean;
+  }>({ isOpen: false, jobId: null, isSubmitting: false });
+
+  // Modal xác nhận gỡ bỏ tin tuyển dụng vi phạm
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    jobId: number | null;
+    jobTitle: string;
+    isSubmitting: boolean;
+  }>({ isOpen: false, jobId: null, jobTitle: "", isSubmitting: false });
+
   // Cơ chế Debounce ô tìm kiếm sau 500ms
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -232,39 +248,43 @@ export const AdminJobs: React.FC = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  // Hàm xử lý Phê duyệt tin đăng thực tế
-  const handleApprove = async (jobId: number) => {
-    if (
-      window.confirm(
-        "Bạn có chắc chắn muốn phê duyệt tin tuyển dụng này để hiển thị công khai?",
-      )
-    ) {
-      try {
-        const response = await updateJobStatus(jobId, JOB_STATUS.ACTIVE);
-        if (response.success) {
-          // Cập nhật state cục bộ để loại bỏ tin vừa phê duyệt khỏi tab chờ duyệt
-          setJobs(prev => prev.filter(j => j.id !== jobId));
-          setPagination(prev => ({ ...prev, total: prev.total - 1 }));
-          toast({
-            title: "Phê duyệt tin tuyển dụng thành công",
-            description: "Tin đăng hiện đã hiển thị công khai.",
-            variant: "success",
-          });
-        } else {
-          toast({
-            title: "Thao tác thất bại",
-            description: response.message || "Lỗi không xác định",
-            variant: "error",
-          });
-        }
-      } catch (err: unknown) {
-        console.error(err);
+  // Mở modal xác nhận phê duyệt
+  const handleApprove = (jobId: number) => {
+    setApproveConfirm({ isOpen: true, jobId, isSubmitting: false });
+  };
+
+  // Thực thi phê duyệt sau khi xác nhận trong modal
+  const handleConfirmApprove = async () => {
+    if (!approveConfirm.jobId) return;
+    const jobId = approveConfirm.jobId;
+    setApproveConfirm(prev => ({ ...prev, isSubmitting: true }));
+    try {
+      const response = await updateJobStatus(jobId, JOB_STATUS.ACTIVE);
+      if (response.success) {
+        setJobs(prev => prev.filter(j => j.id !== jobId));
+        setPagination(prev => ({ ...prev, total: prev.total - 1 }));
         toast({
-          title: "Đã xảy ra lỗi",
-          description: getErrorMessage(err) || "Lỗi không xác định",
+          title: "Phê duyệt tin tuyển dụng thành công",
+          description: "Tin đăng hiện đã hiển thị công khai.",
+          variant: "success",
+        });
+        setApproveConfirm({ isOpen: false, jobId: null, isSubmitting: false });
+      } else {
+        toast({
+          title: "Thao tác thất bại",
+          description: response.message || "Lỗi không xác định",
           variant: "error",
         });
+        setApproveConfirm(prev => ({ ...prev, isSubmitting: false }));
       }
+    } catch (err: unknown) {
+      console.error(err);
+      toast({
+        title: "Đã xảy ra lỗi",
+        description: getErrorMessage(err) || "Lỗi không xác định",
+        variant: "error",
+      });
+      setApproveConfirm(prev => ({ ...prev, isSubmitting: false }));
     }
   };
 
@@ -321,38 +341,43 @@ export const AdminJobs: React.FC = () => {
     }
   };
 
-  // Gỡ bỏ bài tuyển dụng vi phạm vĩnh viễn khỏi hệ thống qua API (UC-20)
-  const handleDeleteJob = async (jobId: number, title: string) => {
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn gỡ vĩnh viễn bài đăng tuyển dụng vi phạm "${title}" khỏi hệ thống?`,
-      )
-    ) {
-      try {
-        const response = await forceDeleteJob(jobId);
-        if (response.success) {
-          setJobs(prev => prev.filter((job) => job.id !== jobId));
-          setPagination(prev => ({ ...prev, total: prev.total - 1 }));
-          toast({
-            title: "Đã gỡ bỏ bài tuyển dụng",
-            description: "Bài tuyển dụng vi phạm đã được xóa khỏi hệ thống.",
-            variant: "success",
-          });
-        } else {
-          toast({
-            title: "Thao tác thất bại",
-            description: response.message || "Lỗi không xác định",
-            variant: "error",
-          });
-        }
-      } catch (err: unknown) {
-        console.error(err);
+  // Mở modal xác nhận gỡ bỏ tin tuyển dụng vi phạm
+  const handleDeleteJob = (jobId: number, title: string) => {
+    setDeleteConfirm({ isOpen: true, jobId, jobTitle: title, isSubmitting: false });
+  };
+
+  // Thực thi gỡ bỏ bài tuyển dụng vi phạm vĩnh viễn sau khi xác nhận (UC-20)
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.jobId) return;
+    const jobId = deleteConfirm.jobId;
+    setDeleteConfirm(prev => ({ ...prev, isSubmitting: true }));
+    try {
+      const response = await forceDeleteJob(jobId);
+      if (response.success) {
+        setJobs(prev => prev.filter((job) => job.id !== jobId));
+        setPagination(prev => ({ ...prev, total: prev.total - 1 }));
         toast({
-          title: "Đã xảy ra lỗi",
-          description: getErrorMessage(err) || "Lỗi không xác định",
+          title: "Đã gỡ bỏ bài tuyển dụng",
+          description: "Bài tuyển dụng vi phạm đã được xóa khỏi hệ thống.",
+          variant: "success",
+        });
+        setDeleteConfirm({ isOpen: false, jobId: null, jobTitle: "", isSubmitting: false });
+      } else {
+        toast({
+          title: "Thao tác thất bại",
+          description: response.message || "Lỗi không xác định",
           variant: "error",
         });
+        setDeleteConfirm(prev => ({ ...prev, isSubmitting: false }));
       }
+    } catch (err: unknown) {
+      console.error(err);
+      toast({
+        title: "Đã xảy ra lỗi",
+        description: getErrorMessage(err) || "Lỗi không xác định",
+        variant: "error",
+      });
+      setDeleteConfirm(prev => ({ ...prev, isSubmitting: false }));
     }
   };
 
@@ -365,15 +390,6 @@ export const AdminJobs: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans text-slate-800 dark:text-slate-100">
-      {/* 1. TOP CONTROL PANEL */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight mt-1.5 font-sans uppercase">
-            Quản lý và kiểm duyệt tin tuyển dụng
-          </h1>
-        </div>
-      </div>
-
       {/* 2. STATS OVERVIEW */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 flex items-center justify-between rounded-sm shadow-2xs">
@@ -632,32 +648,8 @@ export const AdminJobs: React.FC = () => {
         {/* 5. PAGINATION FOOTER */}
         {!hasLoadError && !isLoading && jobs.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-950/40">
-            {/* Left Side: Current view status */}
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
-              Hiển thị <span className="font-extrabold text-slate-800 dark:text-slate-100">{Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}</span>
-              {" "}-{" "}
-              <span className="font-extrabold text-slate-800 dark:text-slate-100">{Math.min(pagination.page * pagination.limit, pagination.total)}</span>
-              {" "}trên tổng số{" "}
-              <span className="font-extrabold text-slate-800 dark:text-slate-100">{pagination.total}</span> tin tuyển dụng
-            </div>
-
             {/* Right Side: Navigation buttons and select items limit */}
-            <div className="flex items-center gap-4">
-              {/* Select limit */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Hiển thị:</span>
-                <select
-                  value={pagination.limit}
-                  onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value, 10), page: 1 }))}
-                  className="text-[10px] font-bold text-slate-650 dark:text-slate-200 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-sm outline-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <option value={5}>5 dòng</option>
-                  <option value={10}>10 dòng</option>
-                  <option value={20}>20 dòng</option>
-                  <option value={50}>50 dòng</option>
-                </select>
-              </div>
-
+            <div className="flex items-center justify-end gap-4 w-full">
               {/* Page Navigation Buttons */}
               <div className="flex items-center gap-1">
                 <Button
@@ -774,6 +766,86 @@ export const AdminJobs: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL: XÁC NHẬN PHÊ DUYỆT TIN ĐĂNG */}
+      <Modal
+        isOpen={approveConfirm.isOpen}
+        onClose={() => !approveConfirm.isSubmitting && setApproveConfirm({ isOpen: false, jobId: null, isSubmitting: false })}
+        title="Xác nhận phê duyệt tin tuyển dụng"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-sm p-4">
+            <Check className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <p className="text-sm font-semibold text-slate-700 leading-relaxed">
+              Bạn có chắc chắn muốn phê duyệt tin tuyển dụng này để hiển thị công khai?
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            Sau khi phê duyệt, tin sẽ được hiển thị trên trang tìm việc và ứng viên có thể nộp hồ sơ ứng tuyển.
+          </p>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setApproveConfirm({ isOpen: false, jobId: null, isSubmitting: false })}
+              disabled={approveConfirm.isSubmitting}
+              className="cursor-pointer h-9 px-4 text-xs font-semibold"
+            >
+              Hủy
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleConfirmApprove}
+              disabled={approveConfirm.isSubmitting}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer h-9 px-4 text-xs font-bold inline-flex items-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              {approveConfirm.isSubmitting ? "Đang xử lý..." : "Phê duyệt"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL: XÁC NHẬN GỠ BỎ TIN TUYỂN DỤNG VI PHẠM */}
+      <Modal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => !deleteConfirm.isSubmitting && setDeleteConfirm({ isOpen: false, jobId: null, jobTitle: "", isSubmitting: false })}
+        title="Xác nhận gỡ bỏ tin tuyển dụng"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-sm p-4">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <p className="text-sm font-semibold text-slate-700 leading-relaxed">
+              Bạn có chắc chắn muốn gỡ vĩnh viễn bài đăng tuyển dụng vi phạm{" "}
+              <span className="font-extrabold text-red-700">"{deleteConfirm.jobTitle}"</span>{" "}
+              khỏi hệ thống?
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            Hành động này không thể hoàn tác. Tin tuyển dụng sẽ bị xóa khỏi hệ thống và mọi dữ liệu liên quan sẽ không thể khôi phục.
+          </p>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteConfirm({ isOpen: false, jobId: null, jobTitle: "", isSubmitting: false })}
+              disabled={deleteConfirm.isSubmitting}
+              className="cursor-pointer h-9 px-4 text-xs font-semibold"
+            >
+              Hủy
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleConfirmDelete}
+              disabled={deleteConfirm.isSubmitting}
+              className="bg-red-600 hover:bg-red-700 text-white cursor-pointer h-9 px-4 text-xs font-bold inline-flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleteConfirm.isSubmitting ? "Đang xử lý..." : "Gỡ bỏ vĩnh viễn"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* 7. MODAL: XEM CHI TIẾT TIN TUYỂN DỤNG */}
       {previewingJob && (

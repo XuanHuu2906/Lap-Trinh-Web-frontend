@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Bell,
   ChevronDown,
@@ -32,10 +32,14 @@ type TopbarUser = {
 
 type TopbarNotification = {
   id: string;
+  rawId: number;
+  type: string;
   title: string;
   message: string;
   timeLabel: string;
   isRead: boolean;
+  relatedType?: string | null;
+  relatedId?: number | null;
 };
 
 interface TopbarProps {
@@ -140,11 +144,39 @@ const mapTopbarNotifications = (
 ): TopbarNotification[] =>
   items.map((item) => ({
     id: String(item.id),
+    rawId: item.id,
+    type: item.type,
     title: item.title,
     message: item.message,
     timeLabel: formatNotificationTime(item.createdAt),
     isRead: item.isRead,
+    relatedType: item.relatedType,
+    relatedId: item.relatedId,
   }));
+
+const resolveNotificationLink = (
+  role: DashboardRole,
+  notification: TopbarNotification,
+): string | null => {
+  const { type, relatedType, relatedId } = notification;
+
+  if (role === "admin") {
+    if (type === "job_pending_review") return "/admin/jobs";
+    if (type === "new_recruiter_account") return "/admin/system";
+    return "/admin/notifications";
+  }
+
+  if (role === "recruiter") {
+    if (type === "new_applicant" && relatedType === "application" && relatedId)
+      return `/recruiter/candidates?applicationId=${relatedId}`;
+    if (type === "new_applicant") return "/recruiter/candidates";
+    return "/recruiter/notifications";
+  }
+
+  // candidate
+  if (type === "feedback_received") return "/candidate/applied-jobs";
+  return "/candidate/notifications";
+};
 
 export function Topbar({
   role,
@@ -156,6 +188,7 @@ export function Topbar({
 }: TopbarProps) {
   const { theme, toggleTheme } = useTheme();
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -211,6 +244,28 @@ export function Topbar({
     unreadNotificationCount > 0 ||
     displayedNotifications.some((item) => !item.isRead);
 
+  const handleNotificationClick = async (notification: TopbarNotification) => {
+    setIsNotificationsOpen(false);
+
+    if (!notification.isRead) {
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.id === notification.id ? { ...item, isRead: true } : item,
+        ),
+      );
+      setUnreadNotificationCount((count) => Math.max(count - 1, 0));
+
+      try {
+        await notificationService.markAsRead(notification.rawId);
+      } catch (error) {
+        console.error("Lỗi đánh dấu thông báo đã đọc:", error);
+      }
+    }
+
+    const link = resolveNotificationLink(role, notification);
+    if (link) navigate(link);
+  };
+
   const loadUnreadNotificationCount = useCallback(async () => {
     try {
       const response = await notificationService.getUnreadCount(true);
@@ -234,7 +289,7 @@ export function Topbar({
 
     try {
       const response = await notificationService.getNotifications(
-        { page: 1, limit: 5 },
+        { page: 1, limit: 10 },
         true,
       );
       const unreadResponse = await notificationService.getUnreadCount(true);
@@ -289,7 +344,7 @@ export function Topbar({
       try {
         setIsNotificationsLoading(true);
         const response = await notificationService.getNotifications(
-          { page: 1, limit: 5 },
+          { page: 1, limit: 10 },
           true,
         );
         const unreadResponse = await notificationService.getUnreadCount(true);
@@ -404,9 +459,13 @@ export function Topbar({
                     </div>
                   ) : (
                     displayedNotifications.map((item) => (
-                      <div
+                      <button
                         key={item.id}
-                        className="border-b border-slate-100 px-4 py-3 last:border-0 dark:border-slate-800"
+                        type="button"
+                        onClick={() => handleNotificationClick(item)}
+                        className={`block w-full border-b border-slate-100 px-4 py-3 text-left transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60 ${
+                          item.isRead ? "" : "bg-indigo-50/40 dark:bg-indigo-950/20"
+                        }`}
                       >
                         <div className="flex items-start gap-3">
                           <span
@@ -431,7 +490,7 @@ export function Topbar({
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -465,13 +524,21 @@ export function Topbar({
             </div>
 
             <div className="hidden text-left leading-none md:block">
-              <span className="block text-xs font-bold text-slate-800 dark:text-white">
-                {currentUser.name}
-              </span>
+              {role === "admin" ? (
+                <span className="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">
+                  ADMIN
+                </span>
+              ) : (
+                <>
+                  <span className="block text-xs font-bold text-slate-800 dark:text-white">
+                    {currentUser.name}
+                  </span>
 
-              <span className="mt-0.5 block max-w-40 truncate text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                {currentUser.email || currentUser.roleLabel}
-              </span>
+                  <span className="mt-0.5 block max-w-40 truncate text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {currentUser.email || currentUser.roleLabel}
+                  </span>
+                </>
+              )}
             </div>
 
             <ChevronDown className="hidden h-4 w-4 text-slate-400 md:block" />
@@ -480,58 +547,74 @@ export function Topbar({
           {isProfileOpen ? (
             <>
               <div className="absolute right-0 z-50 mt-3 w-60 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-md dark:border-slate-800 dark:bg-slate-900">
-                <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                  <span className="block text-xs font-bold text-slate-900 dark:text-white">
-                    {currentUser.name}
-                  </span>
-
-                  <span className="mt-0.5 block truncate text-xs font-bold text-slate-700 dark:text-white">
-                    {currentUser.email || currentUser.name}
-                  </span>
-                </div>
-
-                {role === "recruiter" ? (
-                  <>
-                    <Link
-                      to="/recruiter/settings?tab=company"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                    >
-                      <User className="h-4 w-4 text-slate-400" />
-                      Hồ sơ công ty
-                    </Link>
-
-                    <Link
-                      to="/recruiter/settings?tab=password"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                    >
-                      <Settings className="h-4 w-4 text-slate-400" />
-                      Đổi mật khẩu
-                    </Link>
-                  </>
-                ) : (
-                  <Link
-                    to={currentUser.profilePath}
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                {role === "admin" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      onLogout();
+                    }}
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
                   >
-                    <User className="h-4 w-4 text-slate-400" />
-                    Thông tin cá nhân
-                  </Link>
-                )}
+                    <LogOut className="h-4 w-4 text-red-400" />
+                    Đăng xuất
+                  </button>
+                ) : (
+                  <>
+                    <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                      <span className="block text-xs font-bold text-slate-900 dark:text-white">
+                        {currentUser.name}
+                      </span>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    onLogout();
-                  }}
-                  className="flex w-full items-center gap-2.5 border-t border-slate-100 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-slate-800 dark:text-red-400 dark:hover:bg-red-950/20"
-                >
-                  <LogOut className="h-4 w-4 text-red-400" />
-                  Đăng xuất
-                </button>
+                      <span className="mt-0.5 block truncate text-xs font-bold text-slate-700 dark:text-white">
+                        {currentUser.email || currentUser.name}
+                      </span>
+                    </div>
+
+                    {role === "recruiter" ? (
+                      <>
+                        <Link
+                          to="/recruiter/settings?tab=company"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                        >
+                          <User className="h-4 w-4 text-slate-400" />
+                          Hồ sơ công ty
+                        </Link>
+
+                        <Link
+                          to="/recruiter/settings?tab=password"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                        >
+                          <Settings className="h-4 w-4 text-slate-400" />
+                          Đổi mật khẩu
+                        </Link>
+                      </>
+                    ) : (
+                      <Link
+                        to={currentUser.profilePath}
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                      >
+                        <User className="h-4 w-4 text-slate-400" />
+                        Thông tin cá nhân
+                      </Link>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        onLogout();
+                      }}
+                      className="flex w-full items-center gap-2.5 border-t border-slate-100 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-slate-800 dark:text-red-400 dark:hover:bg-red-950/20"
+                    >
+                      <LogOut className="h-4 w-4 text-red-400" />
+                      Đăng xuất
+                    </button>
+                  </>
+                )}
               </div>
             </>
           ) : null}

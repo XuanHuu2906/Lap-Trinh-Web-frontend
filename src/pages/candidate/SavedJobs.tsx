@@ -55,13 +55,7 @@ function formatDate(value?: string | null) {
 
 function PageHeader() {
   return (
-    <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-[28px] font-bold leading-tight text-slate-950 dark:text-white">
-          Việc làm đã lưu
-        </h1>
-      </div>
-
+    <div className="mb-8 flex flex-wrap items-start justify-end gap-4">
       <Link
         to="/candidate/job-search"
         className="inline-flex h-10 items-center gap-2 bg-slate-950 px-5 text-xs font-bold uppercase text-white transition hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500"
