@@ -5,7 +5,7 @@ export type ApplicationStatus =
   | "pending"
   | "reviewing"
   | "interview"
-  | "accepted"
+  | "confirmed"
   | "rejected"
   | "cancelled";
 
@@ -27,6 +27,15 @@ export type CandidateApplication = {
     id: number;
     content: string;
     createdAt: string;
+  }>;
+  interviews?: Array<{
+    id: number;
+    scheduledAt: string;
+    type: string;
+    location: string | null;
+    notes: string | null;
+    status: string;
+    confirmedAt: string | null;
   }>;
 };
 
@@ -81,6 +90,21 @@ export const applicationService = {
       { params },
     );
     myApplicationsCache.set(key, response.data);
+    return response.data;
+  },
+
+  async confirmInterview(applicationId: number) {
+    const response = await api.put<ApiResponse<CandidateApplication>>(
+      `/applications/${applicationId}/confirm-interview`,
+    );
+    clearMyApplicationsCache();
+    return response.data;
+  },
+
+  async getApplicationDetail(applicationId: number) {
+    const response = await api.get<ApiResponse<CandidateApplication>>(
+      `/applications/${applicationId}`,
+    );
     return response.data;
   },
 };

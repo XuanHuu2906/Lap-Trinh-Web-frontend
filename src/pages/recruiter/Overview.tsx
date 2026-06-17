@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  getApplicationsByJob,
+  getRecruiterApplications,
   getMyJobs,
   updateJobStatus,
   type RecruiterApplication,
@@ -71,8 +71,6 @@ const getStatusLabel = (status: RecruiterApplication["status"]) => {
       return "Đã xem";
     case "interview":
       return "Mời phỏng vấn";
-    case "accepted":
-      return "Phù hợp";
     case "rejected":
       return "Không phù hợp";
     case "cancelled":
@@ -90,8 +88,6 @@ const getStatusColor = (status: RecruiterApplication["status"]) => {
       return "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300";
     case "interview":
       return "bg-violet-100 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300";
-    case "accepted":
-      return "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300";
     case "rejected":
       return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
     case "cancelled":
@@ -112,40 +108,24 @@ export function RecruiterOverviewPage() {
       setLoading(true);
       setError("");
 
-      const jobsResponse = await getMyJobs({
-        page: 1,
-        limit: 50,
-        status: "",
-      });
+      const [jobsResponse, applicationsResponse] = await Promise.all([
+        getMyJobs({
+          page: 1,
+          limit: 50,
+          status: "",
+        }),
+        getRecruiterApplications({
+          page: 1,
+          limit: 100,
+          status: "",
+        }),
+      ]);
 
       const myJobs = jobsResponse.data ?? [];
       setJobs(myJobs);
 
-      const activeJobs = myJobs.filter((job) => !isDeletedJobStatus(job.status));
-
-      const applicationResults = await Promise.allSettled(
-        activeJobs.map((job) =>
-          getApplicationsByJob({
-            jobId: job.id,
-            page: 1,
-            limit: 20,
-            status: "",
-          }),
-        ),
-      );
-
-      const allApplications = applicationResults.flatMap((result) => {
-        if (result.status !== "fulfilled") return [];
-        return result.value.data ?? [];
-      });
-
-      const uniqueApplicationMap = new Map<number, RecruiterApplication>();
-
-      allApplications.forEach((application) => {
-        uniqueApplicationMap.set(application.id, application);
-      });
-
-      setApplications(Array.from(uniqueApplicationMap.values()));
+      const allApplications = applicationsResponse.data ?? [];
+      setApplications(allApplications);
     } catch (err) {
       setError(
         err instanceof Error
@@ -183,7 +163,6 @@ export function RecruiterOverviewPage() {
         (application.feedbacks?.length ?? 0) > 0 ||
         application.status === "reviewing" ||
         application.status === "interview" ||
-        application.status === "accepted" ||
         application.status === "rejected",
     ).length;
 

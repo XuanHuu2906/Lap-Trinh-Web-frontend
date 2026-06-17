@@ -11,7 +11,26 @@
       "Bash(npm install *)",
       "Bash(rtk prisma *)",
       "Bash(rtk tsc *)",
-      "Bash(rtk find *)"
+      "Bash(rtk find *)",
+      "Bash(Test-Path *)",
+      "Bash(rtk grep *)",
+      "Bash(npm uninstall *)",
+      "Bash(rtk npx tsx -e ' *)",
+      "Bash(rtk npx *)",
+      "Bash(.\\\\node_modules\\\\.bin\\\\prisma migrate *)",
+      "Bash(Remove-Item *)",
+      "Bash(node *)",
+      "Bash(Get-ChildItem D:\\\\LTWeb\\\\LTWeb-backend -Depth 0)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Get-ChildItem -Path \"D:\\\\LTWeb\\\\LTWeb-backend\\\\src\" -Recurse -Name)",
+      "Bash(Select-Object -First 200)",
+      "Bash(rtk read *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(rtk git *)",
+      "Bash(Select-Object FullName)",
+      "Bash(Select-Object Name)",
+      "Bash(git ls-tree *)",
+      "PowerShell(Remove-Item *)"
     ]
   }
 }

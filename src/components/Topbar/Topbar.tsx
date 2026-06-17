@@ -212,16 +212,18 @@ export function Topbar({
     displayedNotifications.some((item) => !item.isRead);
 
   const loadUnreadNotificationCount = useCallback(async () => {
-    if (role !== "recruiter") return;
-
-    const response = await notificationService.getUnreadCount(true);
-    setUnreadNotificationCount(response.data.count);
-  }, [role]);
+    try {
+      const response = await notificationService.getUnreadCount(true);
+      setUnreadNotificationCount(response.data.count);
+    } catch (error) {
+      console.error("Lỗi lấy số lượng thông báo chưa đọc:", error);
+    }
+  }, []);
 
   useVisiblePolling(
     loadUnreadNotificationCount,
     {
-      enabled: role === "recruiter" && !isNotificationsOpen,
+      enabled: !isNotificationsOpen,
       intervalMs: 120_000,
       runImmediately: true,
     },
@@ -235,27 +237,21 @@ export function Topbar({
         { page: 1, limit: 5 },
         true,
       );
-      const unreadResponse =
-        role === "recruiter"
-          ? await notificationService.getUnreadCount(true)
-          : null;
+      const unreadResponse = await notificationService.getUnreadCount(true);
 
       setNotifications(mapTopbarNotifications(response.data));
-      setUnreadNotificationCount(
-        unreadResponse?.data.count ??
-          response.data.filter((item) => !item.isRead).length,
-      );
+      setUnreadNotificationCount(unreadResponse.data.count);
     } catch (error) {
-      console.error("Loi tai thong bao:", error);
+      console.error("Lỗi tải thông báo:", error);
       setNotifications([]);
     } finally {
       setIsNotificationsLoading(false);
     }
-  }, [role]);
+  }, []);
 
   useEffect(() => {
     const client = supabase;
-    if (role !== "recruiter" || !authUser?.id || !client) return;
+    if (!authUser?.id || !client) return;
 
     const channel = client
       .channel(`notifications-topbar-${authUser.id}`)
@@ -282,7 +278,6 @@ export function Topbar({
     isNotificationsOpen,
     loadTopbarNotifications,
     loadUnreadNotificationCount,
-    role,
   ]);
 
   useEffect(() => {
@@ -297,17 +292,11 @@ export function Topbar({
           { page: 1, limit: 5 },
           true,
         );
-        const unreadResponse =
-          role === "recruiter"
-            ? await notificationService.getUnreadCount(true)
-            : null;
+        const unreadResponse = await notificationService.getUnreadCount(true);
 
         if (isMounted) {
           setNotifications(mapTopbarNotifications(response.data));
-          setUnreadNotificationCount(
-            unreadResponse?.data.count ??
-              response.data.filter((item) => !item.isRead).length,
-          );
+          setUnreadNotificationCount(unreadResponse.data.count);
         }
       } catch (error) {
         console.error("Lỗi khi tải thông báo:", error);
@@ -325,7 +314,7 @@ export function Topbar({
     return () => {
       isMounted = false;
     };
-  }, [isNotificationsOpen, role]);
+  }, [isNotificationsOpen]);
 
   return (
     <header

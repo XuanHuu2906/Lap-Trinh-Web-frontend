@@ -12,6 +12,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import {
   applicationService,
+  clearMyApplicationsCache,
   getCachedMyApplications,
   type CandidateApplication,
 } from "@/services/application.service";
@@ -39,7 +40,8 @@ const applicationStatusOptions: StatusOption[] = [
   { label: "Tất cả trạng thái", value: "" },
   { label: "Đang chờ", value: "pending" },
   { label: "Đang xem", value: "reviewing" },
-  { label: "Đã tiếp nhận", value: "accepted" },
+  { label: "Mời phỏng vấn", value: "interview" },
+  { label: "Đã xác nhận", value: "confirmed" },
   { label: "Từ chối", value: "rejected" },
 ];
 
@@ -54,10 +56,15 @@ const applicationStatusDisplays: Record<string, StatusDisplay> = {
     className:
       "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
   },
-  accepted: {
-    label: "Đã tiếp nhận",
+  interview: {
+    label: "Mời phỏng vấn",
     className:
-      "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300",
+      "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
+  },
+  confirmed: {
+    label: "Đã xác nhận",
+    className:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
   },
   rejected: {
     label: "Từ chối",
@@ -362,12 +369,32 @@ function ApplicationRow({
 function ApplicationDetailModal({
   application,
   onClose,
+  onRefresh,
 }: {
   application: CandidateApplication;
   onClose: () => void;
+  onRefresh: () => void;
 }) {
   const status = getStatusDisplay(application.status);
   const feedbacks = application.feedbacks ?? [];
+  const interview = application.interviews?.[0];
+  const [confirming, setConfirming] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+
+  const handleConfirm = async () => {
+    setConfirming(true);
+    setConfirmMsg("");
+    try {
+      await applicationService.confirmInterview(application.id);
+      setConfirmMsg("Xác nhận phỏng vấn thành công!");
+      clearMyApplicationsCache();
+      onRefresh();
+    } catch (err: any) {
+      setConfirmMsg(err.response?.data?.message || "Không thể xác nhận phỏng vấn.");
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -438,6 +465,58 @@ function ApplicationDetailModal({
             </p>
           </div>
 
+          {interview && (application.status === "interview" || application.status === "confirmed") && (
+            <div>
+              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-500">
+                Thông tin phỏng vấn
+              </p>
+              <div className="border border-violet-200 bg-violet-50 p-3 space-y-2 dark:border-violet-900/60 dark:bg-violet-950/30">
+                <InterviewDetailRow
+                  label="Thời gian"
+                  value={new Date(interview.scheduledAt).toLocaleString("vi-VN", {
+                    weekday: "long", year: "numeric", month: "long", day: "numeric",
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                />
+                <InterviewDetailRow
+                  label="Hình thức"
+                  value={interview.type === "online" ? "Online" : "Offline"}
+                />
+                <InterviewDetailRow
+                  label={interview.type === "online" ? "Link" : "Địa chỉ"}
+                  value={interview.location || "—"}
+                  isLink={interview.type === "online"}
+                />
+                {interview.notes && (
+                  <InterviewDetailRow label="Ghi chú" value={interview.notes} />
+                )}
+                {interview.status === "confirmed" && (
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                    Bạn đã xác nhận tham gia phỏng vấn
+                  </p>
+                )}
+              </div>
+
+              {application.status === "interview" && (
+                <div className="mt-3">
+                  {confirmMsg && (
+                    <p className={`mb-2 text-xs font-semibold ${confirmMsg.includes("thành công") ? "text-emerald-600" : "text-red-500"}`}>
+                      {confirmMsg}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleConfirm()}
+                    disabled={confirming}
+                    className="h-9 bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {confirming ? "Đang xử lý..." : "Xác nhận tham gia phỏng vấn"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-500">
               Phản hồi từ nhà tuyển dụng
@@ -478,6 +557,21 @@ function ApplicationDetailModal({
   );
 }
 
+function InterviewDetailRow({ label, value, isLink }: { label: string; value: string; isLink?: boolean }) {
+  return (
+    <div className="flex gap-2 text-sm">
+      <span className="font-semibold text-slate-600 dark:text-slate-400 min-w-20">{label}:</span>
+      {isLink ? (
+        <a href={value} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline dark:text-blue-400 break-all">
+          {value}
+        </a>
+      ) : (
+        <span className="text-slate-700 dark:text-slate-300">{value}</span>
+      )}
+    </div>
+  );
+}
+
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -506,6 +600,7 @@ export default function AppliedJobs() {
   const [chatOpeningId, setChatOpeningId] = useState<number | null>(null);
   const [selectedApplication, setSelectedApplication] =
     useState<CandidateApplication | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -544,7 +639,7 @@ export default function AppliedJobs() {
     return () => {
       isMounted = false;
     };
-  }, [status]);
+  }, [status, refreshTrigger]);
 
   const filteredApplications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -606,11 +701,11 @@ export default function AppliedJobs() {
           "text-yellow-600 bg-yellow-50 dark:bg-yellow-950/40 dark:text-yellow-300",
       },
       {
-        label: "Đã tiếp nhận",
-        value: applications.filter((item) => item.status === "accepted").length,
+        label: "Mời phỏng vấn",
+        value: applications.filter((item) => item.status === "interview").length,
         icon: ShieldCheck,
         color:
-          "text-green-600 bg-green-50 dark:bg-green-950/40 dark:text-green-300",
+          "text-violet-600 bg-violet-50 dark:bg-violet-950/40 dark:text-violet-300",
       },
       {
         label: "Từ chối",
@@ -657,6 +752,7 @@ export default function AppliedJobs() {
         <ApplicationDetailModal
           application={selectedApplication}
           onClose={() => setSelectedApplication(null)}
+          onRefresh={() => setRefreshTrigger((n) => n + 1)}
         />
       ) : null}
     </div>

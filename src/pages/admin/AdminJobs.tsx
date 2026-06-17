@@ -13,7 +13,6 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  AlertCircle,
 } from "lucide-react";
 import { type Job, type JobType } from "../../types/job.type";
 import { Button } from "../../components/ui/button";
@@ -42,6 +41,50 @@ const getErrorMessage = (err: unknown): string => {
   }
 
   return "";
+};
+
+const experienceLevelLabels: Record<string, string> = {
+  no_exp: "Không yêu cầu",
+  entry: "Mới tốt nghiệp",
+  junior: "Junior",
+  mid: "Mid-level",
+  senior: "Senior",
+  lead: "Lead",
+  manager: "Manager",
+  director: "Director",
+};
+
+const formatSalary = (
+  min?: number | string | null,
+  max?: number | string | null,
+) => {
+  const minNumber = min === null || min === undefined || min === "" ? null : Number(min);
+  const maxNumber = max === null || max === undefined || max === "" ? null : Number(max);
+
+  if (!minNumber && !maxNumber) return "Thỏa thuận";
+
+  const formatter = new Intl.NumberFormat("vi-VN");
+
+  if (minNumber && maxNumber) {
+    return `${formatter.format(minNumber)} - ${formatter.format(maxNumber)} VND`;
+  }
+
+  if (minNumber) return `Từ ${formatter.format(minNumber)} VND`;
+
+  return `Đến ${formatter.format(maxNumber ?? 0)} VND`;
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "--";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 };
 
 const SkeletonJobCard: React.FC = () => (
@@ -80,7 +123,7 @@ export const AdminJobs: React.FC = () => {
     total: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
     "pending" | "approved" | "rejected"
@@ -110,7 +153,7 @@ export const AdminJobs: React.FC = () => {
   // Hàm gọi API lấy danh sách tin tuyển dụng từ server
   const fetchJobs = async () => {
     setIsLoading(true);
-    setError(null);
+    setHasLoadError(false);
     try {
       let statusParam: string | undefined = undefined;
       if (activeTab === "pending") statusParam = JOB_STATUS.PENDING_REVIEW;
@@ -127,7 +170,6 @@ export const AdminJobs: React.FC = () => {
       });
 
       if (response.success) {
-        // Ánh xạ dữ liệu từ backend trả về dạng AdminJob của frontend
         const mappedJobs: AdminJob[] = response.data.map((job) => ({
           ...job,
           companyName:
@@ -138,7 +180,6 @@ export const AdminJobs: React.FC = () => {
             "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=80&q=80",
         }));
 
-        // Bộ lọc phụ client-side cho jobType nếu được chọn (vì server chỉ hỗ trợ bộ lọc chính)
         let finalJobs = mappedJobs;
         if (selectedJobType !== "Tất cả") {
           finalJobs = mappedJobs.filter(
@@ -160,7 +201,8 @@ export const AdminJobs: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || "Có lỗi xảy ra khi kết nối tới máy chủ.");
+      setHasLoadError(true);
+      toast({ title: getErrorMessage(err) || "Có lỗi xảy ra khi kết nối tới máy chủ.", variant: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -443,15 +485,14 @@ export const AdminJobs: React.FC = () => {
               <SkeletonJobCard key={idx} />
             ))}
           </div>
-        ) : error ? (
+        ) : hasLoadError ? (
           <div className="py-16 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-            <p className="text-sm font-bold text-red-650 dark:text-red-300">{error}</p>
+            <p className="text-sm font-bold text-slate-500">Không thể tải dữ liệu</p>
             <Button
               variant="outline"
               size="sm"
               onClick={fetchJobs}
-              className="mt-3 border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 font-bold text-xs h-9 px-4 cursor-pointer"
+              className="mt-3 font-bold text-xs h-9 px-4 cursor-pointer"
             >
               Thử lại
             </Button>
@@ -487,9 +528,7 @@ export const AdminJobs: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <DollarSign className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                         <span>
-                          {job.salaryMin && job.salaryMax
-                            ? `${job.salaryMin}$ - ${job.salaryMax}$ / tháng`
-                            : "Thỏa thuận"}
+                          {formatSalary(job.salaryMin, job.salaryMax)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -509,7 +548,7 @@ export const AdminJobs: React.FC = () => {
                         variant="outline"
                         className="text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/30 dark:bg-indigo-950/30"
                       >
-                        Kinh nghiệm: {job.experienceLevel}
+                        Kinh nghiệm: {job.experienceLevel ? experienceLevelLabels[job.experienceLevel] || job.experienceLevel : "Không yêu cầu"}
                       </Badge>
                     </div>
 
@@ -591,7 +630,7 @@ export const AdminJobs: React.FC = () => {
         )}
 
         {/* 5. PAGINATION FOOTER */}
-        {!error && !isLoading && jobs.length > 0 && (
+        {!hasLoadError && !isLoading && jobs.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-950/40">
             {/* Left Side: Current view status */}
             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
@@ -779,7 +818,9 @@ export const AdminJobs: React.FC = () => {
                     {translateJobType(previewingJob.jobType)}
                   </Badge>
                   <Badge variant="outline">
-                    Cấp bậc: {previewingJob.experienceLevel}
+                    Cấp bậc: {previewingJob.experienceLevel
+                      ? experienceLevelLabels[previewingJob.experienceLevel] || previewingJob.experienceLevel
+                      : "Không yêu cầu"}
                   </Badge>
                 </div>
               </div>
@@ -791,7 +832,7 @@ export const AdminJobs: React.FC = () => {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    {previewingJob.location}
+                    {previewingJob.location || "Chưa cập nhật"}
                   </span>
                 </div>
                 <div>
@@ -800,9 +841,24 @@ export const AdminJobs: React.FC = () => {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                     <DollarSign className="w-3.5 h-3.5 text-slate-400" />
-                    {previewingJob.salaryMin && previewingJob.salaryMax
-                      ? `${previewingJob.salaryMin}$ - ${previewingJob.salaryMax}$ / tháng`
-                      : "Thỏa thuận"}
+                    {formatSalary(previewingJob.salaryMin, previewingJob.salaryMax)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-wider uppercase mb-1">
+                    DANH MỤC
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    {previewingJob.category?.name || "Chưa phân loại"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-wider uppercase mb-1">
+                    NGÀY ĐĂNG / HẾT HẠN
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    {formatDate(previewingJob.createdAt)}
+                    {previewingJob.expiresAt ? ` → ${formatDate(previewingJob.expiresAt)}` : ""}
                   </span>
                 </div>
               </div>
@@ -821,9 +877,36 @@ export const AdminJobs: React.FC = () => {
                   YÊU CẦU CÔNG VIỆC
                 </span>
                 <p className="text-xs font-semibold leading-relaxed text-slate-650 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-sm border border-slate-150 dark:border-slate-800 whitespace-pre-wrap">
-                  {previewingJob.requirements}
+                  {previewingJob.requirements || "Chưa cập nhật yêu cầu."}
                 </p>
               </div>
+
+              <div>
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-widest uppercase mb-2">
+                  QUYỀN LỢI
+                </span>
+                <p className="text-xs font-semibold leading-relaxed text-slate-650 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-sm border border-slate-150 dark:border-slate-800 whitespace-pre-wrap">
+                  {previewingJob.benefits || "Chưa cập nhật quyền lợi."}
+                </p>
+              </div>
+
+              {previewingJob.skills && previewingJob.skills.length > 0 && (
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block tracking-widest uppercase mb-2">
+                    KỸ NĂNG YÊU CẦU
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {previewingJob.skills.map((s) => (
+                      <span
+                        key={s.skill.id}
+                        className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      >
+                        {s.skill.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bottom buttons */}

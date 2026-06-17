@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
   type ReactNode,
 } from "react";
 import { get, post } from "../services/api-client";
@@ -165,7 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email: string, password?: string) => {
+  const login = useCallback(async (email: string, password?: string) => {
     try {
       const res = await post<ApiResponse<LoginResponse>>("/auth/login", {
         email,
@@ -193,9 +194,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const loginWithGoogle = async (supabaseAccessToken: string) => {
+  const loginWithGoogle = useCallback(async (supabaseAccessToken: string) => {
     try {
       const res = await post<ApiResponse<LoginResponse>>("/auth/google-login", {
         supabaseAccessToken,
@@ -222,9 +223,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const completeOnboarding = async (
+  const completeOnboarding = useCallback(async (
     role: "candidate" | "recruiter",
     fullName: string,
     companyName?: string | null,
@@ -270,17 +271,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, [refreshToken]);
 
-  const registerCandidate = async (data: RegisterCandidateRequest) => {
+  const registerCandidate = useCallback(async (data: RegisterCandidateRequest) => {
     return post<ApiResponse>("/auth/register-candidate", data);
-  };
+  }, []);
 
-  const registerRecruiter = async (data: RegisterRecruiterRequest) => {
+  const registerRecruiter = useCallback(async (data: RegisterRecruiterRequest) => {
     return post<ApiResponse>("/auth/register-recruiter", data);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const storedRefreshToken =
         localStorage.getItem("refreshToken") || refreshToken;
@@ -300,9 +301,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setIsAuthenticated(false);
     }
-  };
+  }, [refreshToken]);
 
-  const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
     try {
       const storedRefreshToken =
         localStorage.getItem("refreshToken") || refreshToken;
@@ -340,7 +341,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(false);
       return null;
     }
-  };
+  }, [refreshToken]);
 
   return (
     <AuthContext.Provider

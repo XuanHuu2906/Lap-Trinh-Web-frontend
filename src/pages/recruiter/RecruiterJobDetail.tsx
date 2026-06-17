@@ -28,9 +28,28 @@ const formatDate = (value?: string | null) => {
   }).format(date);
 };
 
+const jobTypeLabels: Record<string, string> = {
+  "full-time": "Toàn thời gian",
+  "part-time": "Bán thời gian",
+  remote: "Làm việc từ xa",
+  hybrid: "Hybrid",
+  freelance: "Freelance",
+  internship: "Thực tập",
+};
+
+const experienceLevelLabels: Record<string, string> = {
+  entry: "Mới tốt nghiệp",
+  junior: "Junior",
+  mid: "Mid-level",
+  senior: "Senior",
+  lead: "Lead",
+  director: "Director",
+};
+
 const formatSalary = (
   min?: string | number | null,
   max?: string | number | null,
+  unit?: string | null,
 ) => {
   const minNumber = min === null || min === undefined || min === "" ? null : Number(min);
   const maxNumber = max === null || max === undefined || max === "" ? null : Number(max);
@@ -38,14 +57,15 @@ const formatSalary = (
   if (!minNumber && !maxNumber) return "Thỏa thuận";
 
   const formatter = new Intl.NumberFormat("vi-VN");
+  const unitLabel = unit === "USD" ? " USD" : " VND";
 
   if (minNumber && maxNumber) {
-    return `${formatter.format(minNumber)} - ${formatter.format(maxNumber)} VND`;
+    return `${formatter.format(minNumber)} - ${formatter.format(maxNumber)}${unitLabel}`;
   }
 
-  if (minNumber) return `Từ ${formatter.format(minNumber)} VND`;
+  if (minNumber) return `Từ ${formatter.format(minNumber)}${unitLabel}`;
 
-  return `Đến ${formatter.format(maxNumber ?? 0)} VND`;
+  return `Đến ${formatter.format(maxNumber ?? 0)}${unitLabel}`;
 };
 
 export function RecruiterJobDetailPage() {
@@ -225,6 +245,15 @@ export function RecruiterJobDetailPage() {
               </span>
             </div>
 
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                Loại công việc
+              </p>
+              <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                {jobTypeLabels[job.jobType] || job.jobType}
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
@@ -247,10 +276,21 @@ export function RecruiterJobDetailPage() {
 
             <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                Kinh nghiệm
+              </p>
+              <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                {job.experienceLevel
+                  ? experienceLevelLabels[job.experienceLevel] || job.experienceLevel
+                  : "Không yêu cầu"}
+              </p>
+            </div>
+
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Mức lương
               </p>
               <p className="mt-1 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
-                {formatSalary(job.salaryMin, job.salaryMax)}
+                {formatSalary(job.salaryMin, job.salaryMax, job.salaryUnit)}
               </p>
             </div>
 
@@ -262,6 +302,24 @@ export function RecruiterJobDetailPage() {
                 {job.location || "Chưa cập nhật"}
               </p>
             </div>
+
+            {job.skills && job.skills.length > 0 && (
+              <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  Kỹ năng
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {job.skills.map((s) => (
+                    <span
+                      key={s.skill.id}
+                      className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                      {s.skill.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle,
@@ -21,6 +21,7 @@ import {
   getUploadUrl,
 } from "@/services/cv.service";
 import { decodeMojibake } from "@/utils/encoding";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 
 type CVActionHandlers = {
   onView: (cv: CandidateCV) => void;
@@ -529,9 +530,16 @@ export default function MyCVs() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleDelete = async (id: number) => {
-    const shouldDelete = window.confirm("Bạn chắc chắn muốn xóa CV này?");
-    if (!shouldDelete) return;
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
+  const handleDeleteRequest = (id: number) => {
+    setConfirmDeleteId(id);
+  };
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (confirmDeleteId === null) return;
+    const id = confirmDeleteId;
+    setConfirmDeleteId(null);
 
     try {
       setDeletingId(id);
@@ -544,7 +552,7 @@ export default function MyCVs() {
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [confirmDeleteId]);
 
   const handleSetActive = async (id: number) => {
     try {
@@ -572,7 +580,7 @@ export default function MyCVs() {
     onView: handleView,
     onEdit: handleEdit,
     onDownload: handleDownload,
-    onDelete: handleDelete,
+    onDelete: handleDeleteRequest,
     onSetActive: handleSetActive,
   };
 
@@ -582,7 +590,7 @@ export default function MyCVs() {
         isUploading={isUploading}
         fileInputRef={fileInputRef}
         onUpload={handleUploadPDF}
-        onCreate={() => navigate("/candidate/cv-builder")}
+        onCreate={() => navigate("/candidate/cv-templates")}
       />
 
       {errorMessage && <ErrorAlert message={errorMessage} />}
@@ -594,6 +602,16 @@ export default function MyCVs() {
         activatingId={activatingId}
         handlers={handlers}
         onRefresh={() => loadCVs(true)}
+      />
+      <ConfirmModal
+        open={confirmDeleteId !== null}
+        title="Xóa CV"
+        message="Bạn chắc chắn muốn xóa CV này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setConfirmDeleteId(null)}
       />
     </div>
   );
