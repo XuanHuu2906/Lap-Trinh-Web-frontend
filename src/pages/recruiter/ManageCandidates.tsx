@@ -21,6 +21,7 @@ import {
   statusLabel,
   statusStyle,
   getFeedbackStatus,
+  type NextApplicationStatus,
 } from "../../components/recruiter/ApplicationDetailPanel";
 
 // === TRANG QUẢN LÝ ỨNG VIÊN ===
@@ -380,7 +381,7 @@ export function ManageCandidatesPage() {
   // Xử lý thay đổi trạng thái application (từ panel chi tiết)
   // Sau khi thành công: refresh detail + reload danh sách
   const handleChangeStatus = async (
-    nextStatus: "reviewing" | "interview" | "rejected",
+    nextStatus: NextApplicationStatus,
   ) => {
     if (!selectedApplication) return;
 
