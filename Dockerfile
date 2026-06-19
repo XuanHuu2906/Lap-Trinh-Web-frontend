@@ -16,18 +16,18 @@ EXPOSE 5173
 CMD ["npx", "vite", "--host", "0.0.0.0"]
 
 # Stage 3: builder — compile + bundle (internal)
+# Vite tự load .env.production khi `vite build` (chứa SUPABASE keys).
+# VITE_API_URL được override qua build arg để compose có thể dùng `/api` (nginx proxy)
+# trong khi deploy Render giữ nguyên URL cloud từ .env.production.
 FROM base AS builder
 RUN npm ci
 COPY src ./src
 COPY public ./public
 COPY index.html ./
 COPY tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts ./
+COPY .env.production ./
 ARG VITE_API_URL
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
 ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 RUN npm run build
 
 # Stage 4: production — nginx serving static (target: production)

@@ -4,6 +4,10 @@ Frontend project for the LTWeb recruitment management system. The app is built w
 
 ## 🐳 Docker
 
+Cả 2 compose file đặt ở `D:\LTWeb` (cấp cha của `LTWeb-frontend`).
+
+### Development (Vite HMR + bind mount `src/`)
+
 ```bash
 cd D:\LTWeb
 
@@ -14,19 +18,33 @@ docker compose -f docker-compose.dev.yml up --build
 docker compose -f docker-compose.dev.yml up
 
 # Xem logs
-docker compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.dev.yml logs -f frontend
 
-# Xem trạng thái
-docker compose -f docker-compose.dev.yml ps
-
-# Dừng
-docker compose -f docker-compose.dev.yml stop
-
-# Dừng + xóa
+# Dừng + xóa container
 docker compose -f docker-compose.dev.yml down
 ```
 
-Frontend tại `http://localhost:5173`, sửa code là reload ngay (Vite HMR).
+Frontend dev → `http://localhost:5173`, sửa code là reload ngay (Vite HMR).
+Biến môi trường dev đọc từ `LTWeb-frontend/.env` (mount qua `env_file`).
+
+### Production (Nginx serve static + proxy `/api`)
+
+```bash
+cd D:\LTWeb
+
+# Build + chạy nginx
+docker compose up --build
+
+# Dừng
+docker compose down
+```
+
+Frontend prod → `http://localhost` (port 80).
+Nginx tự proxy `/api/*` → container `backend:3000`, không cần CORS.
+
+**Lưu ý cấu hình prod build:**
+- `Dockerfile` stage `builder` COPY `.env.production` vào image — Vite tự load file này khi `vite build`. Đảm bảo `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` đã có trong file đó.
+- `VITE_API_URL` bị override bằng build arg `/api` trong `docker-compose.yml` để dùng nginx proxy nội bộ (file `.env.production` giữ URL cloud cho deploy Render).
 
 ---
 
