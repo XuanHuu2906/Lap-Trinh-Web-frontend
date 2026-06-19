@@ -367,7 +367,7 @@ export async function getApplicationDetail(id: number) {
  */
 export async function updateApplicationStatus(
   id: number,
-  status: 'reviewing' | 'interview' | 'rejected',
+  status: 'reviewing' | 'interview' | 'hired' | 'rejected',
 ) {
   return requestApi<RecruiterApplication>({
     method: 'PUT',
