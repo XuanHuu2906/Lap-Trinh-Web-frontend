@@ -57,6 +57,7 @@ import {
   ApplicationDetailPanel,
   getFeedbackStatus,
   type FeedbackStatus,
+  type NextApplicationStatus,
 } from "../../components/recruiter/ApplicationDetailPanel";
 
 /**
@@ -505,7 +506,7 @@ export function RecruiterChatPage() {
    * Sau khi cập nhật → refresh lại dữ liệu application
    */
   const handleChangeStatus = async (
-    nextStatus: "reviewing" | "interview" | "rejected",
+    nextStatus: NextApplicationStatus,
   ) => {
     if (!selectedApplication) return;
 
