@@ -1,3 +1,28 @@
+/**
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Chat.tsx — Trang Chat của Nhà Tuyển Dụng (Recruiter)
+ * ──────────────────────────────────────────────────────────────────────────────
+ *
+ * Cấu trúc 3 panel:
+ *  [Trái]  Sidebar hội thoại    - danh sách ứng viên đang chat, có tìm kiếm
+ *  [Giữa]  Khung chat           - tin nhắn realtime, gửi text/file
+ *  [Phải]  Panel hồ sơ ứng tuyển - xem hồ sơ, feedback, đặt lịch PV, đánh giá
+ *
+ * Tích hợp:
+ *  - Realtime Supabase: lắng nghe INSERT messages
+ *  - ApplicationDetailPanel: quản lý trạng thái ứng tuyển, feedback, evaluation
+ *  - CandidateCVModal: xem CV ứng viên
+ *  - Đặt lịch phỏng vấn (scheduleInterview) + gửi mail tự động
+ *  - Đánh giá nội bộ (createEvaluation) với thang điểm
+ *
+ * Flow chính:
+ *  1. Load danh sách hội thoại → click chọn → load messages + load application panel
+ *  2. Gửi tin nhắn → API → append vào local state (không dùng optimistic cho recruiter)
+ *  3. Realtime: nhận tin nhắn mới từ candidate → re-fetch + mark read
+ *  4. Panel phải: feedback → gửi mail (PV / từ chối), evaluation → lưu nội bộ
+ * ──────────────────────────────────────────────────────────────────────────────
+ */
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send,
@@ -34,14 +59,23 @@ import {
   type FeedbackStatus,
 } from "../../components/recruiter/ApplicationDetailPanel";
 
+/**
+ * Decode tên file đính kèm bị lỗi encoding mojibake (tiếng Việt có dấu)
+ */
 const normalizeAttachmentName = (value: string | null) =>
   value ? decodeMojibakeInText(value) : value;
 
+/**
+ * Chuẩn hóa message: decode tên file đính kèm
+ */
 const normalizeMessage = (message: Message): Message => ({
   ...message,
   attachmentName: normalizeAttachmentName(message.attachmentName),
 });
 
+/**
+ * Sắp xếp messages theo thời gian tăng dần, nếu cùng thời gian thì theo id tăng dần
+ */
 const sortMessagesByTime = <T extends Message>(items: T[]) =>
   [...items].sort((a, b) => {
     const timeDiff = new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
@@ -49,47 +83,96 @@ const sortMessagesByTime = <T extends Message>(items: T[]) =>
     return a.id - b.id;
   });
 
+/**
+ * Chuẩn hóa danh sách messages: decode tên file + sắp xếp
+ */
 const normalizeMessages = (items: Message[]) =>
   sortMessagesByTime(items.map(normalizeMessage));
 
+/**
+ * ── Component Chat Recruiter chính ──
+ *
+ * State management được chia làm 2 nhóm:
+ *  1. State chat: conversations, messages, inputMessage, loading, search
+ *  2. State application panel: selectedApplication, feedback, evaluation, interview
+ *
+ * Sidebar phải (ApplicationDetailPanel) chỉ hiển thị khi isApplicationPanelOpen = true
+ * Panel này cho phép recruiter:
+ *  - Xem thông tin hồ sơ ứng tuyển
+ *  - Chuyển đổi giữa các application của cùng ứng viên (dropdown)
+ *  - Cập nhật trạng thái (reviewing / interview / rejected)
+ *  - Gửi feedback / đặt lịch phỏng vấn (tự động gửi mail)
+ *  - Đánh giá nội bộ (score + notes)
+ *  - Xem CV (CandidateCVModal)
+ */
 export function RecruiterChatPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
+
+  /**
+   * requestedConversationId: ID hội thoại từ URL param ?conversationId=
+   * Dùng khi điều hướng từ trang candidates/overview/manage-candidates
+   */
   const requestedConversationId = Number(searchParams.get("conversationId"));
+
+  // ── State cho danh sách hội thoại ──
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  // ID hội thoại đang được chọn
   const [activeConversationId, setActiveConversationId] = useState<
     number | null
   >(null);
+  // Danh sách tin nhắn của hội thoại đang chọn
   const [messages, setMessages] = useState<Message[]>([]);
+  // Nội dung tin nhắn đang soạn
   const [inputMessage, setInputMessage] = useState("");
+  // Đang tải danh sách hội thoại
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  // Đang tải tin nhắn
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  // Đang upload file đính kèm
   const [isUploading, setIsUploading] = useState(false);
+  // Từ khóa tìm kiếm hội thoại
   const [searchQuery, setSearchQuery] = useState("");
+
+  // ── State cho panel hồ sơ ứng tuyển (sidebar phải) ──
   const [isApplicationPanelOpen, setIsApplicationPanelOpen] = useState(false);
   const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+  // Application đang được chọn/xem
   const [selectedApplication, setSelectedApplication] =
     useState<RecruiterApplication | null>(null);
+  // Danh sách applications liên quan (cùng candidate, cùng recruiter)
   const [relatedApplications, setRelatedApplications] = useState<
     RecruiterApplication[]
   >([]);
   const [applicationError, setApplicationError] = useState("");
   const [applicationMessage, setApplicationMessage] = useState("");
+  // Feedback content đang soạn
   const [feedback, setFeedback] = useState("");
+  // Trạng thái feedback: "reviewing" | "interview" | "rejected"
   const [feedbackStatus, setFeedbackStatus] =
     useState<FeedbackStatus>("interview");
+  // Điểm đánh giá nội bộ (1-5)
   const [score, setScore] = useState(3);
+  // Ghi chú đánh giá nội bộ
   const [notes, setNotes] = useState("");
+  // Đang lưu dữ liệu (status, feedback, evaluation)
   const [isSavingApplication, setIsSavingApplication] = useState(false);
+  // Application được chọn để xem CV (mở modal)
   const [previewApplication, setPreviewApplication] =
     useState<RecruiterApplication | null>(null);
 
+  // Ref để auto-scroll xuống cuối khung chat
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Hội thoại đang active (tìm từ danh sách conversations)
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId,
   );
 
+  /**
+   * Điền dữ liệu application vào form panel (feedback, status, score, notes)
+   * Được gọi khi chọn application mới hoặc refresh dữ liệu
+   */
   const hydrateApplicationForm = useCallback((application: RecruiterApplication) => {
     setSelectedApplication(application);
     setFeedback(application.feedbacks?.[0]?.content ?? "");
@@ -98,6 +181,14 @@ export function RecruiterChatPage() {
     setNotes(application.evaluations?.[0]?.notes ?? "");
   }, []);
 
+  /**
+   * Tải hồ sơ ứng tuyển cho hội thoại đang chọn
+   * preferredApplicationId: truyền ID cụ thể (khi đổi application trong dropdown)
+   * Nếu không có preferred → tự động tìm:
+   *   1. conversation.application (application gốc của conversation)
+   *   2. Application có cùng jobPostingId với conversation
+   *   3. Application đầu tiên trong danh sách
+   */
   const loadApplicationPanel = useCallback(
     async (preferredApplicationId?: number) => {
       if (!activeConversation) return;
@@ -107,11 +198,13 @@ export function RecruiterChatPage() {
       setApplicationMessage("");
 
       try {
+        // Lấy danh sách applications của ứng viên trong hội thoại này
         const applications = await chatService.getConversationApplications(
           activeConversation.id,
         );
         setRelatedApplications(applications);
 
+        // Ưu tiên preferredApplicationId → conversation.application → cùng jobPostingId → đầu tiên
         const currentApplicationId =
           preferredApplicationId ??
           activeConversation.application?.id ??
@@ -144,12 +237,17 @@ export function RecruiterChatPage() {
     [activeConversation, hydrateApplicationForm],
   );
 
-  // 1. Tải danh sách các cuộc hội thoại
+  /**
+   * Tải danh sách các cuộc hội thoại của recruiter
+   * Nếu có requestedConversationId từ URL param → tự động chọn hội thoại đó
+   * selectFirst: nếu chưa có conversation nào được chọn, chọn cái đầu tiên
+   */
   const loadConversations = useCallback(async (selectFirst = false) => {
     try {
       setIsLoadingConversations(true);
       const data = await chatService.getConversations();
       setConversations(data);
+      // Ưu tiên chọn hội thoại từ URL param (khi điều hướng từ candidates/overview)
       const requestedConversation = data.find(
         (conversation) => conversation.id === requestedConversationId,
       );
@@ -168,6 +266,10 @@ export function RecruiterChatPage() {
     }
   }, [requestedConversationId]);
 
+  /**
+   * Refresh dữ liệu application sau khi thao tác (feedback, status, evaluation)
+   * Cập nhật: selectedApplication form + relatedApplications list + reload conversations
+   */
   const refreshSelectedApplication = useCallback(
     async (applicationId: number) => {
       const response = await getApplicationDetail(applicationId);
@@ -177,16 +279,22 @@ export function RecruiterChatPage() {
           application.id === response.data.id ? response.data : application,
         ),
       );
+      // Reload conversations để cập nhật dữ liệu mới nhất
       await loadConversations();
     },
     [hydrateApplicationForm, loadConversations],
   );
 
+  // Load conversations khi component mount
   useEffect(() => {
     loadConversations(true);
   }, [loadConversations]);
 
-  // 2. Tải tin nhắn của cuộc hội thoại đang chọn
+  /**
+   * Tải tin nhắn của cuộc hội thoại đang chọn
+   * Sau khi tải, tự động đánh dấu đã đọc các tin nhắn chưa đọc từ candidate
+   * và cập nhật lại sidebar (để cập nhật badge số chưa đọc)
+   */
   const loadMessages = useCallback(
     async (conversationId: number) => {
       try {
@@ -214,13 +322,23 @@ export function RecruiterChatPage() {
     [loadConversations, user?.id],
   );
 
+  // Load messages khi activeConversationId thay đổi
   useEffect(() => {
     if (activeConversationId) {
       loadMessages(activeConversationId);
     }
   }, [activeConversationId, loadMessages]);
 
-  // 3. Đăng ký Realtime tin nhắn từ Supabase
+  /**
+   * Đăng ký Realtime tin nhắn từ Supabase
+   * Lắng nghe sự kiện INSERT trên bảng messages (lọc theo conversation_id)
+   * Bỏ qua tin nhắn do chính recruiter gửi (đã được append qua API REST response)
+   * Khi nhận được tin nhắn mới từ candidate:
+   *   1. Re-fetch messages để lấy signed URLs mới cho file đính kèm
+   *   2. Đánh dấu đã đọc các tin nhắn mới
+   *   3. Reload sidebar để cập nhật lastMessage
+   * Cleanup: unsubscribe channel khi unmount hoặc đổi conversation
+   */
   useEffect(() => {
     const client = supabase;
     if (!activeConversationId || !client) return;
@@ -241,7 +359,7 @@ export function RecruiterChatPage() {
           // Tránh duplicate tin nhắn do mình gửi (đã được add qua API REST)
           if (newMsg.sender_id === user?.id) return;
 
-          // Re-fetch tin nhắn để tự động cập nhật cả signed URLs cho file đính kèm
+          // Re-fetch tin nhắn để tự động cập nhật signed URLs cho file đính kèm
           try {
             const res = await chatService.getMessages(
               activeConversationId,
@@ -250,7 +368,7 @@ export function RecruiterChatPage() {
             );
             setMessages(normalizeMessages(res.items));
 
-            // Đánh dấu đã đọc các tin nhắn mới
+            // Đánh dấu đã đọc các tin nhắn mới từ candidate
             const unreadNewMsgs = res.items.filter(
               (m) => !m.isRead && m.senderId !== user?.id,
             );
@@ -260,7 +378,7 @@ export function RecruiterChatPage() {
               );
             }
 
-            // Reload sidebar để cập nhật lastMessage
+            // Reload sidebar để cập nhật lastMessage + badge
             loadConversations();
           } catch (err) {
             console.error("Lỗi cập nhật tin nhắn realtime:", err);
@@ -269,16 +387,22 @@ export function RecruiterChatPage() {
       )
       .subscribe();
 
+    // Cleanup: hủy đăng ký channel khi unmount hoặc đổi conversation
     return () => {
       client.removeChannel(channel);
     };
   }, [activeConversationId, loadConversations, user?.id]);
 
-  // Cuộn xuống cuối tin nhắn
+  // Cuộn xuống cuối tin nhắn mỗi khi messages thay đổi
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /**
+   * Reset panel application khi chuyển conversation:
+   * - Xóa dữ liệu application cũ
+   * - Nếu panel đang mở → tự động load application mới
+   */
   useEffect(() => {
     setSelectedApplication(null);
     setRelatedApplications([]);
@@ -291,7 +415,11 @@ export function RecruiterChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversationId]);
 
-  // Gửi tin nhắn văn bản
+  /**
+   * Gửi tin nhắn văn bản
+   * (Recruiter KHÔNG dùng optimistic UI - đợi API thành công mới append)
+   * Sau khi gửi thành công: append message vào local state + reload sidebar
+   */
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || !activeConversationId) return;
@@ -308,14 +436,19 @@ export function RecruiterChatPage() {
       setMessages((prev) =>
         sortMessagesByTime([...prev, normalizeMessage(sentMsg)]),
       );
-      // Cập nhật lại sidebar
+      // Cập nhật lại sidebar (lastMessage)
       loadConversations();
     } catch (err) {
       console.error("Lỗi khi gửi tin nhắn:", err);
     }
   };
 
-  // Gửi tệp đính kèm
+  /**
+   * Gửi tệp đính kèm (hình ảnh / pdf / doc...)
+   * Giới hạn: 20MB
+   * Định dạng cho phép: jpg, jpeg, png, gif, webp, pdf, doc, docx
+   * Upload qua FormData → API tạo message với attachmentUrl (signed URL)
+   */
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeConversationId) return;
@@ -344,20 +477,33 @@ export function RecruiterChatPage() {
       );
     } finally {
       setIsUploading(false);
-      // Reset input file
+      // Reset input file để cho phép chọn lại file giống tên
       e.target.value = "";
     }
   };
 
+  /**
+   * Mở panel hồ sơ ứng tuyển bên phải
+   * Tự động load application data của hội thoại đang chọn
+   */
   const handleOpenApplicationPanel = () => {
     setIsApplicationPanelOpen(true);
     void loadApplicationPanel();
   };
 
+  /**
+   * Chọn application khác từ dropdown trong panel
+   * Load lại dữ liệu application mới
+   */
   const handleSelectApplication = (applicationId: number) => {
     void loadApplicationPanel(applicationId);
   };
 
+  /**
+   * Xử lý thay đổi trạng thái application từ panel
+   * Các trạng thái: "reviewing" (đang xem xét) | "interview" (hẹn PV) | "rejected" (từ chối)
+   * Sau khi cập nhật → refresh lại dữ liệu application
+   */
   const handleChangeStatus = async (
     nextStatus: "reviewing" | "interview" | "rejected",
   ) => {
@@ -380,6 +526,13 @@ export function RecruiterChatPage() {
     }
   };
 
+  /**
+   * Xử lý lưu feedback:
+   *  - Nếu feedbackStatus === "interview" và có interviewData
+   *    → Gọi scheduleInterview (tạo lịch PV + gửi mail)
+   *  - Nếu không → Gọi createFeedback (gửi phản hồi text)
+   * Sau đó refresh lại dữ liệu application
+   */
   const handleSaveFeedback = async (interviewData?: {
     scheduledAt: string;
     type: "online" | "offline";
@@ -394,12 +547,14 @@ export function RecruiterChatPage() {
 
     try {
       if (feedbackStatus === "interview" && interviewData) {
+        // Mời phỏng vấn: tạo lịch + gửi mail cho ứng viên
         await scheduleInterview(selectedApplication.id, {
           content: feedback.trim(),
           ...interviewData,
         });
         setApplicationMessage("Đã đặt lịch phỏng vấn và gửi mail cho ứng viên.");
       } else {
+        // Gửi phản hồi text (reviewing / rejected)
         await createFeedback(
           selectedApplication.id,
           feedback.trim(),
@@ -421,6 +576,11 @@ export function RecruiterChatPage() {
     }
   };
 
+  /**
+   * Xử lý lưu đánh giá nội bộ (evaluation)
+   * Thang điểm score (1-5) + ghi chú notes
+   * Chỉ hiển thị nội bộ cho recruiter, không gửi cho ứng viên
+   */
   const handleSaveEvaluation = async () => {
     if (!selectedApplication) return;
 
@@ -441,6 +601,9 @@ export function RecruiterChatPage() {
     }
   };
 
+  /**
+   * Format giờ gửi tin nhắn (HH:mm)
+   */
   const formatMessageTime = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
@@ -453,6 +616,9 @@ export function RecruiterChatPage() {
     }
   };
 
+  /**
+   * Format dung lượng file: nếu < 1MB → KB, nếu >= 1MB → MB
+   */
   const formatFileSize = (bytes: number | null): string => {
     if (!bytes) return "0 KB";
     const kb = bytes / 1024;
@@ -461,6 +627,10 @@ export function RecruiterChatPage() {
     return `${mb.toFixed(1)} MB`;
   };
 
+  /**
+   * Lọc danh sách hội thoại theo từ khóa tìm kiếm
+   * Tìm kiếm theo: tên ứng viên (fullName) hoặc tên job (title)
+   */
   const filteredConversations = conversations.filter((c) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -472,8 +642,14 @@ export function RecruiterChatPage() {
   return (
     <div className="font-sans flex flex-col h-[calc(100vh-140px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-3xs transition-colors duration-150">
       <div className="flex flex-1 overflow-hidden min-w-0">
-        {/* ── 1. Sidebar Trò chuyện ── */}
+        {/**
+         * ── Panel trái: Sidebar danh sách hội thoại ──
+         * Hiển thị danh sách các ứng viên đang chat
+         * Có ô tìm kiếm để lọc theo tên ứng viên / tên job
+         * Mỗi item: avatar initials + tên + job title + tin nhắn cuối + badge chưa đọc
+         */}
         <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
+          {/* Header sidebar: tiêu đề + ô tìm kiếm */}
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-3">
               Trò chuyện tuyển dụng
@@ -490,6 +666,7 @@ export function RecruiterChatPage() {
             </div>
           </div>
 
+          {/* Danh sách hội thoại: loading / empty / danh sách */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
             {isLoadingConversations ? (
               <div className="p-8 text-center text-slate-400 text-xs flex justify-center items-center gap-2">
@@ -525,6 +702,7 @@ export function RecruiterChatPage() {
                       : "hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
                       }`}
                   >
+                    {/* Avatar initials (2 ký tự đầu tên) + chấm xanh online */}
                     <div className="relative shrink-0">
                       <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shadow-3xs">
                         {initials}
@@ -532,6 +710,7 @@ export function RecruiterChatPage() {
                       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                     </div>
 
+                    {/* Thông tin: tên, job, tin nhắn cuối */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
@@ -551,6 +730,7 @@ export function RecruiterChatPage() {
                       </p>
                     </div>
 
+                    {/* Badge số tin nhắn chưa đọc */}
                     {unreadCount > 0 && (
                       <div className="shrink-0 flex items-center">
                         <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-full border-none">
@@ -565,11 +745,16 @@ export function RecruiterChatPage() {
           </div>
         </div>
 
-        {/* ── 2. Khu vực khung Chat ── */}
+        {/**
+         * ── Panel giữa: Khung Chat ──
+         * Hiển thị header (avatar + tên + job + nút mở hồ sơ)
+         * Timeline tin nhắn (bên trái/phải tùy sender)
+         * Input để gửi tin nhắn + đính kèm file
+         */}
         <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900">
           {activeConversation ? (
             <>
-              {/* Header */}
+              {/* Header chat: avatar + tên ứng viên + job title + nút mở panel hồ sơ */}
               <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0 shadow-3xs">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shadow-3xs">
@@ -596,6 +781,7 @@ export function RecruiterChatPage() {
                   </div>
                 </div>
 
+                {/* Nút mở panel hồ sơ */}
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -607,7 +793,7 @@ export function RecruiterChatPage() {
                 </div>
               </div>
 
-              {/* Messages timeline */}
+              {/* Messages timeline: loading / danh sách bubble + upload indicator + auto-scroll */}
               <div className="grow overflow-y-auto p-6 space-y-4 bg-slate-50/20 dark:bg-slate-950/10">
                 {isLoadingMessages ? (
                   <div className="h-full flex justify-center items-center">
@@ -626,13 +812,14 @@ export function RecruiterChatPage() {
                         <div
                           className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : ""}`}
                         >
+                          {/* Bubble content */}
                           <div
                             className={`rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${isMe
                               ? "bg-indigo-600 text-white rounded-br-none"
                               : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none"
                               }`}
                           >
-                            {/* File Rendering */}
+                            {/* File Rendering: ảnh → preview inline, file khác → icon + tên + nút tải xuống */}
                             {isFile ? (
                               <div className="space-y-2">
                                 {msg.attachmentMime?.startsWith("image/") ? (
@@ -681,6 +868,7 @@ export function RecruiterChatPage() {
                               <p>{msg.content}</p>
                             )}
 
+                            {/* Time + icon đã đọc (check kép) cho tin nhắn của recruiter */}
                             <div
                               className={`text-[9px] mt-1 text-right flex items-center justify-end gap-1 ${isMe
                                 ? "text-indigo-200"
@@ -698,6 +886,7 @@ export function RecruiterChatPage() {
                     );
                   })
                 )}
+                {/* Upload indicator */}
                 {isUploading && (
                   <div className="flex justify-end animate-fade-in">
                     <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/60 rounded-2xl px-4 py-2.5 shadow-3xs">
@@ -711,7 +900,7 @@ export function RecruiterChatPage() {
                 <div ref={chatEndRef} />
               </div>
 
-              {/* Chat Input */}
+              {/* Chat Input: ô nhập text + nút đính kèm (Paperclip) + nút gửi (Send) */}
               <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                 <form
                   onSubmit={handleSendMessage}
@@ -749,6 +938,7 @@ export function RecruiterChatPage() {
               </div>
             </>
           ) : (
+            // Empty state khi chưa chọn hội thoại
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
               <Circle className="w-12 h-12 text-slate-300 mb-2 stroke-1" />
               <p className="text-sm font-bold">
@@ -758,6 +948,16 @@ export function RecruiterChatPage() {
           )}
         </div>
 
+        {/**
+         * ── Panel phải: Hồ sơ ứng tuyển (ApplicationDetailPanel) ──
+         * Cho phép recruiter:
+         *  - Xem thông tin ứng tuyển của ứng viên
+         *  - Chuyển đổi giữa các application (dropdown)
+         *  - Cập nhật trạng thái (reviewing / interview / rejected)
+         *  - Gửi feedback / đặt lịch phỏng vấn (gửi mail)
+         *  - Đánh giá nội bộ (score + notes)
+         *  - Xem CV (mở modal CandidateCVModal)
+         */}
         {isApplicationPanelOpen && activeConversation ? (
           <ApplicationDetailPanel
             key={selectedApplication?.id}
@@ -788,6 +988,7 @@ export function RecruiterChatPage() {
         ) : null}
       </div>
 
+      {/* Modal xem CV của ứng viên (CandidateCVModal) */}
       <CandidateCVModal
         isOpen={!!previewApplication}
         onClose={() => setPreviewApplication(null)}

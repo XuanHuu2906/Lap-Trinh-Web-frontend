@@ -15,6 +15,12 @@ import {
   JOB_STATUS,
 } from "../../utils/job-status";
 
+// === TRANG CHI TIẾT TIN TUYỂN DỤNG (GÓC NHÌN RECRUITER) ===
+// Hiển thị đầy đủ thông tin tin tuyển dụng
+// Cho phép: sửa tin, xem ứng viên, gửi duyệt, đóng tin, xóa
+
+// Format ngày tháng theo định dạng Việt Nam (dd/mm/yyyy)
+// Trả về "--" nếu giá trị null/undefined hoặc ngày không hợp lệ
 const formatDate = (value?: string | null) => {
   if (!value) return "--";
 
@@ -28,6 +34,7 @@ const formatDate = (value?: string | null) => {
   }).format(date);
 };
 
+// Mapping mã loại công việc (jobType) → nhãn hiển thị bằng tiếng Việt
 const jobTypeLabels: Record<string, string> = {
   "full-time": "Toàn thời gian",
   "part-time": "Bán thời gian",
@@ -37,6 +44,7 @@ const jobTypeLabels: Record<string, string> = {
   internship: "Thực tập",
 };
 
+// Mapping mã cấp bậc kinh nghiệm (experienceLevel) → nhãn hiển thị bằng tiếng Việt
 const experienceLevelLabels: Record<string, string> = {
   entry: "Mới tốt nghiệp",
   junior: "Junior",
@@ -46,6 +54,8 @@ const experienceLevelLabels: Record<string, string> = {
   director: "Director",
 };
 
+// Format mức lương: kết hợp min-max, đơn vị (VND/USD), xử lý các trường hợp chỉ có một khoảng
+// Trả về "Thỏa thuận" nếu cả hai khoảng đều không có giá trị
 const formatSalary = (
   min?: string | number | null,
   max?: string | number | null,
@@ -68,16 +78,29 @@ const formatSalary = (
   return `Đến ${formatter.format(maxNumber ?? 0)}${unitLabel}`;
 };
 
+/**
+ * Component chi tiết tin tuyển dụng
+ * Load job theo ID từ URL, hiển thị đầy đủ thông tin
+ * Các thao tác: sửa, gửi duyệt, đóng tin, xóa
+ */
 export function RecruiterJobDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+
+  // jobId: ID tin tuyển dụng lấy từ URL param, chuyển sang Number (NaN nếu không hợp lệ)
   const jobId = id ? Number(id) : NaN;
 
+  // job: dữ liệu tin tuyển dụng đã tải về (null khi chưa load)
   const [job, setJob] = useState<RecruiterJob | null>(null);
+  // loading: trạng thái đang tải dữ liệu từ API
   const [loading, setLoading] = useState(false);
+  // message: thông báo thành công (xanh) dùng để hiển thị feedback sau khi thao tác
   const [message, setMessage] = useState("");
+  // error: thông báo lỗi (đỏ) dùng cho cả lỗi tải dữ liệu và lỗi thao tác
   const [error, setError] = useState("");
 
+  // Hàm tải chi tiết tin tuyển dụng từ API
+  // Kiểm tra jobId hợp lệ trước khi gọi API, set lỗi nếu ID không đúng
   const loadJob = async () => {
     if (!Number.isInteger(jobId) || jobId <= 0) {
       setError("ID tin tuyển dụng không hợp lệ");
@@ -97,11 +120,15 @@ export function RecruiterJobDetailPage() {
     }
   };
 
+  // useEffect: load dữ liệu job khi component mount hoặc khi jobId thay đổi
   useEffect(() => {
     void loadJob();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
+  // Xử lý thay đổi trạng thái tin tuyển dụng: gửi duyệt hoặc đóng tin
+  // nextStatus được kiểm soát bởi nút bấm tương ứng (PENDING_REVIEW hoặc CLOSED)
+  // Sau khi thành công, cập nhật lại job state với dữ liệu mới từ response
   const handleStatusChange = async (
     nextStatus: typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED,
   ) => {
@@ -123,6 +150,9 @@ export function RecruiterJobDetailPage() {
     }
   };
 
+  // Xử lý xóa tin tuyển dụng
+  // Hiển thị confirm dialog: nếu có ứng viên thì cảnh báo khác với khi chưa có
+  // Sau khi xóa thành công, điều hướng về trang quản lý tin
   const handleDelete = async () => {
     if (!job) return;
 
@@ -147,8 +177,10 @@ export function RecruiterJobDetailPage() {
 
   return (
     <div className="p-8">
+      {/* Header: tiêu đề + link quay lại + action buttons */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
+          {/* Link quay lại trang quản lý tin */}
           <Link
             to="/recruiter/manage-jobs"
             className="text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
@@ -156,6 +188,7 @@ export function RecruiterJobDetailPage() {
             ← Quay lại quản lý tin
           </Link>
 
+          {/* Tiêu đề: hiển thị tên job hoặc fallback khi chưa load xong */}
           <h1 className="mt-3 text-[28px] font-bold leading-tight text-slate-900 dark:text-white">
             {job?.title || "Chi tiết tin tuyển dụng"}
           </h1>
@@ -165,6 +198,7 @@ export function RecruiterJobDetailPage() {
           </p>
         </div>
 
+        {/* Nhóm nút hành động chính: sửa tin và xem ứng viên */}
         {job && (
           <div className="flex flex-wrap gap-2">
             <Link
@@ -184,6 +218,7 @@ export function RecruiterJobDetailPage() {
         )}
       </div>
 
+      {/* Thông báo kết quả thao tác (thành công / lỗi) */}
       {(message || error) && (
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${
@@ -196,15 +231,19 @@ export function RecruiterJobDetailPage() {
         </div>
       )}
 
+      {/* Trạng thái loading */}
       {loading && (
         <div className="border border-slate-200 bg-white px-6 py-10 text-center text-[13px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-500">
           Đang tải tin tuyển dụng...
         </div>
       )}
 
+      {/* Nội dung chính: hiển thị khi đã tải xong job */}
       {!loading && job && (
         <div className="grid grid-cols-[1fr_300px] items-start gap-6">
+          {/* Cột trái: các section mô tả, yêu cầu, quyền lợi */}
           <div className="space-y-5">
+            {/* Section mô tả công việc */}
             <section className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
               <h2 className="mb-4 text-[15px] font-bold text-slate-900 dark:text-slate-50">
                 Mô tả công việc
@@ -214,6 +253,7 @@ export function RecruiterJobDetailPage() {
               </p>
             </section>
 
+            {/* Section yêu cầu ứng viên */}
             <section className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
               <h2 className="mb-4 text-[15px] font-bold text-slate-900 dark:text-slate-50">
                 Yêu cầu ứng viên
@@ -223,6 +263,7 @@ export function RecruiterJobDetailPage() {
               </p>
             </section>
 
+            {/* Section quyền lợi */}
             <section className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
               <h2 className="mb-4 text-[15px] font-bold text-slate-900 dark:text-slate-50">
                 Quyền lợi
@@ -233,7 +274,9 @@ export function RecruiterJobDetailPage() {
             </section>
           </div>
 
+          {/* Cột phải (sidebar): thông tin tóm tắt + thao tác nhanh */}
           <aside className="sticky top-6 space-y-4 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
+            {/* Trạng thái: badge màu tương ứng với status */}
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Trạng thái
@@ -245,6 +288,7 @@ export function RecruiterJobDetailPage() {
               </span>
             </div>
 
+            {/* Loại công việc */}
             <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Loại công việc
@@ -254,6 +298,7 @@ export function RecruiterJobDetailPage() {
               </p>
             </div>
 
+            {/* Danh mục + Số lượng ứng viên (lưới 2 cột) */}
             <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
@@ -274,6 +319,7 @@ export function RecruiterJobDetailPage() {
               </div>
             </div>
 
+            {/* Cấp bậc kinh nghiệm */}
             <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Kinh nghiệm
@@ -285,6 +331,7 @@ export function RecruiterJobDetailPage() {
               </p>
             </div>
 
+            {/* Mức lương */}
             <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Mức lương
@@ -294,6 +341,7 @@ export function RecruiterJobDetailPage() {
               </p>
             </div>
 
+            {/* Địa điểm làm việc */}
             <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Địa điểm
@@ -303,6 +351,7 @@ export function RecruiterJobDetailPage() {
               </p>
             </div>
 
+            {/* Danh sách kỹ năng yêu cầu: render dạng badge */}
             {job.skills && job.skills.length > 0 && (
               <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
@@ -321,6 +370,7 @@ export function RecruiterJobDetailPage() {
               </div>
             )}
 
+            {/* Ngày đăng + Ngày hết hạn (lưới 2 cột) */}
             <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
@@ -341,6 +391,10 @@ export function RecruiterJobDetailPage() {
               </div>
             </div>
 
+            {/* Nhóm nút thao tác nhanh ở sidebar: gửi duyệt / đóng tin / xóa tin
+                - Nút "Gửi duyệt": chỉ hiện khi job ở trạng thái draft (không active, không pending, không deleted)
+                - Nút "Đóng tin": chỉ hiện khi job đang active
+                - Nút "Xóa tin": luôn hiện trừ khi job đã bị xóa */}
             <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
               {!isActiveJobStatus(job.status) &&
                 !isPendingReviewJobStatus(job.status) &&

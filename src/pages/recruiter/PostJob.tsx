@@ -10,27 +10,39 @@ import {
   type JobType,
 } from "../../services/recruiter.service";
 
+// === TRANG ĐĂNG / CHỈNH SỬA / NHÂN BẢN TIN TUYỂN DỤNG ===
+// Hỗ trợ 3 chế độ:
+//   1. Tạo mới (create) - route /recruiter/post-job
+//   2. Chỉnh sửa (edit) - route /recruiter/manage-jobs/:id/edit
+//   3. Nhân bản (duplicate) - route /recruiter/post-job?duplicateFrom=:id
+
+// Kiểu dữ liệu cho danh mục (có thể có children - danh mục con)
 type CategoryOption = {
   id: number;
   name: string;
   children?: CategoryOption[];
 };
 
+// Kiểu dữ liệu danh mục đã flatten (label bao gồm cả parent/child)
 type FlatCategoryOption = {
   id: number;
   name: string;
   label: string;
 };
 
+// Kiểu dữ liệu cho kỹ năng
 type SkillOption = {
   id: number;
   name: string;
 };
 
+// Hình thức làm việc
 type WorkMode = "onsite" | "remote" | "hybrid";
 
+// Trạng thái khi submit: active (đăng ngay) hoặc draft (lưu nháp)
 type SubmitStatus = "active" | "draft";
 
+// Danh sách loại hình công việc (employment type)
 const employmentTypeOptions: Array<{ label: string; value: JobType }> = [
   { label: "Toàn thời gian", value: "full-time" },
   { label: "Bán thời gian", value: "part-time" },
@@ -38,12 +50,14 @@ const employmentTypeOptions: Array<{ label: string; value: JobType }> = [
   { label: "Thực tập", value: "internship" },
 ];
 
+// Danh sách hình thức làm việc
 const workModeOptions: Array<{ label: string; value: WorkMode }> = [
   { label: "Onsite", value: "onsite" },
   { label: "Remote", value: "remote" },
   { label: "Hybrid", value: "hybrid" },
 ];
 
+// Danh sách cấp bậc kinh nghiệm
 const experienceOptions: Array<{ label: string; value: ExperienceLevel }> = [
   { label: "Entry", value: "entry" },
   { label: "Junior", value: "junior" },
@@ -53,6 +67,8 @@ const experienceOptions: Array<{ label: string; value: ExperienceLevel }> = [
   { label: "Director", value: "director" },
 ];
 
+// Flatten danh sách danh mục: chuyển cấu trúc cây (category → children) thành list phẳng
+// Mỗi category con sẽ có label dạng "Danh mục cha / Danh mục con"
 const flattenCategories = (categories: CategoryOption[]): FlatCategoryOption[] =>
   categories.flatMap((category) => [
     { id: category.id, name: category.name, label: category.name },
@@ -63,6 +79,8 @@ const flattenCategories = (categories: CategoryOption[]): FlatCategoryOption[] =
     })),
   ]);
 
+// Parse giá trị lương từ input string, validate số dương
+// Trả về { value: number | null } hoặc { value: null, error: string } nếu không hợp lệ
 const parseSalaryInput = (value: string, label: string): { value: number | null; error?: string } => {
   if (!value.trim()) return { value: null };
 
@@ -78,6 +96,7 @@ const parseSalaryInput = (value: string, label: string): { value: number | null;
   return { value: numberValue };
 };
 
+// Chuyển đổi date string từ server sang định dạng yyyy-MM-dd (dùng cho input type="date")
 const toDateInputValue = (value?: string | null) => {
   if (!value) return "";
 
@@ -87,35 +106,53 @@ const toDateInputValue = (value?: string | null) => {
   return date.toISOString().slice(0, 10);
 };
 
+// Lấy ngày hôm nay dưới dạng yyyy-MM-dd (dùng cho min attribute của input date)
 const todayInputValue = () => {
   const today = new Date();
   const timezoneOffsetMs = today.getTimezoneOffset() * 60 * 1000;
   return new Date(today.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
 };
 
+/**
+ * Component chính: Form đăng/chỉnh sửa/nhân bản tin tuyển dụng
+ * - Xác định chế độ dựa trên URL params (id, duplicateFrom)
+ * - Load danh sách ngành nghề và kỹ năng từ API
+ * - Nếu edit/duplicate: load thông tin job cũ để điền sẵn
+ * - Validate phía client trước khi gửi
+ */
 export function PostJobPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+
+  // parsedJobId: ID từ URL param (dùng cho edit)
   const parsedJobId = id ? Number(id) : NaN;
   const hasEditParam = id !== undefined;
   const isEditing = hasEditParam && Number.isInteger(parsedJobId) && parsedJobId > 0;
+
+  // parsedDuplicateJobId: ID từ query param duplicateFrom
   const duplicateFromParam = searchParams.get("duplicateFrom");
   const parsedDuplicateJobId = duplicateFromParam ? Number(duplicateFromParam) : NaN;
   const isDuplicating =
     !hasEditParam &&
     Number.isInteger(parsedDuplicateJobId) &&
     parsedDuplicateJobId > 0;
+
+  // focusField: trường cần focus (dùng cho "Gia hạn tin" từ ManageJobs)
   const focusField = searchParams.get("focus");
   const expiresAtInputRef = useRef<HTMLInputElement>(null);
 
+  // categories: danh sách ngành nghề từ API (cấu trúc cây)
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  // skills: danh sách kỹ năng từ API
   const [skills, setSkills] = useState<SkillOption[]>([]);
+  // categoryOptions: danh mục đã flatten để render dropdown
   const categoryOptions = useMemo(
     () => flattenCategories(categories),
     [categories],
   );
 
+  // State cho các field của form
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [jobType, setJobType] = useState<JobType | "">("");
@@ -134,12 +171,18 @@ export function PostJobPage() {
   const [benefits, setBenefits] = useState("");
   const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
 
+  // initialLoading: loading khi load dữ liệu job cũ (edit/duplicate)
   const [initialLoading, setInitialLoading] = useState(false);
+  // loading: loading khi submit form
   const [loading, setLoading] = useState(false);
+  // submitStatus: trạng thái submit hiện tại (active/draft) - dùng cho button label
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus | "">("");
+  // error: thông báo lỗi
   const [error, setError] = useState("");
+  // message: thông báo thành công
   const [message, setMessage] = useState("");
 
+  // Load danh sách ngành nghề khi component mount
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -157,6 +200,7 @@ export function PostJobPage() {
     void loadCategories();
   }, []);
 
+  // Load danh sách kỹ năng khi component mount
   useEffect(() => {
     const loadSkills = async () => {
       try {
@@ -170,6 +214,10 @@ export function PostJobPage() {
     void loadSkills();
   }, []);
 
+  // Load dữ liệu job cũ nếu đang ở chế độ edit hoặc duplicate
+  // Edit: load job theo parsedJobId, giữ nguyên dữ liệu
+  // Duplicate: load job theo parsedDuplicateJobId, thêm "(bản sao)" vào title
+  //   và reset expiresAt nếu đã quá hạn
   useEffect(() => {
     const loadJob = async () => {
       const sourceJobId = isEditing
@@ -196,6 +244,7 @@ export function PostJobPage() {
         const response = await getMyJobDetail(sourceJobId);
         const job = response.data;
         const sourceExpiresAt = toDateInputValue(job.expiresAt);
+        // Nếu nhân bản và hạn cũ đã quá hạn thì để trống
         const nextExpiresAt =
           isDuplicating && sourceExpiresAt < todayInputValue() ? "" : sourceExpiresAt;
 
@@ -237,12 +286,14 @@ export function PostJobPage() {
     parsedJobId,
   ]);
 
+  // Focus vào trường hạn nộp nếu có param ?focus=expiresAt (tính năng gia hạn)
   useEffect(() => {
     if (initialLoading || focusField !== "expiresAt") return;
 
     expiresAtInputRef.current?.focus();
   }, [focusField, initialLoading]);
 
+  // Xử lý checkbox "Lương thỏa thuận": nếu checked thì clear salaryMin/salaryMax
   const handleSalaryNegotiableChange = (checked: boolean) => {
     setSalaryNegotiable(checked);
 
@@ -252,6 +303,9 @@ export function PostJobPage() {
     }
   };
 
+  // Xử lý thay đổi hình thức làm việc
+  // Nếu chọn remote/hybrid thì tự động set jobType tương ứng
+  // Nếu chuyển từ remote/hybrid về onsite thì reset jobType
   const handleWorkModeChange = (nextWorkMode: WorkMode) => {
     setWorkMode(nextWorkMode);
 
@@ -262,6 +316,7 @@ export function PostJobPage() {
     }
   };
 
+  // Toggle chọn/bỏ chọn kỹ năng
   const toggleSkill = (skillId: number) => {
     setSelectedSkillIds((current) =>
       current.includes(skillId)
@@ -270,6 +325,9 @@ export function PostJobPage() {
     );
   };
 
+  // Xây dựng payload để gửi lên API
+  // Validate tất cả các field bắt buộc, kiểm tra salary range
+  // Trả về CreateJobPayload nếu hợp lệ, null nếu có lỗi
   const buildPayload = (status: SubmitStatus): CreateJobPayload | null => {
     setError("");
     setMessage("");
@@ -294,6 +352,7 @@ export function PostJobPage() {
       return null;
     }
 
+    // Khi đăng active: bắt buộc có hạn nộp
     if (status === "active" && !expiresAt) {
       setError("Vui lòng chọn hạn nộp hồ sơ trước khi đăng tin");
       return null;
@@ -304,6 +363,7 @@ export function PostJobPage() {
       return null;
     }
 
+    // Parse salary và validate range
     const parsedSalaryMin: { value: number | null; error?: string } = salaryNegotiable
       ? { value: null }
       : parseSalaryInput(salaryMin, "Lương tối thiểu");
@@ -342,6 +402,10 @@ export function PostJobPage() {
     };
   };
 
+  // Submit form: gọi API create hoặc update tùy chế độ
+  // Nếu edit → updateJob rồi navigate đến trang chi tiết
+  // Nếu create → createJob với status tương ứng rồi navigate về manage-jobs
+  // Delay 600ms để user kịp thấy message thành công
   const submitJob = async (status: SubmitStatus) => {
     if (loading || initialLoading) return;
 
@@ -385,6 +449,7 @@ export function PostJobPage() {
     }
   };
 
+  // Submit handler cho nút "Đăng tin ngay" / "Cập nhật tin"
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     void submitJob("active");
@@ -392,6 +457,7 @@ export function PostJobPage() {
 
   return (
     <div className="flex-1 p-8">
+      {/* Tiêu đề thay đổi theo chế độ */}
       <div className="mb-6">
         <h1 className="text-[26px] font-bold leading-tight text-slate-900 dark:text-white">
           {isEditing
@@ -402,6 +468,7 @@ export function PostJobPage() {
         </h1>
       </div>
 
+      {/* Thông báo kết quả */}
       {(message || error) && (
         <div
           className={`mb-5 border px-4 py-3 text-[13px] ${error
@@ -413,23 +480,28 @@ export function PostJobPage() {
         </div>
       )}
 
+      {/* Loading khi tải dữ liệu job cũ (edit/duplicate) */}
       {initialLoading && (
         <div className="border border-slate-200 bg-white px-6 py-10 text-center text-[13px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-500">
           Đang tải tin tuyển dụng...
         </div>
       )}
 
+      {/* Form chính: chỉ render khi không initialLoading */}
       {!initialLoading && (
         <form
           onSubmit={handleSubmit}
           className="grid items-start gap-6 lg:grid-cols-[1fr_280px]"
         >
+          {/* Cột trái: các section form */}
           <div className="space-y-5">
+            {/* === SECTION 1: THÔNG TIN CƠ BẢN === */}
             <div className="border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
               <h2 className="mb-5 text-[14px] font-bold text-slate-800 dark:text-slate-50">
                 Thông tin cơ bản
               </h2>
 
+              {/* Tiêu đề công việc */}
               <div className="mb-4">
                 <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Tiêu đề công việc *
@@ -444,7 +516,9 @@ export function PostJobPage() {
                 />
               </div>
 
+              {/* Lưới 3 cột: Ngành nghề / Loại hình / Kinh nghiệm */}
               <div className="mb-4 grid gap-4 md:grid-cols-3">
+                {/* Ngành nghề */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Ngành nghề *
@@ -465,6 +539,7 @@ export function PostJobPage() {
                   </select>
                 </div>
 
+                {/* Loại hình công việc: disabled khi workMode là remote/hybrid (tự động set) */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Loại hình công việc *
@@ -488,6 +563,7 @@ export function PostJobPage() {
                   </select>
                 </div>
 
+                {/* Kinh nghiệm */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Kinh nghiệm
@@ -512,7 +588,9 @@ export function PostJobPage() {
                 </div>
               </div>
 
+              {/* Lưới 3 cột: Địa điểm / Hình thức làm việc / Hạn nộp */}
               <div className="mb-4 grid gap-4 md:grid-cols-3">
+                {/* Địa điểm */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Địa điểm
@@ -526,6 +604,7 @@ export function PostJobPage() {
                   />
                 </div>
 
+                {/* Hình thức làm việc */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Hình thức làm việc *
@@ -547,6 +626,7 @@ export function PostJobPage() {
                   </select>
                 </div>
 
+                {/* Hạn nộp hồ sơ */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Hạn nộp
@@ -563,6 +643,7 @@ export function PostJobPage() {
                 </div>
               </div>
 
+              {/* Checkbox lương thỏa thuận */}
               <label className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                 <input
                   type="checkbox"
@@ -575,7 +656,9 @@ export function PostJobPage() {
                 Lương thỏa thuận
               </label>
 
+              {/* Lưới 3 cột: Lương tối thiểu / Lương tối đa / Đơn vị */}
               <div className="grid gap-4 md:grid-cols-3">
+                {/* Lương tối thiểu */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Lương tối thiểu
@@ -592,6 +675,7 @@ export function PostJobPage() {
                   />
                 </div>
 
+                {/* Lương tối đa */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Lương tối đa
@@ -608,6 +692,7 @@ export function PostJobPage() {
                   />
                 </div>
 
+                {/* Đơn vị tiền tệ */}
                 <div>
                   <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     Đơn vị
@@ -627,6 +712,7 @@ export function PostJobPage() {
                 </div>
               </div>
 
+              {/* Kỹ năng yêu cầu: render dạng button toggle */}
               <div className="mt-5">
                 <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Kỹ năng yêu cầu
@@ -663,11 +749,13 @@ export function PostJobPage() {
               </div>
             </div>
 
+            {/* === SECTION 2: MÔ TẢ CHI TIẾT === */}
             <div className="space-y-5 border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
               <h2 className="text-[14px] font-bold text-slate-800 dark:text-slate-50">
                 Mô tả chi tiết
               </h2>
 
+              {/* Mô tả công việc */}
               <div>
                 <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Mô tả công việc *
@@ -687,6 +775,7 @@ export function PostJobPage() {
                 />
               </div>
 
+              {/* Yêu cầu */}
               <div>
                 <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Yêu cầu
@@ -705,6 +794,7 @@ export function PostJobPage() {
                 />
               </div>
 
+              {/* Quyền lợi */}
               <div>
                 <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Quyền lợi
@@ -725,6 +815,7 @@ export function PostJobPage() {
             </div>
           </div>
 
+          {/* Cột phải (sidebar): nút hành động */}
           <div className="sticky top-6 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
             <h2 className="mb-3 text-[14px] font-bold text-slate-800 dark:text-slate-50">
               {isEditing ? "Cập nhật" : "Xuất bản"}
@@ -734,6 +825,7 @@ export function PostJobPage() {
               Kiểm tra kỹ thông tin trước khi lưu để ứng viên hiểu rõ vị trí và yêu cầu công việc.
             </p>
 
+            {/* Nút đăng tin / cập nhật */}
             <button
               type="submit"
               disabled={loading}
@@ -748,6 +840,7 @@ export function PostJobPage() {
                   : "ĐĂNG TIN NGAY"}
             </button>
 
+            {/* Nút lưu nháp: chỉ hiện khi tạo mới */}
             {!isEditing && (
               <button
                 type="button"
@@ -759,6 +852,7 @@ export function PostJobPage() {
               </button>
             )}
 
+            {/* Nút quay lại */}
             <button
               type="button"
               onClick={() =>
