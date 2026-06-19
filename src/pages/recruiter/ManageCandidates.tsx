@@ -23,8 +23,17 @@ import {
   getFeedbackStatus,
 } from "../../components/recruiter/ApplicationDetailPanel";
 
+// === TRANG QUẢN LÝ ỨNG VIÊN ===
+// Hiển thị danh sách ứng viên đã ứng tuyển vào các tin của recruiter
+// Cho phép lọc theo job, trạng thái, tìm kiếm tên/email
+// Panel chi tiết bên cạnh cho phép: xem CV, gửi feedback, đặt lịch PV, đánh giá
+// Polling realtime qua Supabase để cập nhật danh sách tự động
+
+// Kiểu dữ liệu cho trạng thái feedback: interview (mời PV) hoặc rejected (từ chối)
 type FeedbackStatus = "interview" | "rejected";
 
+// Chuyển đổi URL param "status" thành ApplicationStatus filter
+// Trả về "" nếu không khớp với bất kỳ trạng thái nào
 const getStatusFilterFromParam = (
   value: string | null,
 ): ApplicationStatus | "" => {
@@ -41,6 +50,7 @@ const getStatusFilterFromParam = (
   return "";
 };
 
+// Format ngày tháng theo locale vi-VN
 const formatDate = (value?: string | null) => {
   if (!value) return "--";
 
@@ -50,6 +60,7 @@ const formatDate = (value?: string | null) => {
   return date.toLocaleDateString("vi-VN");
 };
 
+// Lấy tên ứng viên từ application: ưu tiên fullName, fallback email
 const getCandidateName = (application: RecruiterApplication) => {
   return (
     application.candidateProfile?.fullName ||
@@ -58,6 +69,7 @@ const getCandidateName = (application: RecruiterApplication) => {
   );
 };
 
+// Lấy tên job cho application: ưu tiên jobPosting.title, fallback tìm trong jobs list
 const getApplicationJobTitle = (
   application: RecruiterApplication,
   jobs: RecruiterJob[],
@@ -69,40 +81,64 @@ const getApplicationJobTitle = (
   );
 };
 
+/**
+ * Component quản lý ứng viên
+ * - Lọc theo job, trạng thái
+ * - Tìm kiếm theo tên/email
+ * - Chọn ứng viên để xem chi tiết trong panel bên cạnh
+ * - Polling realtime mỗi 2 phút và qua Supabase subscription
+ */
 export function ManageCandidatesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // jobIdParam: ID job từ URL, dùng để chọn sẵn job trong dropdown
   const jobIdParam = searchParams.get("jobId");
+  // statusParam: trạng thái lọc từ URL
   const statusParam = getStatusFilterFromParam(searchParams.get("status"));
+  // applicationIdParam: ID application từ URL (dùng khi điều hướng từ overview)
   const applicationIdParam = searchParams.get("applicationId");
   const hasDashboardTarget = Boolean(statusParam || applicationIdParam);
 
+  // jobs: danh sách tin tuyển dụng của recruiter (để fill dropdown)
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
+  // selectedJobId: job đang được chọn trong dropdown ("" = tất cả)
   const [selectedJobId, setSelectedJobId] = useState<number | "">("");
+  // applications: danh sách đơn ứng tuyển từ API
   const [applications, setApplications] = useState<RecruiterApplication[]>([]);
+  // selectedApplication: application đang được xem trong panel chi tiết
   const [selectedApplication, setSelectedApplication] =
     useState<RecruiterApplication | null>(null);
+  // previewApplication: application được chọn để xem CV (modal)
   const [previewApplication, setPreviewApplication] =
     useState<RecruiterApplication | null>(null);
 
+  // search: từ khóa tìm kiếm ứng viên (lọc client theo tên/email)
   const [search, setSearch] = useState("");
+  // statusFilter: bộ lọc trạng thái, khởi tạo từ URL param
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">(
     () => statusParam,
   );
 
+  // State cho form trong ApplicationDetailPanel
   const [feedback, setFeedback] = useState("");
   const [feedbackStatus, setFeedbackStatus] =
     useState<FeedbackStatus>("interview");
   const [score, setScore] = useState(3);
   const [notes, setNotes] = useState("");
 
+  // loading: trạng thái tải danh sách applications
   const [loading, setLoading] = useState(false);
+  // jobsLoading: trạng thái tải danh sách jobs
   const [jobsLoading, setJobsLoading] = useState(false);
+  // message / error: thông báo kết quả
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  // showJobColumn: có hiển thị cột "Tin ứng tuyển" trong bảng không
   const showJobColumn = selectedJobId === "";
   const tableColumnCount = showJobColumn ? 6 : 5;
 
+  // Lọc applications theo từ khóa tìm kiếm (client-side)
   const filteredApplications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
@@ -117,6 +153,8 @@ export function ManageCandidatesPage() {
     });
   }, [applications, search]);
 
+  // Tải danh sách jobs và xác định selectedJobId từ URL param
+  // Nếu jobIdParam khớp với một job có thật thì chọn job đó
   const loadJobs = async () => {
     setJobsLoading(true);
     setError("");
@@ -148,6 +186,10 @@ export function ManageCandidatesPage() {
     }
   };
 
+  // Tải danh sách applications từ API
+  // options.showLoading: có hiển thị loading không (tắt khi polling)
+  // options.updateError: có cập nhật error không (tắt khi polling)
+  // Sau khi tải, refresh selectedApplication nếu đang được chọn
   const loadApplications = useCallback(async (
     options: { showLoading?: boolean; updateError?: boolean } = {},
   ) => {
@@ -189,22 +231,26 @@ export function ManageCandidatesPage() {
     }
   }, [selectedJobId, statusFilter, selectedApplication]);
 
+  // useEffect: load jobs khi component mount hoặc jobIdParam thay đổi
   useEffect(() => {
     void loadJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobIdParam, hasDashboardTarget]);
 
+  // useEffect: đồng bộ statusFilter từ URL param
   useEffect(() => {
     setStatusFilter((current) =>
       current === statusParam ? current : statusParam,
     );
   }, [statusParam]);
 
+  // useEffect: reload applications khi selectedJobId, statusFilter, hoặc jobs thay đổi
   useEffect(() => {
     void loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJobId, statusFilter, jobs]);
 
+  // Polling 2 phút khi có job được chọn (chỉ polling khi cần)
   useVisiblePolling(
     () =>
       loadApplications({
@@ -217,6 +263,8 @@ export function ManageCandidatesPage() {
     },
   );
 
+  // Realtime subscription qua Supabase: cập nhật khi có thay đổi trong bảng applications
+  // Lọc theo job_posting_id
   useEffect(() => {
     const client = supabase;
     if (!selectedJobId || !client) return;
@@ -246,6 +294,7 @@ export function ManageCandidatesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJobId, statusFilter]);
 
+  // Điền dữ liệu application vào form của panel chi tiết
   const hydrateApplicationForm = (application: RecruiterApplication) => {
     setSelectedApplication(application);
     setFeedback(application.feedbacks?.[0]?.content ?? "");
@@ -254,6 +303,7 @@ export function ManageCandidatesPage() {
     setNotes(application.evaluations?.[0]?.notes ?? "");
   };
 
+  // Mở chi tiết application: hydrate form + gọi API lấy detail
   const openApplication = async (application: RecruiterApplication) => {
     hydrateApplicationForm(application);
     setMessage("");
@@ -271,6 +321,8 @@ export function ManageCandidatesPage() {
     }
   };
 
+  // useEffect: tự động mở application nếu có applicationId từ URL param
+  // Dùng khi điều hướng từ trang overview hoặc manage-jobs
   useEffect(() => {
     const requestedApplicationId = applicationIdParam
       ? Number(applicationIdParam)
@@ -290,6 +342,7 @@ export function ManageCandidatesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationIdParam, applications, selectedApplication?.id]);
 
+  // Xử lý chọn job trong dropdown: cập nhật URL params
   const handleSelectJob = (value: string) => {
     const nextJobId = value ? Number(value) : "";
     setSelectedJobId(nextJobId);
@@ -306,6 +359,7 @@ export function ManageCandidatesPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  // Xử lý thay đổi bộ lọc trạng thái: cập nhật URL params
   const handleStatusFilterChange = (nextStatus: ApplicationStatus | "") => {
     setStatusFilter(nextStatus);
     setSelectedApplication(null);
@@ -321,6 +375,8 @@ export function ManageCandidatesPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  // Xử lý thay đổi trạng thái application (từ panel chi tiết)
+  // Sau khi thành công: refresh detail + reload danh sách
   const handleChangeStatus = async (
     nextStatus: "reviewing" | "interview" | "rejected",
   ) => {
@@ -342,6 +398,8 @@ export function ManageCandidatesPage() {
     }
   };
 
+  // Xử lý lưu feedback: gửi interview (có lịch PV) hoặc reject
+  // interviewData chỉ có khi feedbackStatus === "interview" và có đủ thông tin lịch
   const handleSaveFeedback = async (interviewData?: {
     scheduledAt: string;
     type: "online" | "offline";
@@ -355,11 +413,13 @@ export function ManageCandidatesPage() {
 
     try {
       if (feedbackStatus === "interview" && interviewData) {
+        // Gửi lời mời phỏng vấn (kèm feedback + lịch)
         await scheduleInterview(selectedApplication.id, {
           content: feedback.trim(),
           ...interviewData,
         });
       } else {
+        // Gửi feedback từ chối hoặc phản hồi thông thường
         await createFeedback(selectedApplication.id, feedback.trim(), feedbackStatus);
       }
       setMessage("Gửi phản hồi cho ứng viên thành công");
@@ -371,6 +431,7 @@ export function ManageCandidatesPage() {
     }
   };
 
+  // Mở trang chat với ứng viên
   const handleOpenChat = () => {
     if (!selectedApplication) return;
 
@@ -381,6 +442,7 @@ export function ManageCandidatesPage() {
     );
   };
 
+  // Xử lý lưu đánh giá nội bộ
   const handleSaveEvaluation = async () => {
     if (!selectedApplication) return;
 
@@ -400,6 +462,7 @@ export function ManageCandidatesPage() {
 
   return (
     <div className="p-8">
+      {/* Thông báo kết quả */}
       {(message || error) && (
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${error
@@ -411,8 +474,10 @@ export function ManageCandidatesPage() {
         </div>
       )}
 
+      {/* Filter bar: dropdown job + status + search */}
       <div className="mb-6 border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/80">
         <div className="grid grid-cols-3 gap-4">
+          {/* Chọn tin tuyển dụng */}
           <div>
             <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Tin tuyển dụng
@@ -436,6 +501,7 @@ export function ManageCandidatesPage() {
             </select>
           </div>
 
+          {/* Lọc trạng thái */}
           <div>
             <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Trạng thái
@@ -459,6 +525,7 @@ export function ManageCandidatesPage() {
             </select>
           </div>
 
+          {/* Tìm kiếm ứng viên */}
           <div>
             <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Tìm ứng viên
@@ -474,7 +541,9 @@ export function ManageCandidatesPage() {
         </div>
       </div>
 
+      {/* Grid: bảng danh sách (trái) + panel chi tiết (phải) */}
       <div className="grid grid-cols-[1fr_380px] items-start gap-6">
+        {/* Bảng danh sách ứng viên */}
         <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
           <table
             className={showJobColumn ? "w-full min-w-225" : "w-full min-w-190"}
@@ -500,6 +569,7 @@ export function ManageCandidatesPage() {
             </thead>
 
             <tbody>
+              {/* Loading state */}
               {loading && (
                 <tr>
                   <td
@@ -511,6 +581,7 @@ export function ManageCandidatesPage() {
                 </tr>
               )}
 
+              {/* Empty state */}
               {!loading && filteredApplications.length === 0 && (
                 <tr>
                   <td
@@ -522,12 +593,14 @@ export function ManageCandidatesPage() {
                 </tr>
               )}
 
+              {/* Danh sách ứng viên */}
               {!loading &&
                 filteredApplications.map((application) => (
                   <tr
                     key={application.id}
                     className="border-b border-slate-50 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
                   >
+                    {/* Tên + email */}
                     <td className="px-6 py-5">
                       <p className="text-[14px] font-bold text-slate-900 dark:text-slate-50">
                         {getCandidateName(application)}
@@ -539,20 +612,24 @@ export function ManageCandidatesPage() {
                       </p>
                     </td>
 
+                    {/* Tên job (chỉ hiện nếu đang xem tất cả jobs) */}
                     {showJobColumn && (
                       <td className="px-6 py-5 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                         {getApplicationJobTitle(application, jobs)}
                       </td>
                     )}
 
+                    {/* Tên CV */}
                     <td className="px-6 py-5 text-[13px] text-slate-500 dark:text-slate-400">
                       {application.cv?.title || "Chưa có CV"}
                     </td>
 
+                    {/* Ngày ứng tuyển */}
                     <td className="px-6 py-5 text-[13px] text-slate-500 dark:text-slate-400">
                       {formatDate(application.appliedAt)}
                     </td>
 
+                    {/* Badge trạng thái + đã phản hồi */}
                     <td className="px-6 py-5">
                       <span
                         className={`inline-block rounded-sm px-2 py-1 text-[10px] font-bold ${
@@ -568,6 +645,7 @@ export function ManageCandidatesPage() {
                       )}
                     </td>
 
+                    {/* Nút xử lý hồ sơ */}
                     <td className="px-6 py-5">
                       <button
                         type="button"
@@ -583,6 +661,7 @@ export function ManageCandidatesPage() {
           </table>
         </div>
 
+        {/* Panel chi tiết ứng viên (bên phải) */}
         <ApplicationDetailPanel
           key={selectedApplication?.id}
           variant="card"
@@ -607,6 +686,7 @@ export function ManageCandidatesPage() {
         />
       </div>
 
+      {/* Modal xem CV */}
       <CandidateCVModal
         isOpen={!!previewApplication}
         onClose={() => setPreviewApplication(null)}

@@ -27,21 +27,35 @@ import {
   JOB_STATUS,
 } from "../../utils/job-status";
 
+// === TRANG QUẢN LÝ TIN TUYỂN DỤNG ===
+// Hiển thị danh sách tin tuyển dụng dạng bảng với các chức năng:
+// - Lọc theo trạng thái (chờ duyệt/đang hoạt động/nháp/đã đóng)
+// - Tìm kiếm theo tiêu đề, địa điểm, danh mục
+// - Lọc theo danh mục
+// - Sắp xếp (mới nhất, sắp hết hạn, nhiều/ít ứng viên)
+// - Thao tác: xem, sửa, gia hạn, nhân bản, gửi duyệt, đóng tin, xóa
+
+// Kiểu dữ liệu cho bộ lọc trạng thái
 type JobStatusFilter =
   | ""
   | typeof JOB_STATUS.PENDING_REVIEW
   | typeof JOB_STATUS.ACTIVE
   | typeof JOB_STATUS.DRAFT
   | typeof JOB_STATUS.CLOSED;
+
+// Kiểu dữ liệu cho tùy chọn sắp xếp
 type JobSortOption =
   | "newest"
   | "deadline"
   | "applications-desc"
   | "applications-asc";
 
+// Số ngày trước hết hạn để cảnh báo "sắp hết hạn"
 const deadlineWarningDays = 3;
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
+// Chuyển đổi URL param "status" thành JobStatusFilter
+// Hỗ trợ nhiều alias: active/approved, pending/...
 const getStatusFilterFromParam = (value: string | null): JobStatusFilter => {
   if (value === "active" || value === "approved" || value === JOB_STATUS.ACTIVE)
     return JOB_STATUS.ACTIVE;
@@ -51,6 +65,7 @@ const getStatusFilterFromParam = (value: string | null): JobStatusFilter => {
   return "";
 };
 
+// Format ngày tháng theo locale vi-VN (dd/mm/yyyy)
 const formatDate = (value?: string | null) => {
   if (!value) return "--";
 
@@ -64,6 +79,7 @@ const formatDate = (value?: string | null) => {
   }).format(date);
 };
 
+// Format mức lương: kết hợp min-max
 const formatSalary = (
   min?: string | number | null,
   max?: string | number | null,
@@ -88,15 +104,18 @@ const formatSalary = (
   return `Đến ${formatter.format(maxNumber ?? 0)} VND`;
 };
 
+// Chuẩn hóa text: trim + lower case, dùng cho tìm kiếm
 const normalizeText = (value?: string | null) =>
   value?.trim().toLowerCase() ?? "";
 
+// Lấy timestamp 00:00:00 của một ngày để so sánh deadline chính xác
 const getStartOfDayTime = (value: Date) => {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
   return date.getTime();
 };
 
+// Chuyển đổi date string sang timestamp, trả về null nếu không hợp lệ
 const getDateTime = (value?: string | null) => {
   if (!value) return null;
 
@@ -106,6 +125,8 @@ const getDateTime = (value?: string | null) => {
   return date.getTime();
 };
 
+// Tính số ngày còn lại đến deadline, trả về thông tin hiển thị (nhãn + màu sắc)
+// Trả về null nếu không có hạn hoặc còn hơn deadlineWarningDays ngày
 const getDeadlineInfo = (value?: string | null) => {
   const deadlineTime = getDateTime(value);
   if (deadlineTime === null) return null;
@@ -135,12 +156,16 @@ const getDeadlineInfo = (value?: string | null) => {
   return null;
 };
 
+// Lấy giá trị filter cho danh mục từ job (ưu tiên categoryId, fallback category.name)
 const getCategoryFilterValue = (job: RecruiterJob) =>
   String(job.categoryId ?? job.category?.name ?? "");
 
+// Lấy số lượng ứng viên cho một job
 const getApplicationCount = (job: RecruiterJob) =>
   job._count?.applications ?? 0;
 
+// Format thông tin meta cho job: địa điểm + loại hình
+// Nếu remote và location cũng là "remote" thì hiển thị "Làm từ xa"
 const formatJobMeta = (job: RecruiterJob) => {
   const location = job.location?.trim() || "Chưa cập nhật địa điểm";
   const typeLabel =
@@ -151,22 +176,39 @@ const formatJobMeta = (job: RecruiterJob) => {
   return `${location} • ${typeLabel}`;
 };
 
+/**
+ * Component quản lý tin tuyển dụng
+ * Cho phép recruiter xem, lọc, tìm kiếm, sắp xếp, và thao tác trên các tin đã đăng
+ */
 export function ManageJobsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // jobs: danh sách tin tuyển dụng gốc từ API (chưa lọc client)
   const [jobs, setJobs] = useState<RecruiterJob[]>([]);
+  // search: từ khóa tìm kiếm (lọc client theo title, location, category)
   const [search, setSearch] = useState("");
+  // categoryFilter: lọc theo danh mục
   const [categoryFilter, setCategoryFilter] = useState("");
+  // sortOption: tùy chọn sắp xếp
   const [sortOption, setSortOption] = useState<JobSortOption>("newest");
+  // statusFilter: lọc theo trạng thái, khởi tạo từ URL param
   const [statusFilter, setStatusFilter] = useState<JobStatusFilter>(() =>
     getStatusFilterFromParam(searchParams.get("status")),
   );
+  // page: trang hiện tại (phân trang server)
   const [page, setPage] = useState(1);
+  // meta: thông tin phân trang từ API response
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  // openMenuJobId: ID của job đang mở dropdown menu (null = đóng)
   const [openMenuJobId, setOpenMenuJobId] = useState<number | null>(null);
+  // loading: trạng thái đang tải dữ liệu
   const [loading, setLoading] = useState(false);
+  // message: thông báo thành công
   const [message, setMessage] = useState("");
+  // error: thông báo lỗi
   const [error, setError] = useState("");
 
+  // Hàm tải danh sách tin tuyển dụng từ API (phân trang server)
   const loadJobs = async () => {
     setLoading(true);
     setError("");
@@ -191,11 +233,14 @@ export function ManageJobsPage() {
     }
   };
 
+  // useEffect: reload khi statusFilter hoặc page thay đổi
   useEffect(() => {
     void loadJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, page]);
 
+  // useEffect: đồng bộ statusFilter từ URL params
+  // Reset page về 1 khi filter thay đổi từ URL
   useEffect(() => {
     const nextStatus = getStatusFilterFromParam(searchParams.get("status"));
     setStatusFilter((current) =>
@@ -204,6 +249,7 @@ export function ManageJobsPage() {
     setPage(1);
   }, [searchParams]);
 
+  // useEffect: global listener đóng dropdown menu khi click outside hoặc nhấn Escape
   useEffect(() => {
     const closeMenu = () => setOpenMenuJobId(null);
     const closeMenuOnEscape = (event: KeyboardEvent) => {
@@ -219,6 +265,8 @@ export function ManageJobsPage() {
     };
   }, []);
 
+  // Xử lý thay đổi bộ lọc trạng thái: cập nhật cả state và URL params
+  // Reset page về 1 khi filter thay đổi
   const handleStatusFilterChange = (nextStatus: JobStatusFilter) => {
     setStatusFilter(nextStatus);
     setPage(1);
@@ -233,6 +281,8 @@ export function ManageJobsPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  // categoryOptions: danh sách danh mục từ jobs để render dropdown filter
+  // Được tính từ jobs hiện tại, unique theo categoryId
   const categoryOptions = useMemo(() => {
     const categories = new Map<string, string>();
 
@@ -248,6 +298,9 @@ export function ManageJobsPage() {
     );
   }, [jobs]);
 
+  // filteredJobs: lọc client theo keyword + category, sau đó sắp xếp
+  // Lọc theo keyword: khớp với title, location, category.name
+  // Sắp xếp: newest / deadline / applications-desc / applications-asc
   const filteredJobs = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
@@ -287,6 +340,7 @@ export function ManageJobsPage() {
     });
   }, [categoryFilter, jobs, search, sortOption]);
 
+  // Thống kê số lượng theo từng trạng thái (hiển thị trên các filter card)
   const totalJobs = jobs.filter(
     (job) => !isDeletedJobStatus(job.status),
   ).length;
@@ -301,6 +355,8 @@ export function ManageJobsPage() {
     (job) => job.status === JOB_STATUS.CLOSED,
   ).length;
 
+  // Xử lý cập nhật trạng thái: gửi duyệt hoặc đóng tin
+  // Sau khi thành công, reload lại danh sách jobs
   const handleUpdateStatus = async (
     jobId: number,
     nextStatus: typeof JOB_STATUS.PENDING_REVIEW | typeof JOB_STATUS.CLOSED,
@@ -321,6 +377,9 @@ export function ManageJobsPage() {
     }
   };
 
+  // Xử lý xóa tin tuyển dụng
+  // Confirm dialog có cảnh báo nếu đã có ứng viên
+  // Sau khi xóa thành công, reload lại danh sách
   const handleDeleteJob = async (job: RecruiterJob) => {
     const applicationCount = getApplicationCount(job);
     const confirmed = window.confirm(
@@ -347,6 +406,7 @@ export function ManageJobsPage() {
 
   return (
     <div className="p-8">
+      {/* Header: nút đăng tin mới */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-end">
         <Link
           to="/recruiter/post-job"
@@ -356,6 +416,7 @@ export function ManageJobsPage() {
         </Link>
       </div>
 
+      {/* Thông báo kết quả thao tác */}
       {(message || error) && (
         <div
           className={`mb-4 border px-4 py-3 text-[13px] ${error
@@ -367,6 +428,7 @@ export function ManageJobsPage() {
         </div>
       )}
 
+      {/* 5 filter stat cards: Tổng tin / Chờ duyệt / Đang hoạt động / Bản nháp / Đã đóng */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <button
           type="button"
@@ -449,6 +511,7 @@ export function ManageJobsPage() {
         </button>
       </div>
 
+      {/* Thanh công cụ: search, filter status, category, sort, refresh */}
       <div className="mb-5 grid gap-3 border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 lg:grid-cols-[minmax(220px,1fr)_180px_180px_190px_auto]">
         <input
           value={search}
@@ -505,6 +568,7 @@ export function ManageJobsPage() {
         </button>
       </div>
 
+      {/* Bảng danh sách tin tuyển dụng */}
       <div className="overflow-x-auto border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80">
         <table className="w-full min-w-280">
           <thead>
@@ -530,6 +594,7 @@ export function ManageJobsPage() {
           </thead>
 
           <tbody>
+            {/* Loading state */}
             {loading && (
               <tr>
                 <td
@@ -541,6 +606,7 @@ export function ManageJobsPage() {
               </tr>
             )}
 
+            {/* Empty state */}
             {!loading && filteredJobs.length === 0 && (
               <tr>
                 <td
@@ -557,6 +623,7 @@ export function ManageJobsPage() {
               </tr>
             )}
 
+            {/* Danh sách jobs */}
             {!loading &&
               filteredJobs.map((job) => {
                 const applicationCount = getApplicationCount(job);
@@ -568,6 +635,7 @@ export function ManageJobsPage() {
                     key={job.id}
                     className="border-b border-slate-50 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
                   >
+                    {/* Tiêu đề + meta (địa điểm + loại hình) */}
                     <td className="px-5 py-4">
                       <p className="text-[14px] font-bold text-slate-900 dark:text-slate-50">
                         {job.title}
@@ -578,14 +646,17 @@ export function ManageJobsPage() {
                       </p>
                     </td>
 
+                    {/* Danh mục */}
                     <td className="px-5 py-4 text-[13px] text-slate-600 dark:text-slate-300">
                       {job.category?.name || "Chưa phân loại"}
                     </td>
 
+                    {/* Mức lương */}
                     <td className="px-5 py-4 text-[13px] text-slate-600 dark:text-slate-300">
                       {formatSalary(job.salaryMin, job.salaryMax)}
                     </td>
 
+                    {/* Badge trạng thái */}
                     <td className="px-5 py-4">
                       <span
                         className={`inline-block rounded-full border px-3 py-1 text-[11px] font-bold ${getJobStatusStyle(job.status)}`}
@@ -594,10 +665,12 @@ export function ManageJobsPage() {
                       </span>
                     </td>
 
+                    {/* Ngày đăng */}
                     <td className="px-5 py-4 text-[13px] text-slate-500 dark:text-slate-400">
                       {formatDate(job.createdAt)}
                     </td>
 
+                    {/* Hạn nộp + badge cảnh báo hết hạn/sắp hết hạn */}
                     <td className="px-5 py-4 text-[13px] text-slate-500 dark:text-slate-400">
                       <div className="space-y-1">
                         <p>{formatDate(job.expiresAt)}</p>
@@ -611,6 +684,7 @@ export function ManageJobsPage() {
                       </div>
                     </td>
 
+                    {/* Số ứng viên (link đến trang candidates với jobId) */}
                     <td className="px-5 py-4 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                       <Link
                         to={`/recruiter/candidates?jobId=${job.id}`}
@@ -620,6 +694,7 @@ export function ManageJobsPage() {
                       </Link>
                     </td>
 
+                    {/* Cột thao tác: Xem / Sửa / Dropdown menu */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 whitespace-nowrap">
                         <Link
@@ -638,6 +713,7 @@ export function ManageJobsPage() {
                           Sửa
                         </Link>
 
+                        {/* Dropdown menu với các thao tác mở rộng */}
                         <div
                           className="relative"
                           onClick={(event) => event.stopPropagation()}
@@ -659,6 +735,7 @@ export function ManageJobsPage() {
                               role="menu"
                               className="absolute right-0 top-9 z-20 w-48 border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-900"
                             >
+                              {/* Sửa tin */}
                               <Link
                                 to={`/recruiter/manage-jobs/${job.id}/edit`}
                                 role="menuitem"
@@ -668,6 +745,7 @@ export function ManageJobsPage() {
                                 Sửa tin
                               </Link>
 
+                              {/* Gia hạn tin (focus vào trường hạn nộp) */}
                               <Link
                                 to={`/recruiter/manage-jobs/${job.id}/edit?focus=expiresAt`}
                                 role="menuitem"
@@ -677,6 +755,7 @@ export function ManageJobsPage() {
                                 Gia hạn tin
                               </Link>
 
+                              {/* Nhân bản tin */}
                               <Link
                                 to={`/recruiter/post-job?duplicateFrom=${job.id}`}
                                 role="menuitem"
@@ -686,6 +765,7 @@ export function ManageJobsPage() {
                                 Nhân bản tin
                               </Link>
 
+                              {/* Gửi duyệt: chỉ hiện nếu job ở trạng thái có thể gửi duyệt */}
                               {!isActiveJobStatus(job.status) &&
                                 !isPendingReviewJobStatus(job.status) &&
                                 !isDeletedJobStatus(job.status) && (
@@ -706,6 +786,7 @@ export function ManageJobsPage() {
                                   </button>
                                 )}
 
+                              {/* Đóng tin: chỉ hiện nếu job đang active */}
                               {isActiveJobStatus(job.status) && (
                                 <button
                                   type="button"
@@ -724,6 +805,7 @@ export function ManageJobsPage() {
                                 </button>
                               )}
 
+                              {/* Xóa tin: chỉ hiện nếu chưa bị xóa */}
                               {!isDeletedJobStatus(job.status) && (
                                 <button
                                   type="button"
@@ -750,6 +832,7 @@ export function ManageJobsPage() {
         </table>
       </div>
 
+      {/* Phân trang */}
       {meta && meta.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
           <p className="text-[13px] text-slate-500 dark:text-slate-400">

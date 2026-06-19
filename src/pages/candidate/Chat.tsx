@@ -1,3 +1,19 @@
+/**
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Chat.tsx — Trang Chat của Ứng Viên (Candidate)
+ * ──────────────────────────────────────────────────────────────────────────────
+ *
+ * Chức năng:
+ *  - Hiển thị danh sách hội thoại (sidebar trái) với tìm kiếm
+ *  - Khung chat realtime (giữa): gửi tin nhắn văn bản, đính kèm file (hình ảnh/pdf/doc...)
+ *  - Đánh dấu đã đọc, hiển thị trạng thái gửi (sending/error/delivered/read)
+ *  - Lắng nghe sự kiện INSERT/UPDATE từ Supabase Realtime để cập nhật tin nhắn tức thì
+ *  - Hỗ trợ optimistic UI: tin nhắn hiện lên ngay trước khi server xác nhận
+ *  - Nhấn vào link "Xem tin tuyển dụng" để mở chi tiết job
+ *  - URL param ?conversationId=xxx để điều hướng từ trang khác (Applied Jobs, Job Detail)
+ * ──────────────────────────────────────────────────────────────────────────────
+ */
+
 import {
   Fragment,
   useCallback,
@@ -33,21 +49,39 @@ import { supabase } from "../../utils/supabase";
 import { decodeMojibakeInText } from "../../utils/encoding";
 import { Link, useSearchParams } from "react-router-dom";
 
+/** Giới hạn kích thước file đính kèm: 20MB */
 const maxAttachmentSize = 20 * 1024 * 1024;
 
+/**
+ * Mở rộng kiểu Message để thêm trạng thái gửi tạm thời ở local:
+ *  - "sending": đang gửi lên server (optimistic)
+ *  - "error": gửi thất bại, cho phép click để gửi lại
+ *  - undefined: đã gửi thành công (trạng thái bình thường)
+ */
 type ChatMessage = Message & {
   deliveryStatus?: "sending" | "error";
 };
 
+/**
+ * Decode tên file đính kèm bị lỗi encoding mojibake (tiếng Việt)
+ * Khi upload file có dấu, multer có thể encode sai → cần decode lại
+ */
 const normalizeAttachmentName = (value: string | null) =>
   value ? decodeMojibakeInText(value) : value;
 
+/**
+ * Chuẩn hóa một message: decode tên file đính kèm
+ */
 const normalizeMessage = <T extends Message>(message: T): T =>
   ({
     ...message,
     attachmentName: normalizeAttachmentName(message.attachmentName),
   }) as T;
 
+/**
+ * Sắp xếp danh sách messages theo thời gian tăng dần
+ * Nếu cùng thời gian thì sắp xếp theo id tăng dần
+ */
 const sortMessagesByTime = <T extends Message>(items: T[]) =>
   [...items].sort((a, b) => {
     const timeDiff = new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
@@ -55,9 +89,16 @@ const sortMessagesByTime = <T extends Message>(items: T[]) =>
     return a.id - b.id;
   });
 
+/**
+ * Chuẩn hóa toàn bộ danh sách messages: decode tên file + sắp xếp theo thời gian
+ */
 const normalizeMessages = <T extends Message>(items: T[]) =>
   sortMessagesByTime(items.map(normalizeMessage));
 
+/**
+ * Danh sách các từ viết tắt phổ biến trong tên job title
+ * Khi format job title, các từ này sẽ được giữ nguyên viết hoa
+ */
 const titleAcronyms = new Set([
   "AI",
   "API",
@@ -74,6 +115,9 @@ const titleAcronyms = new Set([
   "UX",
 ]);
 
+/**
+ * Lấy tên hiển thị của cuộc hội thoại (tên người liên hệ hoặc tên công ty)
+ */
 function getConversationName(conversation: Conversation) {
   return (
     conversation.recruiterProfile.contactName ||
@@ -81,10 +125,19 @@ function getConversationName(conversation: Conversation) {
   );
 }
 
+/**
+ * Lấy 2 ký tự đầu của tên công ty, viết hoa → dùng làm avatar mặc định
+ */
 function getConversationInitials(conversation: Conversation) {
   return conversation.recruiterProfile.companyName.substring(0, 2).toUpperCase();
 }
 
+/**
+ * Lấy nội dung tin nhắn cuối cùng để hiển thị trong sidebar
+ * - Nếu chưa có tin nhắn → "Chưa có tin nhắn"
+ * - Nếu là file → "File: <tên file>"
+ * - Nếu là text → hiển thị nội dung
+ */
 function getLastMessageText(conversation: Conversation) {
   const lastMessage = conversation.messages[0];
 
@@ -97,6 +150,11 @@ function getLastMessageText(conversation: Conversation) {
   return lastMessage.content || "";
 }
 
+/**
+ * Format job title: capitalize từng từ nhưng giữ nguyên viết hoa cho từ viết tắt
+ * Nếu title đã viết hoa toàn bộ → tự động chuyển về dạng capitalize thông minh
+ * Nếu title không viết hoa → giữ nguyên
+ */
 function formatJobTitle(title?: string | null) {
   const normalized = title?.trim().replace(/\s+/g, " ");
   if (!normalized) return "Tin tuyển dụng";
@@ -113,12 +171,19 @@ function formatJobTitle(title?: string | null) {
     .join(" ");
 }
 
+/**
+ * Format ngày tháng theo locale vi-VN (VD: "19/06/2026")
+ */
 function formatConversationDate(value?: string) {
   if (!value) return "";
 
   return new Date(value).toLocaleDateString("vi-VN");
 }
 
+/**
+ * Trả về key ngày dạng "YYYY-MM-DD" để so sánh ngày giữa các message
+ * Dùng để quyết định có hiển thị Date Divider hay không
+ */
 function getDateKey(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -130,6 +195,12 @@ function getDateKey(value: string) {
   ].join("-");
 }
 
+/**
+ * Format ngày hiển thị trên Date Divider:
+ *  - Cùng ngày → "Hôm nay"
+ *  - Hôm qua → "Hôm qua"
+ *  - Khác → định dạng locale vi-VN
+ */
 function formatMessageDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -144,6 +215,9 @@ function formatMessageDate(value: string) {
   return new Intl.DateTimeFormat("vi-VN").format(date);
 }
 
+/**
+ * Format giờ gửi tin nhắn dạng HH:mm (theo locale vi-VN)
+ */
 function formatMessageTime(value: string) {
   try {
     return new Date(value).toLocaleTimeString("vi-VN", {
@@ -155,6 +229,9 @@ function formatMessageTime(value: string) {
   }
 }
 
+/**
+ * Format dung lượng file: nếu < 1MB → hiển thị KB, nếu >= 1MB → hiển thị MB
+ */
 function formatFileSize(bytes: number | null) {
   if (!bytes) return "0 KB";
 
@@ -165,6 +242,12 @@ function formatFileSize(bytes: number | null) {
   return `${megabytes.toFixed(1)} MB`;
 }
 
+/**
+ * Tạo một message tạm thời (optimistic) để hiển thị ngay trên UI
+ * trước khi server xác nhận. deliveryStatus = "sending"
+ * Khi server trả về kết quả, message này sẽ được thay thế bởi message thật.
+ * Nếu lỗi, deliveryStatus chuyển thành "error" để cho phép gửi lại.
+ */
 function createOptimisticTextMessage({
   id,
   conversationId,
@@ -196,6 +279,10 @@ function createOptimisticTextMessage({
   };
 }
 
+/**
+ * ── Sidebar danh sách hội thoại (bên trái) ──
+ * Gồm header (tiêu đề + nút refresh + ô tìm kiếm) và danh sách các cuộc trò chuyện
+ */
 function ConversationSidebar({
   conversations,
   activeConversationId,
@@ -232,6 +319,11 @@ function ConversationSidebar({
   );
 }
 
+/**
+ * ── Header của Sidebar (tiêu đề + nút làm mới + ô tìm kiếm) ──
+ * - Nút refresh: tải lại danh sách hội thoại (xoay khi đang tải)
+ * - Ô tìm kiếm: lọc hội thoại theo tên công ty / tên người liên hệ / tên job
+ */
 function ConversationSidebarHeader({
   searchQuery,
   isLoading,
@@ -275,6 +367,12 @@ function ConversationSidebarHeader({
   );
 }
 
+/**
+ * ── Danh sách các cuộc hội thoại ──
+ * Hiển thị loading spinner nếu đang tải
+ * Hiển thị empty state nếu chưa có hội thoại nào
+ * Mỗi item là một ConversationItem
+ */
 function ConversationList({
   conversations,
   activeConversationId,
@@ -318,6 +416,17 @@ function ConversationList({
   );
 }
 
+/**
+ * ── Một item hội thoại trong sidebar ──
+ * Hiển thị:
+ *  - Avatar (2 ký tự đầu tên công ty)
+ *  - Tên người liên hệ / công ty
+ *  - Job title
+ *  - Tin nhắn cuối cùng
+ *  - Badge số tin nhắn chưa đọc
+ *  - Dấu hiệu online (chấm xanh)
+ * Khi active: border trái màu indigo
+ */
 function ConversationItem({
   conversation,
   isActive,
@@ -373,6 +482,14 @@ function ConversationItem({
   );
 }
 
+/**
+ * ── Panel chat chính (bên phải sidebar) ──
+ * Bao gồm 3 phần:
+ *  1. ChatHeader: avatar, tên, job title, nút xem tin tuyển dụng
+ *  2. MessageTimeline: danh sách tin nhắn, date divider, file preview, upload indicator
+ *  3. ChatInput: ô nhập text + nút đính kèm + nút gửi
+ * Nếu chưa chọn hội thoại → hiển thị EmptyChatState
+ */
 function ChatPanel({
   activeConversation,
   messages,
@@ -427,6 +544,11 @@ function ChatPanel({
   );
 }
 
+/**
+ * ── Header của khung chat ──
+ * Hiển thị avatar (initials), tên người liên hệ, job title + tên công ty
+ * Nếu có jobPostingId → hiển thị nút "Xem tin tuyển dụng" (link đến trang chi tiết job)
+ */
 function ChatHeader({ conversation }: { conversation: Conversation }) {
   return (
     <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-3xs dark:border-slate-800 dark:bg-slate-900">
@@ -464,6 +586,12 @@ function ChatHeader({ conversation }: { conversation: Conversation }) {
   );
 }
 
+/**
+ * ── Timeline tin nhắn ──
+ * Hiển thị danh sách các tin nhắn, tự động chèn Date Divider giữa các ngày khác nhau
+ * Hỗ trợ: loading spinner, empty state, upload indicator, auto-scroll xuống cuối
+ * Mỗi tin nhắn được render bởi MessageBubble
+ */
 function MessageTimeline({
   messages,
   isLoading,
@@ -518,6 +646,9 @@ function MessageTimeline({
   );
 }
 
+/**
+ * Trạng thái empty: hiển thị khi chưa có tin nhắn nào trong hội thoại
+ */
 function EmptyMessagesState() {
   return (
     <div className="flex flex-1 items-center justify-center text-center">
@@ -528,6 +659,10 @@ function EmptyMessagesState() {
   );
 }
 
+/**
+ * Divider ngày: hiển thị giữa các tin nhắn thuộc các ngày khác nhau
+ * Format: "Hôm nay", "Hôm qua", hoặc ngày cụ thể
+ */
 function MessageDateDivider({ value }: { value: string }) {
   return (
     <div className="flex justify-center">
@@ -538,6 +673,14 @@ function MessageDateDivider({ value }: { value: string }) {
   );
 }
 
+/**
+ * Lấy nhãn trạng thái gửi tin nhắn (chỉ hiển thị cho tin nhắn của mình):
+ *  - "Đang gửi..."   → đang chờ server phản hồi (optimistic)
+ *  - "Gửi lỗi - Thử lại" → gửi thất bại, có thể click để gửi lại
+ *  - "Đã xem"        → người nhận đã đọc
+ *  - "Đã gửi"        → đã gửi thành công nhưng chưa đọc
+ *  - null            → không phải tin nhắn của mình
+ */
 function getMessageDeliveryLabel(message: ChatMessage, isMine: boolean) {
   if (!isMine) return null;
   if (message.deliveryStatus === "sending") return "Đang gửi...";
@@ -545,6 +688,16 @@ function getMessageDeliveryLabel(message: ChatMessage, isMine: boolean) {
   return message.isRead ? "Đã xem" : "Đã gửi";
 }
 
+/**
+ * ── Bubble tin nhắn ──
+ * - isMine = true  → căn phải, nền indigo, rounded-br-none
+ * - isMine = false → căn trái, nền trắng (border), rounded-bl-none
+ * - Nếu messageType === "file" → render FileMessage component
+ * - Nếu là text → hiển thị nội dung
+ * - Footer: giờ gửi + trạng thái delivery (sending/error/read/delivered)
+ * - Nếu deliveryStatus === "error" → hiển thị nút "Thử lại" (gọi onRetryMessage)
+ * - Icon: spinner khi sending, CheckCheck khi đã gửi
+ */
 function MessageBubble({
   message,
   isMine,
@@ -608,6 +761,13 @@ function MessageBubble({
   );
 }
 
+/**
+ * ── Hiển thị tin nhắn dạng file đính kèm ──
+ * - Nếu là ảnh (image/*) → hiển thị preview ảnh (click để zoom)
+ * - Nếu là file khác (pdf, doc...) → hiển thị icon + tên file + dung lượng + nút tải xuống
+ * - Nếu có kèm nội dung text → hiển thị bên dưới file
+ * attachmentUrl là Signed URL từ backend (có thời hạn)
+ */
 function FileMessage({ message }: { message: Message }) {
   const isImage = message.attachmentMime?.startsWith("image/");
   const attachmentName = normalizeAttachmentName(message.attachmentName);
@@ -652,6 +812,10 @@ function FileMessage({ message }: { message: Message }) {
   );
 }
 
+/**
+ * Bubble "đang tải lên file đính kèm" (xuất hiện tạm thời trong khi upload)
+ * Hiển thị ở bên phải (căn phải) với spinner + text
+ */
 function UploadingBubble() {
   return (
     <div className="flex justify-end">
@@ -665,6 +829,13 @@ function UploadingBubble() {
   );
 }
 
+/**
+ * ── Ô nhập tin nhắn + nút gửi + nút đính kèm file ──
+ * - Input text: placeholder hướng dẫn, trim khi gửi
+ * - Nút Paperclip: chọn file (chấp nhận .jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx)
+ * - Nút Send: gửi tin nhắn (disabled khi input rỗng)
+ * - File input ẩn trong label để tùy chỉnh style
+ */
 function ChatInput({
   inputMessage,
   onInputChange,
@@ -711,6 +882,10 @@ function ChatInput({
   );
 }
 
+/**
+ * Trạng thái empty khi chưa chọn hội thoại nào
+ * Hiển thị icon circle + text hướng dẫn
+ */
 function EmptyChatState() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center p-8 text-slate-400">
@@ -722,32 +897,64 @@ function EmptyChatState() {
   );
 }
 
+/**
+ * ── Component Chat chính (Candidate) ──
+ *
+ * State management:
+ *  - conversations: danh sách hội thoại từ API
+ *  - activeConversationId: ID hội thoại đang chọn (lưu vào URL param)
+ *  - messages: danh sách tin nhắn của hội thoại đang chọn
+ *  - inputMessage: nội dung đang soạn
+ *  - searchQuery: từ khóa tìm kiếm hội thoại
+ *
+ * Flow:
+ *  1. Load conversations khi mount
+ *  2. Khi chọn conversation → load messages
+ *  3. Đăng ký Supabase Realtime lắng nghe INSERT/UPDATE
+ *  4. Gửi tin nhắn: optimistic UI → API → replace message thật
+ *  5. Upload file: FormData → API → append message
+ *  6. Auto-scroll xuống cuối khi messages thay đổi
+ *  7. Đánh dấu đã đọc cho tin nhắn đến
+ */
 export default function Chat() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  // Lấy conversationId từ URL param (khi điều hướng từ Applied Jobs / Job Detail)
   const requestedConversationIdParam = Number(searchParams.get("conversationId"));
   const requestedConversationId =
     Number.isInteger(requestedConversationIdParam) &&
       requestedConversationIdParam > 0
       ? requestedConversationIdParam
       : null;
+  // State danh sách hội thoại
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  // State ID hội thoại đang active
   const [activeConversationId, setActiveConversationId] = useState<number | null>(
     null,
   );
+  // State danh sách tin nhắn
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // State input message
   const [inputMessage, setInputMessage] = useState("");
+  // Loading states
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  // Từ khóa tìm kiếm
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Ref để auto-scroll xuống cuối
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Hội thoại đang active
   const activeConversation = conversations.find(
     (conversation) => conversation.id === activeConversationId,
   );
 
+  /**
+   * Lọc danh sách hội thoại theo từ khóa tìm kiếm
+   * Tìm kiếm theo: tên công ty, tên người liên hệ, tiêu đề job
+   */
   const filteredConversations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return conversations;
@@ -765,12 +972,18 @@ export default function Chat() {
     });
   }, [conversations, searchQuery]);
 
+  /**
+   * Tải danh sách các cuộc hội thoại từ API
+   * - Nếu có requestedConversationId từ URL → tự động chọn hội thoại đó
+   * - selectFirst: nếu chưa có hội thoại nào được chọn, chọn hội thoại đầu tiên
+   */
   const loadConversations = useCallback(async (selectFirst = false) => {
     try {
       setIsLoadingConversations(true);
       const data = await chatService.getConversations();
       setConversations(data);
 
+      // Ưu tiên chọn hội thoại theo URL param (từ trang Applied Jobs / Job Detail)
       const requestedConversation = requestedConversationId
         ? data.find(
           (conversation) => conversation.id === requestedConversationId,
@@ -782,6 +995,7 @@ export default function Chat() {
         return;
       }
 
+      // Nếu không có requested, chọn hội thoại đầu tiên (nếu selectFirst)
       if (selectFirst && data.length > 0) {
         setActiveConversationId((current) => current ?? data[0].id);
       }
@@ -792,6 +1006,11 @@ export default function Chat() {
     }
   }, [requestedConversationId]);
 
+  /**
+   * Tải tin nhắn của một hội thoại cụ thể
+   * Sau khi tải, tự động đánh dấu đã đọc các tin nhắn chưa đọc từ recruiter
+   * và cập nhật lại danh sách hội thoại (để cập nhật badge)
+   */
   const loadMessages = useCallback(
     async (conversationId: number) => {
       try {
@@ -799,6 +1018,7 @@ export default function Chat() {
         const response = await chatService.getMessages(conversationId, 1, 100);
         setMessages(normalizeMessages(response.items));
 
+        // Đánh dấu đã đọc cho tin nhắn chưa đọc (từ recruiter gửi đến)
         const unreadMessages = response.items.filter(
           (message) => !message.isRead && message.senderId !== user?.id,
         );
@@ -809,6 +1029,7 @@ export default function Chat() {
               chatService.markMessageRead(message.id),
             ),
           );
+          // Reload conversations để cập nhật số chưa đọc
           loadConversations();
         }
       } catch (error) {
@@ -820,16 +1041,26 @@ export default function Chat() {
     [loadConversations, user?.id],
   );
 
+  // Load conversations khi component mount
   useEffect(() => {
     loadConversations(true);
   }, [loadConversations]);
 
+  // Load messages khi activeConversationId thay đổi
   useEffect(() => {
     if (activeConversationId) {
       loadMessages(activeConversationId);
     }
   }, [activeConversationId, loadMessages]);
 
+  /**
+   * ── Đăng ký Realtime qua Supabase ──
+   * Lắng nghe sự kiện INSERT trên bảng "messages" để nhận tin nhắn mới tức thì
+   * Lắng nghe sự kiện UPDATE để cập nhật trạng thái isRead
+   * Bỏ qua tin nhắn do chính user gửi (đã được thêm qua optimistic UI hoặc API response)
+   * Khi nhận được tin nhắn mới: re-fetch messages, đánh dấu đã đọc, reload sidebar
+   * Cleanup: unsubscribe channel khi component unmount hoặc activeConversationId thay đổi
+   */
   useEffect(() => {
     const client = supabase;
     if (!activeConversationId || !client) return;
@@ -847,9 +1078,11 @@ export default function Chat() {
         async (payload) => {
           const newMessage = payload.new as { sender_id?: number };
 
+          // Bỏ qua tin nhắn do mình gửi (đã được thêm bởi API response)
           if (newMessage.sender_id === user?.id) return;
 
           try {
+            // Re-fetch để lấy signed URLs mới cho file đính kèm
             const response = await chatService.getMessages(
               activeConversationId,
               1,
@@ -857,6 +1090,7 @@ export default function Chat() {
             );
             setMessages(normalizeMessages(response.items));
 
+            // Đánh dấu đã đọc tin nhắn mới từ recruiter
             const unreadNewMessages = response.items.filter(
               (message) => !message.isRead && message.senderId !== user?.id,
             );
@@ -869,6 +1103,7 @@ export default function Chat() {
               );
             }
 
+            // Reload sidebar để cập nhật lastMessage + badge
             loadConversations();
           } catch (error) {
             console.error("Lỗi cập nhật tin nhắn realtime:", error);
@@ -885,6 +1120,7 @@ export default function Chat() {
         },
         async () => {
           try {
+            // Cập nhật messages khi có thay đổi trạng thái (isRead)
             const response = await chatService.getMessages(
               activeConversationId,
               1,
@@ -899,23 +1135,35 @@ export default function Chat() {
       )
       .subscribe();
 
+    // Cleanup: hủy đăng ký channel khi unmount hoặc đổi conversation
     return () => {
       client.removeChannel(channel);
     };
   }, [activeConversationId, loadConversations, user?.id]);
 
+  /**
+   * Auto-scroll xuống cuối khung chat mỗi khi messages thay đổi
+   */
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /**
+   * Gửi tin nhắn văn bản với optimistic UI:
+   * 1. Tạo message tạm (deliveryStatus = "sending") và append vào local state ngay
+   * 2. Gọi API sendMessage
+   * 3. Thành công → replace message tạm bằng message thật từ server
+   * 4. Thất bại → đánh dấu deliveryStatus = "error" (cho phép gửi lại)
+   */
   const handleSendMessage = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!inputMessage.trim() || !activeConversationId || !user?.id) return;
 
     const textToSend = inputMessage.trim();
-    const optimisticId = -Date.now();
+    const optimisticId = -Date.now(); // ID âm để tránh trùng với ID thật từ DB
     setInputMessage("");
+    // Thêm message tạm với trạng thái "sending"
     setMessages((current) => [
       ...current,
       createOptimisticTextMessage({
@@ -931,14 +1179,17 @@ export default function Chat() {
         activeConversationId,
         textToSend,
       );
+      // Thay thế message tạm bằng message thật từ server
       setMessages((current) =>
         current.map((message) =>
           message.id === optimisticId ? normalizeMessage(sentMessage) : message,
         ),
       );
+      // Cập nhật sidebar (lastMessage)
       loadConversations();
     } catch (error) {
       console.error("Lỗi khi gửi tin nhắn:", error);
+      // Đánh dấu lỗi để user có thể thử lại
       setMessages((current) =>
         current.map((message) =>
           message.id === optimisticId
@@ -949,10 +1200,17 @@ export default function Chat() {
     }
   };
 
+  /**
+   * Gửi lại tin nhắn bị lỗi (retry)
+   * Đặt lại deliveryStatus = "sending", gọi API sendMessage
+   * Thành công → replace bằng message thật
+   * Thất bại → giữ nguyên deliveryStatus = "error"
+   */
   const handleRetryMessage = async (message: ChatMessage) => {
     const textToSend = message.content?.trim();
     if (!textToSend || !user?.id) return;
 
+    // Reset trạng thái về "sending"
     setMessages((current) =>
       current.map((item) =>
         item.id === message.id
@@ -988,6 +1246,12 @@ export default function Chat() {
     }
   };
 
+  /**
+   * Upload file đính kèm
+   * Giới hạn kích thước 20MB
+   * Gửi FormData qua API → nhận message với attachmentUrl (signed URL)
+   * Append message vào danh sách
+   */
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !activeConversationId) return;
@@ -1014,10 +1278,15 @@ export default function Chat() {
       );
     } finally {
       setIsUploading(false);
+      // Reset input file để cho phép chọn lại file giống tên
       event.target.value = "";
     }
   };
 
+  /**
+   * Chọn một hội thoại từ sidebar
+   * Cập nhật URL param "conversationId" để có thể share link
+   */
   const handleSelectConversation = (conversationId: number) => {
     setActiveConversationId(conversationId);
     setSearchParams({ conversationId: String(conversationId) }, { replace: true });

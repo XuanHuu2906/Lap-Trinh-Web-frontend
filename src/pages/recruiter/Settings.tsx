@@ -13,46 +13,74 @@ import {
 } from "../../services/recruiter.service";
 import { requestApi } from "../../services/api";
 
+// === TRANG CÀI ĐẶT NHÀ TUYỂN DỤNG ===
+// Tab 1: Hồ sơ công ty (tên, logo, website, mô tả)
+// Tab 2: Thông tin liên hệ (người liên hệ, SĐT, địa chỉ)
+// Tab 3: Đổi mật khẩu
+
+// Danh sách tab cài đặt, dùng để render navigation và xác định active tab
 const settingsTabs = ["Hồ sơ công ty", "Thông tin liên hệ", "Đổi mật khẩu"];
 
+// Giới hạn ký tự cho phần mô tả doanh nghiệp
 const MAX_DESC = 1000;
 
+// Chuyển đổi URL param "tab" thành tên tab hiển thị
+// Mặc định trả về tab hồ sơ công ty nếu không khớp
 const getTabFromUrl = (tab: string | null) => {
   if (tab === "contact") return "Thông tin liên hệ";
   if (tab === "password") return "Đổi mật khẩu";
   return "Hồ sơ công ty";
 };
 
+/**
+ * Component cài đặt hệ thống cho nhà tuyển dụng
+ * Gồm 3 tab: hồ sơ công ty, thông tin liên hệ, đổi mật khẩu
+ * Hỗ trợ upload logo công ty
+ */
 export function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // activeTab: tab đang được chọn, khởi tạo từ URL param
   const [activeTab, setActiveTab] = useState(() =>
     getTabFromUrl(searchParams.get("tab")),
   );
 
+  // logoPreview: URL ảnh xem trước (có thể là từ server hoặc object URL tạm)
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  // logoFile: file ảnh đã chọn để upload (null nếu chưa chọn file mới)
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
+  // State cho tab hồ sơ công ty
   const [companyName, setCompanyName] = useState("");
+  // State cho tab thông tin liên hệ
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
 
+  // State cho tab đổi mật khẩu
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // loading: trạng thái đang lưu hồ sơ (tab 1 và 2)
   const [loading, setLoading] = useState(false);
+  // passwordLoading: trạng thái đang đổi mật khẩu (tab 3)
   const [passwordLoading, setPasswordLoading] = useState(false);
+  // message: thông báo thành công (xanh lá)
   const [message, setMessage] = useState("");
+  // error: thông báo lỗi (đỏ)
   const [error, setError] = useState("");
 
+  // Ref để trigger input chọn file logo
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // websiteDomain: loại bỏ protocol (https://) khỏi URL để hiển thị trong input
   const websiteDomain = website.replace(/^https?:\/\//, "");
 
+  // Tải hồ sơ nhà tuyển dụng từ API và điền vào các state
+  // Được gọi khi component mount và khi người dùng bấm "Hủy bỏ"
   const loadProfile = async () => {
     setLoading(true);
     setError("");
@@ -79,14 +107,19 @@ export function SettingsPage() {
     }
   };
 
+  // useEffect: tải profile khi component mount
   useEffect(() => {
     void loadProfile();
   }, []);
 
+  // useEffect: đồng bộ activeTab với URL params khi URL thay đổi
+  // Cho phép chia sẻ link trực tiếp đến một tab cụ thể
   useEffect(() => {
     setActiveTab(getTabFromUrl(searchParams.get("tab")));
   }, [searchParams]);
 
+  // Xử lý chuyển tab: cập nhật state và URL param tương ứng
+  // Reset thông báo khi chuyển tab
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     setError("");
@@ -105,6 +138,8 @@ export function SettingsPage() {
     setSearchParams({ tab: "company" });
   };
 
+  // Xử lý chọn file logo từ máy người dùng
+  // Tạo object URL tạm để preview ảnh trước khi upload
   const handleLogo = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -113,6 +148,9 @@ export function SettingsPage() {
     setLogoPreview(URL.createObjectURL(file));
   };
 
+  // Lưu hồ sơ nhà tuyển dụng: cập nhật thông tin + upload logo nếu có
+  // Được gọi từ cả handleSubmitCompany và handleSubmitContact
+  // Upload logo sau khi cập nhật profile thành công, cập nhật logoPreview với URL thật từ server
   const saveRecruiterProfile = async () => {
     await updateRecruiterProfile({
       companyName,
@@ -130,6 +168,7 @@ export function SettingsPage() {
     }
   };
 
+  // Submit tab hồ sơ công ty
   const handleSubmitCompany = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -151,6 +190,8 @@ export function SettingsPage() {
     }
   };
 
+  // Submit tab thông tin liên hệ
+  // Dùng chung saveRecruiterProfile nhưng message khác biệt
   const handleSubmitContact = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -172,6 +213,9 @@ export function SettingsPage() {
     }
   };
 
+  // Submit tab đổi mật khẩu
+  // Validate: không để trống mật khẩu hiện tại, mật khẩu mới >= 6 ký tự, xác nhận khớp
+  // Gọi API /auth/change-password sau đó reset form
   const handleChangePassword = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -219,6 +263,7 @@ export function SettingsPage() {
   return (
     <div className="flex-1 bg-slate-50 p-8 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl">
+        {/* Header trang */}
         <div className="mb-7">
           <h1 className="text-[30px] font-bold leading-tight text-slate-900 dark:text-white">
             Cài đặt hệ thống
@@ -229,6 +274,7 @@ export function SettingsPage() {
           </p>
         </div>
 
+        {/* Thông báo kết quả */}
         {(message || error) && (
           <div
             className={`mb-5 border px-4 py-3 text-[13px] ${
@@ -241,7 +287,9 @@ export function SettingsPage() {
           </div>
         )}
 
+        {/* Layout: sidebar tab navigation + nội dung */}
         <div className="grid grid-cols-[220px_1fr] items-start gap-6">
+          {/* Sidebar navigation với các tab cài đặt */}
           <aside className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
             {settingsTabs.map((tab) => (
               <button
@@ -259,7 +307,9 @@ export function SettingsPage() {
             ))}
           </aside>
 
+          {/* Nội dung tab */}
           <main className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            {/* === TAB 1: HỒ SƠ CÔNG TY === */}
             {activeTab === "Hồ sơ công ty" && (
               <form onSubmit={handleSubmitCompany}>
                 <div className="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
@@ -273,6 +323,7 @@ export function SettingsPage() {
                 </div>
 
                 <div className="px-8 py-7">
+                  {/* Upload logo: preview + button chọn file */}
                   <div className="mb-7 flex items-center gap-5 border-b border-slate-100 pb-7 dark:border-slate-800">
                     <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
                       {logoPreview ? (
@@ -315,7 +366,9 @@ export function SettingsPage() {
                     </div>
                   </div>
 
+                  {/* Form fields: tên công ty, website, mô tả */}
                   <div className="space-y-5">
+                    {/* Tên công ty (bắt buộc) */}
                     <div>
                       <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Tên công ty *
@@ -329,6 +382,7 @@ export function SettingsPage() {
                       />
                     </div>
 
+                    {/* Website: input với prefix https:// cố định bên trái */}
                     <div>
                       <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Website công ty
@@ -354,6 +408,7 @@ export function SettingsPage() {
                       </div>
                     </div>
 
+                    {/* Mô tả doanh nghiệp: textarea có giới hạn ký tự */}
                     <div>
                       <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         Mô tả doanh nghiệp
@@ -378,6 +433,7 @@ export function SettingsPage() {
                   </div>
                 </div>
 
+                {/* Footer: nút Hủy bỏ (load lại profile) + Lưu thay đổi */}
                 <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-8 py-5 dark:border-slate-800">
                   <button
                     type="button"
@@ -398,6 +454,7 @@ export function SettingsPage() {
               </form>
             )}
 
+            {/* === TAB 2: THÔNG TIN LIÊN HỆ === */}
             {activeTab === "Thông tin liên hệ" && (
               <form onSubmit={handleSubmitContact}>
                 <div className="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
@@ -411,6 +468,7 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-5 px-8 py-7">
+                  {/* Người liên hệ */}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Người liên hệ
@@ -424,6 +482,7 @@ export function SettingsPage() {
                     />
                   </div>
 
+                  {/* Số điện thoại */}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Số điện thoại
@@ -437,6 +496,7 @@ export function SettingsPage() {
                     />
                   </div>
 
+                  {/* Địa chỉ công ty */}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Địa chỉ công ty
@@ -450,6 +510,7 @@ export function SettingsPage() {
                     />
                   </div>
 
+                  {/* Info box */}
                   <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] leading-relaxed text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300">
                     Thông tin liên hệ giúp ứng viên và quản trị viên nhận diện doanh nghiệp rõ ràng hơn.
                   </div>
@@ -475,6 +536,7 @@ export function SettingsPage() {
               </form>
             )}
 
+            {/* === TAB 3: ĐỔI MẬT KHẨU === */}
             {activeTab === "Đổi mật khẩu" && (
               <form onSubmit={handleChangePassword}>
                 <div className="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
@@ -488,6 +550,7 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-5 px-8 py-7">
+                  {/* Mật khẩu hiện tại */}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Mật khẩu hiện tại *
@@ -501,6 +564,7 @@ export function SettingsPage() {
                     />
                   </div>
 
+                  {/* Mật khẩu mới + hint độ dài */}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Mật khẩu mới *
@@ -518,6 +582,7 @@ export function SettingsPage() {
                     </p>
                   </div>
 
+                  {/* Xác nhận mật khẩu mới */}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                       Xác nhận mật khẩu mới *
@@ -531,6 +596,7 @@ export function SettingsPage() {
                     />
                   </div>
 
+                  {/* Warning box */}
                   <div className="rounded-md border border-amber-100 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
                     Sau khi đổi mật khẩu thành công, bạn nên đăng xuất và đăng nhập lại để kiểm tra.
                   </div>
