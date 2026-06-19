@@ -61,13 +61,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getApiErrorMessage(error: unknown, fallback: string) {
-  const response = isRecord(error) && isRecord(error.response)
-    ? error.response
-    : null;
+  const response =
+    isRecord(error) && isRecord(error.response) ? error.response : null;
   const data = response && isRecord(response.data) ? response.data : null;
   const status = typeof response?.status === "number" ? response.status : null;
-  const backendMessage =
-    typeof data?.message === "string" ? data.message : "";
+  const backendMessage = typeof data?.message === "string" ? data.message : "";
 
   if (backendMessage) return backendMessage;
   if (status === 401) {
@@ -330,11 +328,7 @@ function CVTableRow({
       </td>
 
       <td className="px-5 py-4">
-        <CVActionButtons
-          cv={cv}
-          deletingId={deletingId}
-          handlers={handlers}
-        />
+        <CVActionButtons cv={cv} deletingId={deletingId} handlers={handlers} />
       </td>
     </tr>
   );

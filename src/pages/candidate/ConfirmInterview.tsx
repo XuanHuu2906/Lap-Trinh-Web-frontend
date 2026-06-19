@@ -12,7 +12,10 @@ import {
   Clock,
   ArrowLeft,
 } from "lucide-react";
-import { applicationService, type CandidateApplication } from "../../services/application.service";
+import {
+  applicationService,
+  type CandidateApplication,
+} from "../../services/application.service";
 
 export function ConfirmInterviewPage() {
   const [searchParams] = useSearchParams();
@@ -20,7 +23,9 @@ export function ConfirmInterviewPage() {
   const applicationIdStr = searchParams.get("applicationId");
   const applicationId = applicationIdStr ? Number(applicationIdStr) : null;
 
-  const [application, setApplication] = useState<CandidateApplication | null>(null);
+  const [application, setApplication] = useState<CandidateApplication | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -37,7 +42,8 @@ export function ConfirmInterviewPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await applicationService.getApplicationDetail(applicationId);
+        const res =
+          await applicationService.getApplicationDetail(applicationId);
         if (res.success && res.data) {
           setApplication(res.data);
           // Nếu trạng thái của đơn tuyển đã là 'confirmed', hiển thị trạng thái thành công luôn
@@ -52,7 +58,7 @@ export function ConfirmInterviewPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Đã xảy ra lỗi khi kết nối tới máy chủ."
+            : "Đã xảy ra lỗi khi kết nối tới máy chủ.",
         );
       } finally {
         setLoading(false);
@@ -85,7 +91,7 @@ export function ConfirmInterviewPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Gặp sự cố khi thực hiện yêu cầu xác nhận."
+          : "Gặp sự cố khi thực hiện yêu cầu xác nhận.",
       );
     } finally {
       setSubmitting(false);
@@ -93,7 +99,8 @@ export function ConfirmInterviewPage() {
   };
 
   const getLatestInterview = () => {
-    if (!application?.interviews || application.interviews.length === 0) return null;
+    if (!application?.interviews || application.interviews.length === 0)
+      return null;
     return application.interviews[0];
   };
 
@@ -112,12 +119,12 @@ export function ConfirmInterviewPage() {
 
   const interview = getLatestInterview();
   const companyName =
-    application?.jobPosting?.recruiter?.recruiterProfile?.companyName || "Công ty tuyển dụng";
+    application?.jobPosting?.recruiter?.recruiterProfile?.companyName ||
+    "Công ty tuyển dụng";
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-10 bg-slate-50/50 dark:bg-slate-950/20">
       <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-white/20 bg-white/70 p-8 shadow-xl backdrop-blur-md dark:border-slate-800/60 dark:bg-slate-900/70 transition-all duration-300">
-        
         {/* Background decorative gradient */}
         <div className="absolute -right-10 -top-10 -z-10 h-32 w-32 rounded-full bg-indigo-500/10 blur-2xl"></div>
         <div className="absolute -left-10 -bottom-10 -z-10 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl"></div>
@@ -164,7 +171,8 @@ export function ConfirmInterviewPage() {
               Lịch phỏng vấn chưa được tạo
             </h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Không tìm thấy thông tin lịch phỏng vấn nào liên kết với đơn ứng tuyển này.
+              Không tìm thấy thông tin lịch phỏng vấn nào liên kết với đơn ứng
+              tuyển này.
             </p>
             <button
               onClick={() => navigate("/candidate/applied-jobs")}
@@ -187,7 +195,8 @@ export function ConfirmInterviewPage() {
                   Xác nhận thành công!
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Bạn đã xác nhận tham gia phỏng vấn với <strong>{companyName}</strong>.
+                  Bạn đã xác nhận tham gia phỏng vấn với{" "}
+                  <strong>{companyName}</strong>.
                 </p>
                 <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   Nhà tuyển dụng sẽ nhận được phản hồi và liên hệ lại với bạn.
@@ -213,7 +222,8 @@ export function ConfirmInterviewPage() {
                         <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
                       )}
                       <span className="truncate">
-                        {interview.type === "online" ? "Online" : "Offline"} - {interview.location}
+                        {interview.type === "online" ? "Online" : "Offline"} -{" "}
+                        {interview.location}
                       </span>
                     </p>
                   </div>
@@ -233,7 +243,8 @@ export function ConfirmInterviewPage() {
                     Thư mời & Lịch phỏng vấn
                   </h1>
                   <p className="text-sm text-slate-400 dark:text-slate-500">
-                    Vui lòng xem lại thông tin phỏng vấn bên dưới và nhấp nút để xác nhận tham gia.
+                    Vui lòng xem lại thông tin phỏng vấn bên dưới và nhấp nút để
+                    xác nhận tham gia.
                   </p>
                 </div>
 
@@ -288,7 +299,9 @@ export function ConfirmInterviewPage() {
                           Hình thức phỏng vấn
                         </p>
                         <p className="mt-1 text-sm font-bold text-slate-700 dark:text-slate-200">
-                          {interview.type === "online" ? "Trực tuyến (Online)" : "Trực tiếp (Offline)"}
+                          {interview.type === "online"
+                            ? "Trực tuyến (Online)"
+                            : "Trực tiếp (Offline)"}
                         </p>
                       </div>
                     </div>

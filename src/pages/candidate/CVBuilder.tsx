@@ -303,7 +303,7 @@ function CVPreview({
         <div className="w-[32%] bg-slate-900 text-white p-6 flex flex-col justify-between text-left font-sans">
           <div className="space-y-6">
             <div className="border-b border-slate-850 pb-4">
-              <h2 className="text-lg font-black tracking-tight leading-snug text-white uppercase break-words">
+              <h2 className="text-lg font-black tracking-tight leading-snug text-white uppercase wrap-break-word">
                 {data.name || "Họ và Tên"}
               </h2>
               <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1.5 block">
