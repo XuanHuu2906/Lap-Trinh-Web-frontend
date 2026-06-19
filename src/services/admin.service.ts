@@ -114,12 +114,80 @@ export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> 
   };
 };
 
-export const getSystemActivities = async (params?: { limit?: number }): Promise<ApiResponse<SystemActivity[]>> => {
-  const response = await get<ApiResponse<SystemActivity[]>>('/users/dashboard/activities', { params });
+export interface GetSystemActivitiesParams {
+  page?: number;
+  limit?: number;
+  type?: string;
+  search?: string;
+  date?: string;
+}
+
+export interface GetSystemActivitiesResponse {
+  success: boolean;
+  data: SystemActivity[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+}
+
+export const getSystemActivities = async (
+  params?: GetSystemActivitiesParams
+): Promise<GetSystemActivitiesResponse> => {
+  const response = await get<GetSystemActivitiesResponse>('/users/dashboard/activities', { params });
   if (!response.success || !response.data) return response;
 
   return {
     ...response,
     data: response.data.map(normalizeSystemActivity),
+  };
+};
+
+export interface AuditLog {
+  id: number;
+  adminId: number;
+  action: string;
+  targetType: string;
+  targetId: number;
+  details: string | null;
+  createdAt: string;
+  admin: {
+    id: number;
+    email: string;
+  };
+}
+
+export interface GetAuditLogsParams {
+  page?: number;
+  limit?: number;
+  action?: string;
+  targetType?: string;
+  search?: string;
+  date?: string;
+}
+
+export interface GetAuditLogsResponse {
+  success: boolean;
+  data: AuditLog[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+}
+
+export const getAuditLogs = async (
+  params?: GetAuditLogsParams
+): Promise<GetAuditLogsResponse> => {
+  const response = await get<GetAuditLogsResponse>('/users/dashboard/audit-logs', { params });
+  if (!response.success || !response.data) return response;
+
+  return {
+    ...response,
+    data: response.data.map(log => ({
+      ...log,
+      admin: { ...log.admin, email: decodeMojibakeInText(log.admin.email) },
+    })),
   };
 };
