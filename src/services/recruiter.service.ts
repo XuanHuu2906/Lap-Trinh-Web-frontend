@@ -31,6 +31,7 @@ export type ApplicationStatus =
   | 'reviewing'    // Đã xem
   | 'interview'    // Mời phỏng vấn
   | 'confirmed'    // Ứng viên đã xác nhận
+  | 'hired'        // Trúng tuyển sau phỏng vấn
   | 'rejected'     // Không phù hợp
   | 'cancelled';   // Đã hủy
 
@@ -385,7 +386,7 @@ export async function updateApplicationStatus(
 export async function createFeedback(
   applicationId: number,
   content: string,
-  status?: 'interview' | 'rejected',
+  status?: 'interview' | 'hired' | 'rejected',
 ) {
   return requestApi({
     method: 'POST',

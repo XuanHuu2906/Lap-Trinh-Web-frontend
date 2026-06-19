@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  CheckCircle2,
   Clock,
   FileText,
   MessageSquare,
@@ -42,6 +43,7 @@ const applicationStatusOptions: StatusOption[] = [
   { label: "Đang xem", value: "reviewing" },
   { label: "Mời phỏng vấn", value: "interview" },
   { label: "Đã xác nhận", value: "confirmed" },
+  { label: "Trúng tuyển", value: "hired" },
   { label: "Từ chối", value: "rejected" },
 ];
 
@@ -65,6 +67,11 @@ const applicationStatusDisplays: Record<string, StatusDisplay> = {
     label: "Đã xác nhận",
     className:
       "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+  },
+  hired: {
+    label: "Trúng tuyển",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300",
   },
   rejected: {
     label: "Từ chối",
@@ -132,7 +139,7 @@ function CounterCard({ item }: { item: CounterCardInfo }) {
 
 function CounterGrid({ counters }: { counters: CounterCardInfo[] }) {
   return (
-    <div className="mb-6 grid gap-4 md:grid-cols-4">
+    <div className="mb-6 grid gap-4 md:grid-cols-5">
       {counters.map((counter) => (
         <CounterCard key={counter.label} item={counter} />
       ))}
@@ -507,6 +514,46 @@ function ApplicationDetailModal({
             </div>
           )}
 
+          {(application.status === "hired" || application.status === "rejected") &&
+            interview && (
+              <div
+                className={`flex items-start gap-3 border p-3 ${
+                  application.status === "hired"
+                    ? "border-green-200 bg-green-50 dark:border-green-900/60 dark:bg-green-950/30"
+                    : "border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+                }`}
+              >
+                {application.status === "hired" ? (
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-300" />
+                ) : (
+                  <XCircle className="h-5 w-5 shrink-0 text-red-500 dark:text-red-300" />
+                )}
+                <div>
+                  <p
+                    className={`text-sm font-bold ${
+                      application.status === "hired"
+                        ? "text-green-800 dark:text-green-200"
+                        : "text-red-700 dark:text-red-200"
+                    }`}
+                  >
+                    Kết quả phỏng vấn:{" "}
+                    {application.status === "hired" ? "Trúng tuyển" : "Không phù hợp"}
+                  </p>
+                  <p
+                    className={`mt-0.5 text-xs ${
+                      application.status === "hired"
+                        ? "text-green-700/80 dark:text-green-300/80"
+                        : "text-red-600/80 dark:text-red-300/80"
+                    }`}
+                  >
+                    {application.status === "hired"
+                      ? "Chúc mừng bạn! Xem chi tiết phản hồi của nhà tuyển dụng bên dưới."
+                      : "Xem chi tiết phản hồi của nhà tuyển dụng bên dưới."}
+                  </p>
+                </div>
+              </div>
+            )}
+
           <div>
             <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-500">
               Phản hồi từ nhà tuyển dụng
@@ -696,6 +743,13 @@ export default function AppliedJobs() {
         icon: ShieldCheck,
         color:
           "text-violet-600 bg-violet-50 dark:bg-violet-950/40 dark:text-violet-300",
+      },
+      {
+        label: "Trúng tuyển",
+        value: applications.filter((item) => item.status === "hired").length,
+        icon: CheckCircle2,
+        color:
+          "text-green-600 bg-green-50 dark:bg-green-950/40 dark:text-green-300",
       },
       {
         label: "Từ chối",

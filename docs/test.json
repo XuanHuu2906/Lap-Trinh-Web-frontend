@@ -1,0 +1,50 @@
+{
+    "category": "Đơn giản",
+    "features": [
+        "Chuẩn hóa ATS tuyệt đối",
+        "Bố cục 1 cột tối ưu cho robot",
+        "Cực kỳ tinh gọn chuyên nghiệp"
+    ],
+    "defaultData": {
+        "personalInfo": {
+            "fullName": "NGUYỄN VĂN A",
+            "email": "anv@gmail.com",
+            "phone": "0987 654 321",
+            "address": "Hà Nội, Việt Nam",
+            "linkedin": "linkedin.com/in/anv",
+            "summary": "Hơn 3 năm kinh nghiệm trong phát triển hệ thống web quy mô lớn. Mong muốn mang kiến thức về React, Node.js và kiến trúc microservices đóng góp cho sự phát triển của công ty."
+        },
+        "education": [
+            {
+                "school": "ĐẠI HỌC CÔNG NGHỆ THÔNG TIN",
+                "degree": "Cử nhân CNTT (GPA: 3.4/4)",
+                "year": "2020 - 2024"
+            }
+        ],
+        "experience": [
+            {
+                "company": "CÔNG TY CÔNG NGHỆ ABC",
+                "title": "Lập trình viên ReactJS",
+                "period": "T6/2024 - Hiện tại",
+                "desc": "Xây dựng và tối ưu giao diện dashboard quản lý thông tin doanh nghiệp, nâng tốc độ tải trang lên 35%."
+            },
+            {
+                "company": "TẬP ĐOÀN XYZ",
+                "title": "Lập trình viên Backend",
+                "period": "T9/2023 - T5/2024",
+                "desc": "Phát triển hệ thống APIs cho mobile app dịch vụ thương mại điện tử sử dụng Express và MongoDB."
+            }
+        ],
+        "skills": [
+            {
+                "name": "React"
+            },
+            {
+                "name": "Node.js"
+            },
+            {
+                "name": "TypeScript"
+            }
+        ]
+    }
+}

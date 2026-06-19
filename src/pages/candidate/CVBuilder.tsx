@@ -722,13 +722,11 @@ function BuilderTopBar({
 function BuilderStatusBar({
   isLoading,
   errorMessage,
-  lastSavedAt,
 }: {
   isLoading: boolean;
   errorMessage: string | null;
-  lastSavedAt: string | null;
 }) {
-  if (!isLoading && !errorMessage && !lastSavedAt) return null;
+  if (!isLoading && !errorMessage) return null;
 
   return (
     <div className="border-b border-slate-800 bg-slate-950 px-6 py-3 text-sm">
@@ -736,12 +734,6 @@ function BuilderStatusBar({
         <span className="text-slate-400">Đang tải CV từ database...</span>
       )}
       {errorMessage && <span className="text-red-300">{errorMessage}</span>}
-      {!isLoading && !errorMessage && lastSavedAt && (
-        <span className="text-green-300">
-          Đã lưu vào database lúc{" "}
-          {new Date(lastSavedAt).toLocaleString("vi-VN")}
-        </span>
-      )}
     </div>
   );
 }
@@ -1109,7 +1101,6 @@ export default function CVBuilder() {
   const [downloading, setDownloading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(editingId) || Boolean(templateId));
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1122,7 +1113,6 @@ export default function CVBuilder() {
           const response = await cvService.getById(editingId);
           setData(mapCVToFormData(response.data));
           setCurrentCvId(response.data.id);
-          setLastSavedAt(response.data.updatedAt);
 
           if (response.data.templateId) {
             const templatesRes = await cvService.getTemplates();
@@ -1262,7 +1252,6 @@ export default function CVBuilder() {
         : await cvService.create(payload);
 
       setCurrentCvId(response.data.id);
-      setLastSavedAt(response.data.updatedAt);
 
       if (!currentCvId) {
         navigate(`/candidate/cv-builder?id=${response.data.id}`, {
@@ -1331,7 +1320,6 @@ export default function CVBuilder() {
         .replace(/[\\/:*?"<>|]/g, "")
         .replace(/\s+/g, "_") || "untitled";
       pdf.save(`CV_${safeName}.pdf`);
-      setLastSavedAt(null);
     } catch (error: unknown) {
       console.error("[CVBuilder] PDF export error:", error);
       const detail = error instanceof Error ? error.message : String(error);
@@ -1368,7 +1356,6 @@ export default function CVBuilder() {
       <BuilderStatusBar
         isLoading={isLoading}
         errorMessage={errorMessage}
-        lastSavedAt={lastSavedAt}
       />
 
       <div className="flex flex-1 overflow-hidden">

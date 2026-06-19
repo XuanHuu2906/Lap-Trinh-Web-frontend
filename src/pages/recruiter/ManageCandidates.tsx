@@ -29,8 +29,8 @@ import {
 // Panel chi tiết bên cạnh cho phép: xem CV, gửi feedback, đặt lịch PV, đánh giá
 // Polling realtime qua Supabase để cập nhật danh sách tự động
 
-// Kiểu dữ liệu cho trạng thái feedback: interview (mời PV) hoặc rejected (từ chối)
-type FeedbackStatus = "interview" | "rejected";
+// Kiểu dữ liệu cho trạng thái feedback: interview (mời PV), hired (trúng tuyển) hoặc rejected (từ chối)
+type FeedbackStatus = "interview" | "hired" | "rejected";
 
 // Chuyển đổi URL param "status" thành ApplicationStatus filter
 // Trả về "" nếu không khớp với bất kỳ trạng thái nào
@@ -41,6 +41,8 @@ const getStatusFilterFromParam = (
     value === "pending" ||
     value === "reviewing" ||
     value === "interview" ||
+    value === "confirmed" ||
+    value === "hired" ||
     value === "rejected" ||
     value === "cancelled"
   ) {
@@ -136,7 +138,7 @@ export function ManageCandidatesPage() {
   const [error, setError] = useState("");
   // showJobColumn: có hiển thị cột "Tin ứng tuyển" trong bảng không
   const showJobColumn = selectedJobId === "";
-  const tableColumnCount = showJobColumn ? 6 : 5;
+  const tableColumnCount = showJobColumn ? 5 : 4;
 
   // Lọc applications theo từ khóa tìm kiếm (client-side)
   const filteredApplications = useMemo(() => {
@@ -520,6 +522,8 @@ export function ManageCandidatesPage() {
               <option value="pending">Chưa xem</option>
               <option value="reviewing">Đã xem</option>
               <option value="interview">Mời phỏng vấn</option>
+              <option value="confirmed">Đã xác nhận</option>
+              <option value="hired">Trúng tuyển</option>
               <option value="rejected">Không phù hợp</option>
               <option value="cancelled">Đã hủy</option>
             </select>
@@ -556,7 +560,6 @@ export function ManageCandidatesPage() {
                   "CV",
                   "Ngày ứng tuyển",
                   "Trạng thái",
-                  "Hành động",
                 ].map((heading) => (
                   <th
                     key={heading}
@@ -598,7 +601,12 @@ export function ManageCandidatesPage() {
                 filteredApplications.map((application) => (
                   <tr
                     key={application.id}
-                    className="border-b border-slate-50 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
+                    onClick={() => void openApplication(application)}
+                    className={`cursor-pointer border-b border-slate-50 transition-colors dark:border-slate-800 ${
+                      selectedApplication?.id === application.id
+                        ? "bg-indigo-50 dark:bg-indigo-950/30"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
                   >
                     {/* Tên + email */}
                     <td className="px-6 py-5">
@@ -643,17 +651,6 @@ export function ManageCandidatesPage() {
                           Đã phản hồi
                         </p>
                       )}
-                    </td>
-
-                    {/* Nút xử lý hồ sơ */}
-                    <td className="px-6 py-5">
-                      <button
-                        type="button"
-                        onClick={() => void openApplication(application)}
-                        className="h-8 border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                      >
-                        Xử lý hồ sơ
-                      </button>
                     </td>
                   </tr>
                 ))}
