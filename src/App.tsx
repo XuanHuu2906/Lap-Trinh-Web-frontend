@@ -55,7 +55,10 @@ function App() {
             element={<CompanyProfile variant="public" />}
           />
           <Route path="cv-templates" element={<CVTemplatePage />} />
-          <Route path="resources" element={<Navigate to="/cv-templates" replace />} />
+          <Route
+            path="resources"
+            element={<Navigate to="/cv-templates" replace />}
+          />
           <Route
             path="resources/cv-templates"
             element={<Navigate to="/cv-templates" replace />}
@@ -69,22 +72,37 @@ function App() {
         <Route path="/register" element={<CandidateRegisterPage />} />
         <Route path="/register-candidate" element={<CandidateRegisterPage />} />
         <Route path="/register-employer" element={<EnterpriseRegisterPage />} />
-        <Route path="/register-enterprise" element={<EnterpriseRegisterPage />} />
+        <Route
+          path="/register-enterprise"
+          element={<EnterpriseRegisterPage />}
+        />
 
         <Route element={<ProtectedRoute allowedRoles={["pending"]} />}>
           <Route path="/auth/setup-profile" element={<SetupProfilePage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["candidate"]} />}>
-          <Route path="/candidate" element={<DashboardLayout role="candidate" />}>
+          <Route
+            path="/candidate"
+            element={<DashboardLayout role="candidate" />}
+          >
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<Overview />} />
             <Route path="applied-jobs" element={<AppliedJobs />} />
             <Route path="saved-jobs" element={<SavedJobs />} />
             <Route path="my-cvs" element={<MyCVs />} />
-            <Route path="job-search" element={<JobSearch variant="candidate" />} />
-            <Route path="find-jobs" element={<JobSearch variant="candidate" />} />
-            <Route path="jobs/:id" element={<JobDetail variant="candidate" />} />
+            <Route
+              path="job-search"
+              element={<JobSearch variant="candidate" />}
+            />
+            <Route
+              path="find-jobs"
+              element={<JobSearch variant="candidate" />}
+            />
+            <Route
+              path="jobs/:id"
+              element={<JobDetail variant="candidate" />}
+            />
             <Route
               path="companies/:recruiterId"
               element={<CompanyProfile variant="candidate" />}
@@ -93,22 +111,34 @@ function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="cv-templates" element={<CVTemplatePage />} />
             <Route path="cv-builder" element={<CVBuilder />} />
-            <Route path="confirm-interview" element={<ConfirmInterviewPage />} />
+            <Route
+              path="confirm-interview"
+              element={<ConfirmInterviewPage />}
+            />
             <Route path="settings" element={<CandidateSettings />} />
           </Route>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["recruiter"]} />}>
-          <Route path="/recruiter" element={<DashboardLayout role="recruiter" />}>
+          <Route
+            path="/recruiter"
+            element={<DashboardLayout role="recruiter" />}
+          >
             <Route index element={<RecruiterOverviewPage />} />
             <Route path="overview" element={<RecruiterOverviewPage />} />
             <Route path="post-job" element={<PostJobPage />} />
             <Route path="manage-jobs" element={<ManageJobsPage />} />
-            <Route path="manage-jobs/:id" element={<RecruiterJobDetailPage />} />
+            <Route
+              path="manage-jobs/:id"
+              element={<RecruiterJobDetailPage />}
+            />
             <Route path="manage-jobs/:id/edit" element={<PostJobPage />} />
             <Route path="candidates" element={<ManageCandidatesPage />} />
             <Route path="chat" element={<RecruiterChatPage />} />
-            <Route path="notifications" element={<RecruiterNotificationsPage />} />
+            <Route
+              path="notifications"
+              element={<RecruiterNotificationsPage />}
+            />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>

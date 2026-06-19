@@ -37,21 +37,23 @@ const navItems = [
     path: "/candidate/saved-jobs",
     icon: Bookmark,
   },
-  {
-    label: "Trò chuyện",
-    path: "/candidate/chat",
-    icon: MessageSquare,
-  },
+
   {
     label: "CV của tôi",
     path: "/candidate/my-cvs",
     icon: FileText,
   },
+
   {
     label: "Tìm việc làm",
     path: "/candidate/job-search",
     aliases: ["/candidate/find-jobs"],
     icon: Search,
+  },
+  {
+    label: "Trò chuyện",
+    path: "/candidate/chat",
+    icon: MessageSquare,
   },
 ];
 
@@ -75,7 +77,9 @@ export function CandidateSidebar({
           collapsed ? "justify-center" : "justify-between"
         }`}
       >
-        <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
+        <div
+          className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600">
             <Layers className="h-5 w-5 text-white" />
           </div>
@@ -117,7 +121,9 @@ export function CandidateSidebar({
         ) : null}
       </div>
 
-      <nav className={`flex-1 overflow-y-auto py-6 ${collapsed ? "px-3" : "px-4"}`}>
+      <nav
+        className={`flex-1 overflow-y-auto py-6 ${collapsed ? "px-3" : "px-4"}`}
+      >
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -152,7 +158,6 @@ export function CandidateSidebar({
           })}
         </div>
       </nav>
-
     </>
   );
 
