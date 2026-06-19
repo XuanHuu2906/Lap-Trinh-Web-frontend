@@ -30,11 +30,11 @@ import {
 
 // ==================== TYPE & CONSTANT DEFINITIONS ====================
 
-/** Trạng thái phản hồi: phỏng vấn hoặc từ chối */
-export type FeedbackStatus = 'interview' | 'rejected';
+/** Trạng thái phản hồi: phỏng vấn, trúng tuyển hoặc từ chối */
+export type FeedbackStatus = 'interview' | 'hired' | 'rejected';
 
 /** Các trạng thái kế tiếp mà recruiter có thể chuyển đến */
-export type NextApplicationStatus = 'reviewing' | 'interview' | 'rejected';
+export type NextApplicationStatus = 'reviewing' | 'interview' | 'hired' | 'rejected';
 
 /** Nhãn hiển thị cho từng trạng thái đơn ứng tuyển (tiếng Việt) */
 export const statusLabel: Record<ApplicationStatus, string> = {
@@ -42,6 +42,7 @@ export const statusLabel: Record<ApplicationStatus, string> = {
   reviewing: 'Đã xem',
   interview: 'Mời phỏng vấn',
   confirmed: 'Đã xác nhận',
+  hired: 'Trúng tuyển',
   rejected: 'Không phù hợp',
   cancelled: 'Đã hủy',
 };
@@ -56,6 +57,8 @@ export const statusStyle: Record<ApplicationStatus, string> = {
     'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300',
   confirmed:
     'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300',
+  hired:
+    'border-green-300 bg-green-50 text-green-800 dark:border-green-800/60 dark:bg-green-950/30 dark:text-green-300',
   rejected:
     'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300',
   cancelled:
@@ -64,13 +67,13 @@ export const statusStyle: Record<ApplicationStatus, string> = {
 
 /**
  * Xác định trạng thái phản hồi mặc định dựa trên trạng thái hiện tại
- * - Nếu đã rejected/interview/confirmed: lấy trạng thái tương ứng
- * - Nếu không: mặc định là "interview"
+ * - confirmed: mặc định 'hired' (đang ở bước quyết định kết quả phỏng vấn)
+ * - rejected/interview: lấy trạng thái tương ứng
+ * - khác: mặc định 'interview'
  */
 export const getFeedbackStatus = (status: ApplicationStatus): FeedbackStatus => {
-  if (status === 'rejected' || status === 'interview' || status === 'confirmed') {
-    return status === 'confirmed' ? 'interview' : status;
-  }
+  if (status === 'confirmed') return 'hired';
+  if (status === 'rejected' || status === 'interview') return status;
   return 'interview';
 };
 
@@ -665,9 +668,51 @@ export function ApplicationDetailPanel({
           </section>
         )}
 
-        {/* CONFIRMED: Ứng viên đã xác nhận -> cho phép đánh giá nội bộ */}
+        {/* CONFIRMED: Ứng viên đã xác nhận -> chốt kết quả phỏng vấn + đánh giá nội bộ */}
         {status === 'confirmed' && (
           <section className="space-y-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                Kết quả phỏng vấn (gửi cho ứng viên)
+              </label>
+              <textarea
+                value={feedback}
+                onChange={(e) => onFeedbackChange(e.target.value)}
+                rows={4}
+                placeholder="Nhập nội dung thông báo kết quả phỏng vấn cho ứng viên..."
+                className="w-full border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-700 outline-none focus:border-slate-400 dark:border-slate-800 dark:bg-slate-955 dark:text-slate-100"
+              />
+              {feedback.trim() === '' && (
+                <p className="text-[11px] text-slate-400">
+                  Nội dung sẽ được lưu vào lịch sử phản hồi và gửi thông báo cho ứng viên.
+                </p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFeedbackStatusChange('hired');
+                    onSaveFeedback();
+                  }}
+                  disabled={isSaving || !feedback.trim()}
+                  className="flex h-9 flex-1 cursor-pointer items-center justify-center rounded-sm bg-green-600 text-[12px] font-bold text-white transition-all hover:bg-green-500 disabled:opacity-50"
+                >
+                  Trúng tuyển & Gửi thông báo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFeedbackStatusChange('rejected');
+                    onSaveFeedback();
+                  }}
+                  disabled={isSaving || !feedback.trim()}
+                  className="flex h-9 flex-1 cursor-pointer items-center justify-center rounded-sm bg-red-600 text-[12px] font-bold text-white transition-all hover:bg-red-500 disabled:opacity-50"
+                >
+                  Không phù hợp
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 Đánh giá nội bộ
@@ -700,6 +745,16 @@ export function ApplicationDetailPanel({
               >
                 Lưu đánh giá
               </button>
+            </div>
+          </section>
+        )}
+
+        {/* HIRED: Ứng viên đã trúng tuyển */}
+        {status === 'hired' && (
+          <section className="border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50/60 p-3 text-[12px] text-green-800 dark:border-green-900/40 dark:bg-green-950/20 dark:text-green-300">
+              <AlertCircle className="h-5 w-5 shrink-0 text-green-500" />
+              <span>Ứng viên đã được thông báo trúng tuyển.</span>
             </div>
           </section>
         )}

@@ -175,10 +175,14 @@ export function LoginPage() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
+      const loginCallbackUrl = redirect
+        ? `${window.location.origin}/login?redirect=${encodeURIComponent(redirect)}`
+        : `${window.location.origin}/login`;
+
       const { error: oauthError } = await client.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin + "/login",
+          redirectTo: loginCallbackUrl,
           queryParams: {
             prompt: "select_account", // Ép buộc Google luôn hiển thị màn hình chọn tài khoản
           },
