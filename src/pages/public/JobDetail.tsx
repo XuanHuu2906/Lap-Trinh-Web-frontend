@@ -15,7 +15,11 @@ import { clearCandidateDashboardCache } from "@/services/candidate-dashboard-cac
 import { chatService } from "@/services/chat.service";
 import { cvService, type CandidateCV } from "@/services/cv.service";
 import { jobService } from "@/services/job.service";
-import { savePendingApplyJob } from "@/services/job-application-flow";
+import {
+  clearPendingApplyJob,
+  getPendingApplyJob,
+  savePendingApplyJob,
+} from "@/services/job-application-flow";
 import type { Job } from "@/types/job.type";
 import { formatJobTypeLabel } from "@/utils/job-type-labels";
 
@@ -419,26 +423,40 @@ export default function JobDetail({
   }, [id]);
 
   useEffect(() => {
-    if (!locationState.openApplyForm || !job) return;
+    if (!job) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    const wantsApply =
+      Boolean(locationState.openApplyForm) ||
+      searchParams.get("apply") === "1" ||
+      getPendingApplyJob() === job.id;
+
+    if (!wantsApply) return;
 
     if (!isAuthenticated || !user) {
       savePendingApplyJob(job.id);
-      navigate("/login", { replace: true });
+      const redirectTarget = `${location.pathname}?apply=1`;
+      navigate(`/login?redirect=${encodeURIComponent(redirectTarget)}`, {
+        replace: true,
+      });
       return;
     }
 
     if (user.role === "candidate") {
+      clearPendingApplyJob();
       setIsApplyModalOpen(true);
       navigate(location.pathname, { replace: true });
       return;
     }
 
+    clearPendingApplyJob();
     setApplyMessage("Chỉ tài khoản ứng viên mới có thể ứng tuyển.");
     navigate(location.pathname, { replace: true });
   }, [
     isAuthenticated,
     job,
     location.pathname,
+    location.search,
     locationState.openApplyForm,
     navigate,
     user,
@@ -490,7 +508,8 @@ export default function JobDetail({
 
     if (!isAuthenticated || !user) {
       savePendingApplyJob(job.id);
-      navigate("/login");
+      const redirectTarget = `${location.pathname}?apply=1`;
+      navigate(`/login?redirect=${encodeURIComponent(redirectTarget)}`);
       return;
     }
 
