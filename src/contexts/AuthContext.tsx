@@ -41,6 +41,10 @@ interface AuthContextType {
   registerCandidate: (data: RegisterCandidateRequest) => Promise<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   registerRecruiter: (data: RegisterRecruiterRequest) => Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  verifyEmail: (token: string) => Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  resendVerification: (email: string) => Promise<any>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
 }
@@ -281,6 +285,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return post<ApiResponse>("/auth/register-recruiter", data);
   }, []);
 
+  const verifyEmail = useCallback(async (token: string) => {
+    return post<ApiResponse<{ alreadyVerified: boolean; role: string }>>(
+      "/auth/verify-email",
+      { token },
+      { _skipRedirect: true } as Parameters<typeof post>[2],
+    );
+  }, []);
+
+  const resendVerification = useCallback(async (email: string) => {
+    return post<ApiResponse>(
+      "/auth/resend-verification",
+      { email },
+      { _skipRedirect: true } as Parameters<typeof post>[2],
+    );
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       const storedRefreshToken =
@@ -356,6 +376,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         completeOnboarding,
         registerCandidate,
         registerRecruiter,
+        verifyEmail,
+        resendVerification,
         logout,
         refreshAccessToken,
       }}

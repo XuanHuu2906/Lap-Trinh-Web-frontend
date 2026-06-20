@@ -44,6 +44,7 @@ export function CandidateRegisterPage() {
         confirmPassword,
       });
       if (res.success) {
+        const registeredEmail = email;
         setSuccessMsg(
           res.message ||
             "Đăng ký ứng viên thành công! Vui lòng kiểm tra email để xác nhận tài khoản.",
@@ -56,10 +57,10 @@ export function CandidateRegisterPage() {
         setConfirmPassword("");
         setAgreeTerms(false);
 
-        // Chuyển hướng sau 3 giây sang trang login
+        // Chuyển hướng sang trang hướng dẫn kiểm tra email
         setTimeout(() => {
-          navigate("/login");
-        }, 4000);
+          navigate("/email-sent", { state: { email: registeredEmail } });
+        }, 1500);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -103,7 +104,7 @@ export function CandidateRegisterPage() {
                   {successMsg}
                 </p>
                 <p className="text-emerald-500 text-[11px] mt-2 italic">
-                  Đang chuyển hướng về trang đăng nhập trong giây lát...
+                  Đang chuyển hướng để kiểm tra email...
                 </p>
               </div>
             </div>

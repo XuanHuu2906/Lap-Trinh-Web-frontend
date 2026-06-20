@@ -8,7 +8,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect");
-  const { login, loginWithGoogle, logout } = useAuth();
+  const { login, loginWithGoogle, logout, resendVerification } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +16,9 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleSyncing, setIsGoogleSyncing] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendInfo, setResendInfo] = useState<string | null>(null);
 
   // Sử dụng useRef để theo dõi trạng thái xử lý trong cùng một lần mount
 
@@ -116,6 +119,8 @@ export function LoginPage() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNeedsVerification(false);
+    setResendInfo(null);
     setIsLoading(true);
 
     try {
@@ -147,13 +152,42 @@ export function LoginPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Lỗi đăng nhập:", err);
+      const errCode = err.response?.data?.code;
       const errMsg =
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
       setError(errMsg);
+      if (errCode === "EMAIL_NOT_VERIFIED") {
+        setNeedsVerification(true);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setResendInfo("Vui lòng nhập email phía trên trước khi gửi lại.");
+      return;
+    }
+    setResendInfo(null);
+    setResendLoading(true);
+    try {
+      const res = await resendVerification(email);
+      setResendInfo(
+        res.message ||
+          "Đã gửi lại email xác nhận. Vui lòng kiểm tra hộp thư.",
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setResendInfo(
+        err.response?.data?.message ||
+          err.message ||
+          "Gửi lại email thất bại. Vui lòng thử lại sau.",
+      );
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -309,11 +343,28 @@ export function LoginPage() {
               </div>
               <div className="flex-1">
                 <p className="text-red-600 font-bold text-[12px] leading-snug">
-                  Đăng nhập thất bại
+                  {needsVerification ? "Tài khoản chưa xác nhận" : "Đăng nhập thất bại"}
                 </p>
                 <p className="text-red-500 text-[11px] leading-relaxed">
                   {error}
                 </p>
+                {needsVerification && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resendLoading}
+                      className="text-[11px] font-bold text-slate-900 underline hover:text-slate-700 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {resendLoading ? "Đang gửi..." : "Gửi lại email xác nhận"}
+                    </button>
+                    {resendInfo && (
+                      <p className="text-[11px] text-slate-600 italic mt-1">
+                        {resendInfo}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
