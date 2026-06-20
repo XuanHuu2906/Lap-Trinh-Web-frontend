@@ -52,6 +52,10 @@ function formatCount(value?: number) {
   return new Intl.NumberFormat("vi-VN").format(value);
 }
 
+function getApplicationCount(job?: Job) {
+  return job?._count?.applications ?? 0;
+}
+
 function formatSalary(job?: Job) {
   if (!job || job.salaryUnit === "negotiable") return "Thương lượng";
   if (!job.salaryMin && !job.salaryMax) return "Thương lượng";
@@ -107,6 +111,7 @@ function JobPreviewCard({
 }) {
   const jobType = formatJobTypeLabel(job.jobType);
   const category = job.category?.name || "Chưa phân loại";
+  const applicationCount = getApplicationCount(job);
   const textColor = featured
     ? "text-slate-950"
     : "text-white group-hover:text-slate-950";
@@ -139,6 +144,11 @@ function JobPreviewCard({
           </p>
           <p className="mt-3 inline-flex rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
             {formatSalary(job)}
+          </p>
+          <p className="mt-2 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+            {applicationCount > 0
+              ? `${formatCount(applicationCount)} ứng tuyển`
+              : "Mới đăng"}
           </p>
         </div>
       </div>

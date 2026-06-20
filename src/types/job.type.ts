@@ -45,6 +45,8 @@ export interface Job {
   }>;
   _count?: {
     applications: number;
+    savedJobs?: number;
+    jobViews?: number;
   };
 }
 
