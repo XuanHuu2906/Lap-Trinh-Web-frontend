@@ -17,6 +17,8 @@ import { CandidateRegisterPage } from "./pages/auth/RegisterCandidate";
 import { EnterpriseRegisterPage } from "./pages/auth/RegisterEnterprise";
 import { ResetPasswordPage } from "./pages/auth/ResetPassword";
 import { SetupProfilePage } from "./pages/auth/SetupProfile";
+import { VerifyEmailPage } from "./pages/auth/VerifyEmail";
+import { EmailSentPage } from "./pages/auth/EmailSent";
 import AppliedJobs from "./pages/candidate/AppliedJobs";
 import Chat from "./pages/candidate/Chat";
 import CVBuilder from "./pages/candidate/CVBuilder";
@@ -76,6 +78,8 @@ function App() {
           path="/register-enterprise"
           element={<EnterpriseRegisterPage />}
         />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/email-sent" element={<EmailSentPage />} />
 
         <Route element={<ProtectedRoute allowedRoles={["pending"]} />}>
           <Route path="/auth/setup-profile" element={<SetupProfilePage />} />

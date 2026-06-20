@@ -31,7 +31,8 @@
       "Bash(Select-Object Name)",
       "Bash(git ls-tree *)",
       "PowerShell(Remove-Item *)",
-      "Bash(dir /s /b src/)"
+      "Bash(dir /s /b src/)",
+      "Bash(xargs grep -l \"verif\\\\|confirm\")"
     ]
   }
 }

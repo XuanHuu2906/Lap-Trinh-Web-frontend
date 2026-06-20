@@ -55,6 +55,7 @@ export function EnterpriseRegisterPage() {
       });
 
       if (res.success) {
+        const registeredEmail = email;
         setSuccessMsg(
           res.message ||
             "Đăng ký nhà tuyển dụng thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.",
@@ -71,10 +72,10 @@ export function EnterpriseRegisterPage() {
         setConfirmPassword("");
         setAgreeTerms(false);
 
-        // Chuyển hướng sang trang đăng nhập sau 4 giây
+        // Chuyển hướng sang trang hướng dẫn kiểm tra email
         setTimeout(() => {
-          navigate("/login");
-        }, 4000);
+          navigate("/email-sent", { state: { email: registeredEmail } });
+        }, 1500);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -115,7 +116,7 @@ export function EnterpriseRegisterPage() {
                   {successMsg}
                 </p>
                 <p className="text-emerald-500 text-[11px] mt-2 italic">
-                  Đang chuyển hướng về trang đăng nhập trong giây lát...
+                  Đang chuyển hướng để kiểm tra email...
                 </p>
               </div>
             </div>
